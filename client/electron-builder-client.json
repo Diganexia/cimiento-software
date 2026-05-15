@@ -33,6 +33,7 @@
   "publish": {
     "provider": "github",
     "owner": "Diganexia",
-    "repo": "ferreteria-software"
+    "repo": "ferreteria-software",
+    "channel": "client"
   }
 }

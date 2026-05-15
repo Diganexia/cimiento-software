@@ -273,6 +273,7 @@ app.on('activate', () => {
 // ── Auto-updater ──────────────────────────────────────────────────────────────
 if (!isDev) {
   const { autoUpdater } = require('electron-updater');
+  autoUpdater.channel = isServerMode() ? 'server' : 'client';
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
