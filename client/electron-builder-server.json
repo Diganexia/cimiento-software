@@ -35,6 +35,10 @@
     "createStartMenuShortcut": true,
     "shortcutName": "Corralon Servidor"
   },
+  "asarUnpack": [
+    "node_modules/embedded-postgres/**/*",
+    "node_modules/@embedded-postgres/**/*"
+  ],
   "toolsets": {
     "winCodeSign": "1.1.0"
   },

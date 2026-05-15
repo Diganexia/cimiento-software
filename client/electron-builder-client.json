@@ -24,6 +24,10 @@
     "createStartMenuShortcut": true,
     "shortcutName": "Corralon Cliente"
   },
+  "asarUnpack": [
+    "node_modules/embedded-postgres/**/*",
+    "node_modules/@embedded-postgres/**/*"
+  ],
   "toolsets": {
     "winCodeSign": "1.1.0"
   },
