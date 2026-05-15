@@ -8,7 +8,8 @@
     "dev:client": "npm run dev --workspace=client",
     "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
     "migrate": "npm run migrate --workspace=server",
-    "seed": "npm run seed --workspace=server"
+    "seed": "npm run seed --workspace=server",
+    "postinstall": "node scripts/patch-embedded-postgres.js"
   },
   "devDependencies": {
     "concurrently": "^8.2.2"
