@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-15 — Todas las fases completadas (1–9).
+> Documento vivo. Última actualización: 2026-05-15 — Todas las fases completadas (1–9) + distribución v1.0.0.
 
 ---
 
@@ -317,8 +317,9 @@ En desarrollo: `server/.env`. En producción (app servidor): `userData/app-confi
 npm run dev                       # server + client en paralelo (desarrollo)
 
 # client/
-npm run electron:build:server     # genera Corralon Servidor Setup.exe
-npm run electron:build:client     # genera Corralon Cliente Setup.exe
+$env:CSC_IDENTITY_AUTO_DISCOVERY="false"
+npm run electron:build:server     # genera Corralon Servidor Setup X.Y.Z.exe
+npm run electron:build:client     # genera Corralon Cliente Setup X.Y.Z.exe
 npm run electron:dev              # Electron + Vite en desarrollo
 npm run electron:dev:server       # idem con SERVER_MODE=true
 
@@ -330,6 +331,46 @@ npm run seed                      # knex seed:run
 # docs/
 node generate-pdf.js              # genera documentacion-tecnica.pdf
 ```
+
+---
+
+## Distribución e instalación
+
+### Instaladores
+
+| Archivo | Para quién |
+|---------|-----------|
+| `Corralon Servidor Setup X.Y.Z.exe` | PC principal — actúa de servidor + cliente. Incluye PostgreSQL portable. |
+| `Corralon Cliente Setup X.Y.Z.exe` | Resto de PCs de la red — solo interfaz, se conecta al servidor por IP. |
+
+Los instaladores se publican en **GitHub Releases**: `https://github.com/Diganexia/ferreteria-software/releases`
+
+### Requisitos de red
+
+- El servidor debe tener el **puerto 3001** abierto en el firewall de Windows.
+- Los clientes se conectan por IP local (ej. `http://192.168.1.x:3001`).
+- No requiere internet (salvo para actualizaciones automáticas).
+
+### Auto-actualizaciones
+
+Las apps se actualizan solas al publicar una nueva release en GitHub.
+
+- App Servidor → detecta cambios en `server.yml` de la release
+- App Cliente → detecta cambios en `client.yml` de la release
+- El usuario ve un diálogo "¿Instalar ahora?" cuando hay una actualización lista
+
+### Publicar una nueva versión
+
+1. Incrementar `version` en `client/package.json` (ej. `1.0.1`)
+2. Construir los instaladores:
+   ```powershell
+   $env:CSC_IDENTITY_AUTO_DISCOVERY="false"
+   npm run electron:build:server
+   npm run electron:build:client
+   ```
+3. Crear release en GitHub con tag `vX.Y.Z` y subir:
+   - `dist-electron/server/Corralon Servidor Setup X.Y.Z.exe` + `.blockmap` + `server.yml`
+   - `dist-electron/client/Corralon Cliente Setup X.Y.Z.exe` + `.blockmap` + `client.yml`
 
 ---
 
@@ -356,3 +397,4 @@ node generate-pdf.js              # genera documentacion-tecnica.pdf
 - [x] **Fase 7** — Usuarios, roles y configuración general
 - [x] **Fase 8** — Reportes y dashboard con KPIs
 - [x] **Fase 9** — Deploy: dos instaladores, embedded-postgres, splash, backup automático
+- [x] **Distribución** — GitHub Releases + auto-updater configurado (v1.0.0 publicada)
