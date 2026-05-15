@@ -1,0 +1,34 @@
+{
+  "appId": "com.ferreteria.cliente",
+  "productName": "Corralon Cliente",
+  "copyright": "Ferretería Software",
+  "directories": {
+    "output": "dist-electron/client"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "assets/icon.ico",
+    "installerHeaderIcon": "assets/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Corralon Cliente"
+  },
+  "extraMetadata": {
+    "main": "electron/main.js"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "Diganexia",
+    "repo": "ferreteria-software"
+  }
+}

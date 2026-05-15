@@ -1,0 +1,15 @@
+.claude/
+node_modules/
+dist/
+dist-electron/
+.env
+*.log
+.DS_Store
+coverage/
+*.pem
+*.key
+docs/documentacion-tecnica.pdf
+client/.vite/
+client/dist/
+server/empresa.json
+

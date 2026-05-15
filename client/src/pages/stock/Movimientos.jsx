@@ -1,0 +1,122 @@
+import { useEffect, useState, useCallback } from 'react';
+import { getMovimientos } from '../../services/stockService';
+import Pagination from '../../components/Pagination';
+
+const TIPOS = ['ENTRADA_COMPRA','SALIDA_VENTA','TRANSFERENCIA_ENTRADA','TRANSFERENCIA_SALIDA','AJUSTE_POSITIVO','AJUSTE_NEGATIVO','INVENTARIO'];
+
+const TIPO_LABEL = {
+  ENTRADA_COMPRA: { label: 'Entrada compra', cls: 'bg-green-100 text-green-700' },
+  SALIDA_VENTA: { label: 'Salida venta', cls: 'bg-red-100 text-red-700' },
+  TRANSFERENCIA_ENTRADA: { label: 'Transf. entrada', cls: 'bg-blue-100 text-blue-700' },
+  TRANSFERENCIA_SALIDA: { label: 'Transf. salida', cls: 'bg-orange-100 text-orange-700' },
+  AJUSTE_POSITIVO: { label: 'Ajuste +', cls: 'bg-teal-100 text-teal-700' },
+  AJUSTE_NEGATIVO: { label: 'Ajuste -', cls: 'bg-yellow-100 text-yellow-700' },
+  INVENTARIO: { label: 'Inventario', cls: 'bg-purple-100 text-purple-700' }
+};
+
+export default function Movimientos() {
+  const [data, setData] = useState([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+
+  const [tipo, setTipo] = useState('');
+  const [desde, setDesde] = useState('');
+  const [hasta, setHasta] = useState('');
+
+  const LIMIT = 50;
+
+  const cargar = useCallback(async () => {
+    setLoading(true);
+    try {
+      const { data: res } = await getMovimientos({ tipo, desde, hasta, page, limit: LIMIT });
+      setData(res.data);
+      setTotal(res.total);
+    } catch {
+      /* silencioso */
+    } finally {
+      setLoading(false);
+    }
+  }, [tipo, desde, hasta, page]);
+
+  useEffect(() => { cargar(); }, [cargar]);
+
+  return (
+    <div className="p-6">
+      <h1 className="text-xl font-semibold text-gray-800 mb-5">Historial de movimientos</h1>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 flex flex-wrap gap-3">
+        <select
+          value={tipo}
+          onChange={(e) => { setTipo(e.target.value); setPage(1); }}
+          className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los tipos</option>
+          {TIPOS.map((t) => <option key={t} value={t}>{TIPO_LABEL[t]?.label || t}</option>)}
+        </select>
+        <div className="flex items-center gap-2 text-sm text-gray-600">
+          <span>Desde</span>
+          <input type="date" value={desde} onChange={(e) => { setDesde(e.target.value); setPage(1); }}
+            className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+          <span>hasta</span>
+          <input type="date" value={hasta} onChange={(e) => { setHasta(e.target.value); setPage(1); }}
+            className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <button onClick={() => { setTipo(''); setDesde(''); setHasta(''); setPage(1); }}
+          className="text-sm text-gray-500 hover:text-gray-700 underline">
+          Limpiar
+        </button>
+      </div>
+
+      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Fecha</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Producto</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Tipo</th>
+                <th className="text-right px-4 py-3 text-gray-600 font-medium">Cantidad</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Depósito origen</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Depósito destino</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Usuario</th>
+                <th className="text-left px-4 py-3 text-gray-600 font-medium">Motivo</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {loading ? (
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Cargando...</td></tr>
+              ) : data.length === 0 ? (
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Sin movimientos</td></tr>
+              ) : (
+                data.map((m) => {
+                  const meta = TIPO_LABEL[m.tipo] || { label: m.tipo, cls: 'bg-gray-100 text-gray-600' };
+                  return (
+                    <tr key={m.id} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 text-gray-500 text-xs whitespace-nowrap">
+                        {new Date(m.created_at).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-gray-800">{m.producto}</p>
+                        {m.codigo && <p className="text-xs text-gray-400 font-mono">{m.codigo}</p>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${meta.cls}`}>{meta.label}</span>
+                      </td>
+                      <td className="px-4 py-3 text-right font-mono">{parseFloat(m.cantidad)}</td>
+                      <td className="px-4 py-3 text-gray-600">{m.deposito_origen || '—'}</td>
+                      <td className="px-4 py-3 text-gray-600">{m.deposito_destino || '—'}</td>
+                      <td className="px-4 py-3 text-gray-600">{m.usuario}</td>
+                      <td className="px-4 py-3 text-gray-500 text-xs max-w-xs truncate">{m.motivo || '—'}</td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+        <Pagination page={page} total={total} limit={LIMIT} onChange={setPage} />
+      </div>
+    </div>
+  );
+}
