@@ -1,6 +1,7 @@
 {
   "appId": "com.ferreteria.servidor",
   "productName": "Corralon Servidor",
+  "electronVersion": "29.4.6",
   "copyright": "Ferretería Software",
   "directories": {
     "output": "dist-electron/server"
@@ -33,6 +34,9 @@
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "shortcutName": "Corralon Servidor"
+  },
+  "toolsets": {
+    "winCodeSign": "1.1.0"
   },
   "extraMetadata": {
     "main": "electron/main.js"

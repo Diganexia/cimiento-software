@@ -1,6 +1,7 @@
 {
   "appId": "com.ferreteria.cliente",
   "productName": "Corralon Cliente",
+  "electronVersion": "29.4.6",
   "copyright": "Ferretería Software",
   "directories": {
     "output": "dist-electron/client"
@@ -22,6 +23,9 @@
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
     "shortcutName": "Corralon Cliente"
+  },
+  "toolsets": {
+    "winCodeSign": "1.1.0"
   },
   "extraMetadata": {
     "main": "electron/main.js"
