@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-15 — Todas las fases completadas (1–9) + distribución v1.0.0.
+> Documento vivo. Última actualización: 2026-05-16 — v1.0.3: Fase 10, bugs UI, clean install, Kardex fix.
 
 ---
 
@@ -371,6 +371,36 @@ Las apps se actualizan solas al publicar una nueva release en GitHub.
 3. Crear release en GitHub con tag `vX.Y.Z` y subir:
    - `dist-electron/server/Corralon Servidor Setup X.Y.Z.exe` + `.blockmap` + `server.yml`
    - `dist-electron/client/Corralon Cliente Setup X.Y.Z.exe` + `.blockmap` + `client.yml`
+
+### Clean install — borrar la base de datos
+
+Para reinstalar el software desde cero (sin datos previos), hay que eliminar la carpeta de datos de usuario que Electron genera en el primer arranque. **Esta carpeta contiene la base de datos PostgreSQL**, la configuración y los logs.
+
+> **Importante:** Electron nombra la carpeta con el campo `name` del `package.json` interno (`ferreteria-client`), no con el nombre visible del instalador ("Corralon Servidor").
+
+**Pasos (en la PC servidora):**
+
+1. Cerrar la aplicación completamente (verificar que no quede en la bandeja del sistema).
+2. Abrir el Explorador de Windows y pegar en la barra de direcciones:
+   ```
+   %APPDATA%\ferreteria-client
+   ```
+3. Borrar toda la carpeta `ferreteria-client`.
+4. (Opcional) Desinstalar y reinstalar la app desde GitHub Releases.
+5. Al volver a abrir, la app crea la BD desde cero y corre las seeds automáticamente.
+
+**Contenido de la carpeta (referencia):**
+
+```
+C:\Users\<usuario>\AppData\Roaming\ferreteria-client\
+├── pgdata\          ← base de datos PostgreSQL
+├── backups\         ← backups automáticos diarios
+├── logs\
+├── Cache\
+└── app-config.json  ← contraseña de la BD
+```
+
+> Para los clientes (no el servidor), la carpeta equivalente es `%APPDATA%\ferreteria-client` en cada PC cliente (no contiene BD, solo configuración de conexión).
 
 ---
 
