@@ -6,6 +6,7 @@ import {
 import AlertasBanner from '../components/AlertasBanner';
 import useAuthStore from '../store/authStore';
 import { getKPIs, getVentasPeriodo } from '../services/reportesService';
+import { version } from '../../package.json';
 
 const fmt = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCompact = (n) => {
@@ -81,13 +82,16 @@ export default function Dashboard() {
 
   return (
     <div className="p-6">
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-gray-800">
-          Bienvenido, {usuario?.nombre}
-        </h1>
-        <p className="text-sm text-gray-500 mt-0.5">
-          {new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-        </p>
+      <div className="mb-5 flex items-start justify-between">
+        <div>
+          <h1 className="text-xl font-semibold text-gray-800">
+            Bienvenido, {usuario?.nombre}
+          </h1>
+          <p className="text-sm text-gray-500 mt-0.5">
+            {new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+          </p>
+        </div>
+        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">v{version}</span>
       </div>
 
       <div className="mb-5">

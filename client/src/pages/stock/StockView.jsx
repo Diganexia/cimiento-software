@@ -3,6 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { getStock, getDepositos } from '../../services/stockService';
 import StockBadge from '../../components/StockBadge';
 
+const fmtQty = (n) => parseFloat(parseFloat(n).toFixed(3)).toString();
+
 export default function StockView() {
   const [stock, setStock] = useState([]);
   const [depositos, setDepositos] = useState([]);
@@ -91,7 +93,7 @@ export default function StockView() {
                     <td className="px-4 py-3 text-center">
                       <StockBadge stock={s.cantidad} minimo={s.stock_minimo} />
                     </td>
-                    <td className="px-4 py-3 text-right text-gray-500">{s.stock_minimo}</td>
+                    <td className="px-4 py-3 text-right text-gray-500">{fmtQty(s.stock_minimo)}</td>
                     <td className="px-4 py-3 text-gray-600">{s.unidad}</td>
                     <td className="px-4 py-3 text-right text-gray-400 text-xs">
                       {new Date(s.updated_at).toLocaleDateString('es-AR')}

@@ -14,6 +14,7 @@ export default function Ajuste() {
   const [depositoId, setDepositoId] = useState('');
   const [productoId, setProductoId] = useState('');
   const [productoNombre, setProductoNombre] = useState('');
+  const [productoUnidad, setProductoUnidad] = useState('');
   const [cantidadActual, setCantidadActual] = useState(null);
   const [cantidadNueva, setCantidadNueva] = useState('');
   const [motivo, setMotivo] = useState('');
@@ -55,6 +56,7 @@ export default function Ajuste() {
   const seleccionarProducto = (prod) => {
     setProductoId(String(prod.id));
     setProductoNombre(prod.nombre);
+    setProductoUnidad(prod.unidad_abreviatura || prod.unidad || '');
     setBusqueda('');
     setProductos([]);
     setCantidadNueva('');
@@ -63,6 +65,7 @@ export default function Ajuste() {
   const limpiar = () => {
     setProductoId('');
     setProductoNombre('');
+    setProductoUnidad('');
     setCantidadActual(null);
     setCantidadNueva('');
     setMotivo('');
@@ -174,7 +177,8 @@ export default function Ajuste() {
           <div className="bg-gray-50 rounded px-4 py-3 text-sm">
             <span className="text-gray-500">Stock actual en depósito: </span>
             <span className="font-semibold text-gray-800">
-              {cantidadActual !== null ? cantidadActual : '—'}
+              {cantidadActual !== null ? parseFloat(parseFloat(cantidadActual).toFixed(3)).toString() : '—'}
+              {cantidadActual !== null && productoUnidad && <span className="text-gray-500 ml-1">{productoUnidad}</span>}
             </span>
           </div>
         )}
@@ -193,7 +197,7 @@ export default function Ajuste() {
           />
           {delta !== null && (
             <p className={`text-xs mt-1 ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-600' : 'text-gray-400'}`}>
-              {delta > 0 ? `+${delta}` : delta === 0 ? 'Sin cambio' : delta} unidades
+              {delta === 0 ? 'Sin cambio' : `${delta > 0 ? '+' : ''}${parseFloat(delta.toFixed(3))} ${productoUnidad || 'unidades'}`}
             </p>
           )}
         </div>

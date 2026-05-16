@@ -140,4 +140,17 @@ const confirmar = async (req, res) => {
   }
 };
 
-module.exports = { abrir, obtener, actualizarItems, confirmar };
+const cancelar = async (req, res) => {
+  try {
+    const inventario = await db('inventarios').where('id', req.params.id).first();
+    if (!inventario) return res.status(404).json({ error: 'Inventario no encontrado' });
+    if (inventario.estado !== 'abierto') return res.status(400).json({ error: 'El inventario no está abierto' });
+    await db('inventarios').where('id', req.params.id).update({ estado: 'cancelado', updated_at: db.fn.now() });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al cancelar inventario' });
+  }
+};
+
+module.exports = { abrir, obtener, actualizarItems, confirmar, cancelar };

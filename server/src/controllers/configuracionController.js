@@ -54,9 +54,8 @@ async function createPuntoVenta(req, res) {
   if (!numero || !nombre) return res.status(400).json({ error: 'numero y nombre requeridos' });
   try {
     const existe = await db('puntos_venta_afip').where('numero', numero).first();
-    if (existe) return res.status(409).json({ error: 'Ya existe un punto de venta con ese nÃºmero' });
-    const [id] = await db('puntos_venta_afip').insert({ numero, nombre, tipo: tipo || 'electronica', activo: true });
-    const row = await db('puntos_venta_afip').where('id', id).first();
+    if (existe) return res.status(409).json({ error: 'Ya existe un punto de venta con ese número' });
+    const [row] = await db('puntos_venta_afip').insert({ numero, nombre, tipo: tipo || 'electronica', activo: true }).returning('*');
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -108,8 +107,7 @@ async function createRubro(req, res) {
   const { nombre, rubro_padre_id } = req.body;
   if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
   try {
-    const [id] = await db('rubros').insert({ nombre, rubro_padre_id: rubro_padre_id || null, activo: true });
-    const row = await db('rubros').where('id', id).first();
+    const [row] = await db('rubros').insert({ nombre, rubro_padre_id: rubro_padre_id || null, activo: true }).returning('*');
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -158,8 +156,7 @@ async function createUnidad(req, res) {
   const { nombre, abreviatura } = req.body;
   if (!nombre || !abreviatura) return res.status(400).json({ error: 'nombre y abreviatura requeridos' });
   try {
-    const [id] = await db('unidades_medida').insert({ nombre, abreviatura });
-    const row = await db('unidades_medida').where('id', id).first();
+    const [row] = await db('unidades_medida').insert({ nombre, abreviatura }).returning('*');
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -207,8 +204,7 @@ async function createMedioPago(req, res) {
   const { nombre } = req.body;
   if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
   try {
-    const [id] = await db('medios_pago').insert({ nombre, activo: true });
-    const row = await db('medios_pago').where('id', id).first();
+    const [row] = await db('medios_pago').insert({ nombre, activo: true }).returning('*');
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -257,8 +253,7 @@ async function createDeposito(req, res) {
   const { nombre, descripcion } = req.body;
   if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
   try {
-    const [id] = await db('depositos').insert({ nombre, descripcion: descripcion || null, activo: true });
-    const row = await db('depositos').where('id', id).first();
+    const [row] = await db('depositos').insert({ nombre, descripcion: descripcion || null, activo: true }).returning('*');
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -307,8 +302,7 @@ async function createCaja(req, res) {
   const { nombre } = req.body;
   if (!nombre) return res.status(400).json({ error: 'nombre requerido' });
   try {
-    const [id] = await db('cajas').insert({ nombre, activo: true });
-    const row = await db('cajas').where('id', id).first();
+    const [row] = await db('cajas').insert({ nombre, activo: true }).returning('*');
     res.status(201).json(row);
   } catch (err) {
     res.status(500).json({ error: err.message });

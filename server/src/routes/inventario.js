@@ -7,5 +7,6 @@ router.post('/',              auth, authz('stock', 'inventario'), ctrl.abrir);
 router.get('/:id',            auth, authz('stock', 'inventario'), ctrl.obtener);
 router.put('/:id/items',      auth, authz('stock', 'inventario'), ctrl.actualizarItems);
 router.post('/:id/confirmar', auth, authz('stock', 'inventario'), ctrl.confirmar);
+router.delete('/:id',         auth, authz('stock', 'inventario'), ctrl.cancelar);
 
 module.exports = router;

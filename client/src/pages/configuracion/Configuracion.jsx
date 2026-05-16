@@ -122,21 +122,25 @@ function TabAFIP() {
   const { items, reload } = useList(getPuntosVenta);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [err, setErr] = useState('');
 
   const handleCreate = async (vals) => {
+    setErr('');
     try { await createPuntoVenta(vals); reload(); setAdding(false); }
-    catch (e) { alert(e.response?.data?.error || 'Error'); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
   };
 
   const handleUpdate = async (id, vals) => {
+    setErr('');
     try { await updatePuntoVenta(id, vals); reload(); setEditing(null); }
-    catch (e) { alert(e.response?.data?.error || 'Error'); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm('¿Eliminar este punto de venta?')) return;
+    setErr('');
     try { await deletePuntoVenta(id); reload(); }
-    catch (e) { alert(e.response?.data?.error || 'Error'); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al eliminar'); }
   };
 
   const fields = [
@@ -151,6 +155,7 @@ function TabAFIP() {
         <p className="text-sm text-gray-600">Puntos de venta habilitados en AFIP</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
+      {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
       <table className="w-full text-sm">
         <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
           <tr>
@@ -196,25 +201,30 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
   const { items, reload } = useList(loader);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [err, setErr] = useState('');
 
   const handleCreate = async (vals) => {
+    setErr('');
     try { await creator(vals); reload(); setAdding(false); }
-    catch (e) { alert(e.response?.data?.error || 'Error'); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
   };
 
   const handleUpdate = async (id, vals) => {
+    setErr('');
     try { await updater(id, vals); reload(); setEditing(null); }
-    catch (e) { alert(e.response?.data?.error || 'Error'); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
   };
 
   const handleDelete = async (id) => {
     if (!window.confirm(`¿Eliminar este ${title}?`)) return;
+    setErr('');
     try { await deleter(id); reload(); }
-    catch (e) { alert(e.response?.data?.error || 'Error'); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al eliminar'); }
   };
 
   return (
     <div>
+      {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
       <div className="flex justify-between items-center mb-3">
         <p className="text-sm text-gray-600">{title}s del sistema</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>

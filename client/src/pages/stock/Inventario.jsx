@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getDepositos, abrirInventario, getInventario, updateInventarioItems, confirmarInventario } from '../../services/stockService';
+import { getDepositos, abrirInventario, getInventario, updateInventarioItems, confirmarInventario, cancelarInventario } from '../../services/stockService';
 
 const STEP = { INICIO: 'inicio', CONTEO: 'conteo', DIFERENCIAS: 'diferencias', CONFIRMADO: 'confirmado' };
 
@@ -15,20 +15,60 @@ export default function Inventario() {
 
   useEffect(() => { getDepositos().then((r) => setDepositos(r.data)); }, []);
 
+  const cargarInventario = async (id) => {
+    const { data: inv } = await getInventario(id);
+    setInventarioId(id);
+    setInventario(inv);
+    const c = {};
+    inv.items.forEach((i) => { c[i.producto_id] = i.cantidad_sistema; });
+    setConteos(c);
+    setStep(STEP.CONTEO);
+  };
+
   const handleAbrir = async () => {
     setError('');
     setLoading(true);
     try {
       const { data } = await abrirInventario({ deposito_id: depositoId });
-      setInventarioId(data.id);
-      const { data: inv } = await getInventario(data.id);
-      setInventario(inv);
-      const c = {};
-      inv.items.forEach((i) => { c[i.producto_id] = i.cantidad_sistema; });
-      setConteos(c);
-      setStep(STEP.CONTEO);
+      await cargarInventario(data.id);
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al abrir inventario');
+      const responseData = err.response?.data;
+      if (err.response?.status === 409 && responseData?.inventario_id) {
+        setError(`${responseData.error} — ¿Querés continuar ese inventario?`);
+        setInventarioId(responseData.inventario_id);
+      } else {
+        setError(responseData?.error || 'Error al abrir inventario');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleContinuarExistente = async () => {
+    setError('');
+    setLoading(true);
+    try {
+      await cargarInventario(inventarioId);
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al cargar inventario');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCancelar = async () => {
+    if (!confirm('¿Cancelar el inventario? Se descartarán los conteos ingresados.')) return;
+    setLoading(true);
+    try {
+      await cancelarInventario(inventarioId);
+      setStep(STEP.INICIO);
+      setInventario(null);
+      setInventarioId(null);
+      setDepositoId('');
+      setConteos({});
+      setError('');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al cancelar');
     } finally {
       setLoading(false);
     }
@@ -90,7 +130,17 @@ export default function Inventario() {
         })}
       </div>
 
-      {error && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">{error}</p>}
+      {error && (
+        <div className="mb-4">
+          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>
+          {inventarioId && step === STEP.INICIO && (
+            <button onClick={handleContinuarExistente} disabled={loading}
+              className="mt-2 text-sm bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-50 transition-colors">
+              {loading ? 'Cargando...' : 'Continuar inventario existente'}
+            </button>
+          )}
+        </div>
+      )}
 
       {/* Step 1: Abrir */}
       {step === STEP.INICIO && (
@@ -119,10 +169,16 @@ export default function Inventario() {
               <p className="font-medium text-gray-800">Depósito: {inventario.deposito}</p>
               <p className="text-xs text-gray-500">{inventario.items.length} productos — ingresá la cantidad contada de cada uno</p>
             </div>
-            <button onClick={handleGuardarConteos} disabled={loading}
-              className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
-              {loading ? 'Guardando...' : 'Ver diferencias →'}
-            </button>
+            <div className="flex gap-2">
+              <button onClick={handleCancelar} disabled={loading}
+                className="border border-red-300 text-red-600 px-3 py-2 rounded text-sm hover:bg-red-50 transition-colors">
+                Cancelar inventario
+              </button>
+              <button onClick={handleGuardarConteos} disabled={loading}
+                className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 disabled:opacity-50 transition-colors">
+                {loading ? 'Guardando...' : 'Ver diferencias →'}
+              </button>
+            </div>
           </div>
           <div className="overflow-x-auto max-h-[60vh] overflow-y-auto">
             <table className="w-full text-sm">
@@ -168,6 +224,10 @@ export default function Inventario() {
               <p className="text-xs text-gray-500">{hasDiferencias ? 'Hay diferencias que serán ajustadas automáticamente al confirmar.' : 'No hay diferencias.'}</p>
             </div>
             <div className="flex gap-2">
+              <button onClick={handleCancelar} disabled={loading}
+                className="border border-red-300 text-red-600 px-3 py-2 rounded text-sm hover:bg-red-50 transition-colors">
+                Cancelar
+              </button>
               <button onClick={() => setStep(STEP.CONTEO)} className="border border-gray-300 px-3 py-2 rounded text-sm hover:bg-gray-50 transition-colors">
                 ← Volver a contar
               </button>

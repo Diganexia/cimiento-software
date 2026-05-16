@@ -1,3 +1,5 @@
+const fmt = (n) => parseFloat(parseFloat(n).toFixed(3)).toString();
+
 export default function StockBadge({ stock, minimo }) {
   const s = parseFloat(stock);
   const m = parseFloat(minimo);
@@ -8,10 +10,10 @@ export default function StockBadge({ stock, minimo }) {
     label = 'Sin stock';
   } else if (s <= m) {
     cls = 'bg-yellow-100 text-yellow-700 border border-yellow-200';
-    label = s;
+    label = fmt(s);
   } else {
     cls = 'bg-green-100 text-green-700 border border-green-200';
-    label = s;
+    label = fmt(s);
   }
 
   return (
