@@ -45,9 +45,9 @@
 
 ---
 
-## Versión actual: v1.0.4
+## Versión actual: v1.0.5
 
-Release: https://github.com/Diganexia/ferreteria-software/releases/tag/v1.0.4  
+Release: https://github.com/Diganexia/ferreteria-software/releases/tag/v1.0.5  
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
 ### Historial de releases
@@ -58,7 +58,8 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.0.1 | Fase 10 (mejoras post-feedback) + bugfixes UI |
 | v1.0.2 | Seeds limpios (sin datos de prueba) |
 | v1.0.3 | Fix Kardex crash (`e.map is not a function` — `/productos` devuelve `{data,total}` no array) |
-| v1.0.4 | Fix create en Configuración + decimales + inventario + versión visible |
+| v1.0.4 | Fix create en Configuración + decimales + inventario + versión visible en Login/Dashboard |
+| v1.0.5 | Fix versión hardcodeada `v1.0.0` en Splash — ahora lee `package.json` dinámicamente |
 
 ---
 
@@ -147,9 +148,9 @@ La carpeta userData de Electron es `%APPDATA%\ferreteria-client` (usa el campo `
 
 ## Bugs conocidos / pendientes
 
-### v1.0.4 — versión en Login muestra "1.0.0" (a investigar)
+### ~~v1.0.4 — versión en Login muestra "1.0.0"~~ — RESUELTO en v1.0.5
 
-El `import { version } from '../../package.json'` en `Login.jsx` debería dar "1.0.4" en build. Puede ser un problema con el build de Electron cacheando el package.json de una versión anterior, o que Vite use el `package.json` del workspace root en vez del de `client/`. Pendiente investigar.
+Era `Splash.jsx` (pantalla negra de carga de Electron) que tenía `v1.0.0` hardcodeado desde la Fase 9. Reemplazado por `import { version } from '../../package.json'` igual que en Login y Dashboard.
 
 ### Posible Fase 11 — Un solo instalador (bajo análisis)
 
