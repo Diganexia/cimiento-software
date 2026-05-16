@@ -11,6 +11,7 @@
     "electron/**/*",
     "package.json"
   ],
+  "artifactName": "Corralon-Cliente-Setup-${version}.${ext}",
   "win": {
     "target": [{ "target": "nsis", "arch": ["x64"] }],
     "icon": "assets/icon.ico"

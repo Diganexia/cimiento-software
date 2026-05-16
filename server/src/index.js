@@ -56,6 +56,14 @@ app.use('/api/reportes',       reportesRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
-app.listen(PORT, () => {
+const httpServer = app.listen(PORT, () => {
   console.log(`Servidor corriendo en puerto ${PORT}`);
+});
+
+httpServer.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`Puerto ${PORT} ya está en uso. El servidor podría estar corriendo en otra instancia.`);
+  } else {
+    console.error('Error al iniciar servidor HTTP:', err);
+  }
 });

@@ -98,9 +98,16 @@ async function runMigrations(serverDir, onStatus) {
   const db = knex(knexfile.production);
 
   try {
+    // Always run migrate.latest() — it's idempotent and safe to call every boot.
+    // This handles the case where a previous boot failed mid-migration.
     await db.migrate.latest();
-    onStatus('Cargando datos iniciales...');
-    await db.seed.run();
+
+    // Only seed if the roles table is empty (avoids duplicate data on re-runs)
+    const rolesCount = await db('roles').count('id as n').first();
+    if (!rolesCount || Number(rolesCount.n) === 0) {
+      onStatus('Cargando datos iniciales...');
+      await db.seed.run();
+    }
   } finally {
     await db.destroy();
   }

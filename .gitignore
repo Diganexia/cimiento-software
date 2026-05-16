@@ -12,4 +12,7 @@ docs/documentacion-tecnica.pdf
 client/.vite/
 client/dist/
 server/empresa.json
+feedback/
+errores-feedback/
+index.html
 

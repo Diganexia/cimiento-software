@@ -7,6 +7,39 @@ const crypto = require('crypto');
 
 const isDev = process.env.NODE_ENV === 'development';
 
+// ── Logger ────────────────────────────────────────────────────────────────────
+let _logFile = null;
+function getLogFile() {
+  if (_logFile) return _logFile;
+  const logDir = path.join(app.getPath('userData'), 'logs');
+  if (!fs.existsSync(logDir)) fs.mkdirSync(logDir, { recursive: true });
+  _logFile = path.join(logDir, `app-${new Date().toISOString().slice(0, 10)}.log`);
+  return _logFile;
+}
+function log(...args) {
+  const line = `[${new Date().toISOString()}] ${args.join(' ')}\n`;
+  process.stdout.write(line);
+  try { fs.appendFileSync(getLogFile(), line); } catch { /* ignore */ }
+}
+function logError(...args) {
+  const line = `[${new Date().toISOString()}] ERROR ${args.join(' ')}\n`;
+  process.stderr.write(line);
+  try { fs.appendFileSync(getLogFile(), line); } catch { /* ignore */ }
+}
+
+// Redirect console.log/error so Express server logs also land in the log file
+const _origLog = console.log;
+const _origError = console.error;
+console.log = (...args) => { _origLog(...args); try { log(...args); } catch {} };
+console.error = (...args) => { _origError(...args); try { logError(...args); } catch {} };
+
+process.on('uncaughtException', (err) => {
+  logError('uncaughtException:', err.stack || err.message);
+});
+process.on('unhandledRejection', (reason) => {
+  logError('unhandledRejection:', reason?.stack || reason);
+});
+
 // ── Mode detection ────────────────────────────────────────────────────────────
 // Server build includes a 'server-mode.flag' in resources.
 function isServerMode() {
@@ -86,13 +119,15 @@ function createSplashWindow() {
     frame: false,
     resizable: false,
     center: true,
+    backgroundColor: '#111827',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
 
   if (isDev) {
-    splashWindow.loadURL('http://localhost:5173/splash');
+    splashWindow.loadURL('http://localhost:5173/#/splash');
   } else {
     splashWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: '/splash' });
+    splashWindow.webContents.openDevTools({ mode: 'detach' });
   }
 }
 
@@ -110,6 +145,7 @@ function createMainWindow(serverUrl) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -174,6 +210,13 @@ function setupIPC(mode, serverUrl) {
 
 // ── Server mode boot ──────────────────────────────────────────────────────────
 async function bootServerMode() {
+  // Register sync IPC handlers before the splash window opens so
+  // ipcRenderer.sendSync('get-mode') in the renderer doesn't block indefinitely.
+  ipcMain.on('get-mode', (e) => { e.returnValue = 'server'; });
+  ipcMain.on('get-server-url', (e) => { e.returnValue = null; });
+  ipcMain.on('get-local-ip', (e) => { e.returnValue = getLocalIP(); });
+  ipcMain.on('backup-get-dir', (e) => { e.returnValue = backupDir; });
+
   createSplashWindow();
 
   const sendStatus = (msg) => {
@@ -182,15 +225,39 @@ async function bootServerMode() {
   };
 
   try {
+    log('Boot: iniciando en modo servidor');
     const { startDatabase, runMigrations } = require('./dbManager');
 
     const { isFirstRun } = await startDatabase(pgDataDir, configPath, sendStatus);
+    log('Boot: base de datos lista, firstRun=', isFirstRun);
 
     const serverDir = getServerDir();
+    const serverEntry = path.join(serverDir, 'src', 'index.js');
 
-    if (isFirstRun) {
-      await runMigrations(serverDir, sendStatus);
-    }
+    // Patch Module._resolveFilename BEFORE migrations and server load so that all
+    // server-side requires (knexfile.js, routes, controllers) find their deps in
+    // app.asar/node_modules even when called from outside the ASAR tree.
+    const Module = require('module');
+    const originalResolve = Module._resolveFilename.bind(Module);
+    const appNodeModules = path.join(__dirname, '..', 'node_modules');
+    Module._resolveFilename = function (request, parent, ...args) {
+      try { return originalResolve(request, parent, ...args); }
+      catch (e) {
+        const fakeparent = {
+          id: path.join(serverDir, 'src', 'fake.js'),
+          filename: path.join(serverDir, 'src', 'fake.js'),
+          paths: [
+            path.join(serverDir, 'node_modules'),
+            appNodeModules,
+            ...Module._nodeModulePaths(path.join(serverDir, 'src'))
+          ]
+        };
+        try { return originalResolve(request, fakeparent, ...args); }
+        catch { throw e; }
+      }
+    };
+
+    await runMigrations(serverDir, sendStatus);
 
     sendStatus('Iniciando servidor...');
 
@@ -200,22 +267,7 @@ async function bootServerMode() {
     process.env.JWT_SECRET = getOrCreateJwtSecret();
     process.env.ALLOWED_ORIGINS = '*';
 
-    // Load and start Express in-process
-    // Set server dir in PATH so requires work properly
-    const serverEntry = path.join(serverDir, 'src', 'index.js');
-    // Temporarily patch Module paths so server's requires resolve from serverDir
-    const Module = require('module');
-    const originalResolve = Module._resolveFilename.bind(Module);
-    Module._resolveFilename = function (request, parent, ...args) {
-      try { return originalResolve(request, parent, ...args); }
-      catch (e) {
-        // Try resolving from serverDir/node_modules
-        const fakeparent = { id: path.join(serverDir, 'src', 'fake.js'), filename: path.join(serverDir, 'src', 'fake.js'), paths: Module._nodeModulePaths(path.join(serverDir, 'src')) };
-        return originalResolve(request, fakeparent, ...args);
-      }
-    };
     require(serverEntry);
-    Module._resolveFilename = originalResolve; // restore
 
     sendStatus('Verificando conexión...');
     await waitForServer('http://127.0.0.1:3001/api/health');
@@ -231,9 +283,9 @@ async function bootServerMode() {
 
     createMainWindow(serverUrl);
   } catch (err) {
+    logError('Boot error:', err.stack || err.message);
     if (splashWindow && !splashWindow.isDestroyed())
       splashWindow.webContents.send('boot-error', err.message);
-    console.error('Boot error:', err);
   }
 }
 
@@ -289,7 +341,7 @@ if (!isDev) {
   });
 
   autoUpdater.on('error', (err) => {
-    console.error('Auto-updater error:', err.message);
+    logError('Auto-updater error:', err.message);
   });
 
   // Chequear actualizaciones al iniciar y cada 4 horas

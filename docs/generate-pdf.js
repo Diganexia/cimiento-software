@@ -808,6 +808,33 @@ table(['Tabla', 'Módulo', 'Descripción'], [
   ['comprobantes_afip', 'AFIP', 'Facturas electrónicas con CAE y vencimiento'],
 ], { colWidths: [170, 100, 225] });
 
+checkPageBreak(200);
+subHeader('9.3  Capacidad y volumen de datos');
+para('El motor es PostgreSQL completo. El límite práctico lo impone el hardware de la PC servidora, no el software.');
+
+table(
+  ['Entidad', 'Volumen cómodo', 'Observaciones'],
+  [
+    ['Productos', 'hasta ~50.000 SKUs', 'Sin límite práctico real'],
+    ['Ventas/año', 'hasta ~100.000', 'Sin límite práctico real'],
+    ['Ítems de venta', 'Millones', 'Sin límite práctico real'],
+    ['Movimientos de stock', 'Millones', 'Sin límite práctico real'],
+    ['Años de datos', '10–20 años', 'Depende del disco disponible'],
+  ],
+  { colWidths: [150, 155, 190] }
+);
+
+para('Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la base de datos en 10 años ocupa aproximadamente 2–5 GB incluyendo índices.');
+
+subHeader('Cuellos de botella conocidos', { size: 10 });
+bullet([
+  'Reportes sin paginación: algunos endpoints devuelven todos los registros en una sola respuesta. Con cientos de miles de filas pueden ser lentos.',
+  'PDFs de reportes grandes: pdfKit construye el PDF en memoria; un reporte de 50.000+ filas puede tardar 30–60 segundos.',
+  'Usuarios concurrentes: el servidor comparte CPU/RAM con la UI; con 5–8 clientes haciendo consultas pesadas puede haber latencia.',
+  'Backups: pg_dump de una BD de 5 GB tarda varios minutos (no bloquea la operación).',
+]);
+infoBox('Plan de mitigación: si los reportes se vuelven lentos, agregar paginación y límites a esas queries. No requiere cambios en el esquema de BD.');
+
 // ═══════════════════════════════════════════════════════════════════════════
 //  10. PERMISOS
 // ═══════════════════════════════════════════════════════════════════════════

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getEstadoCuentaCliente, cobrar, downloadPdfCliente } from '../../services/ctaCteService';
+import { getEstadoCuentaCliente, cobrar, downloadPdfCliente, downloadPdfCobro } from '../../services/ctaCteService';
 import api from '../../lib/api';
 
 const fmt = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -13,8 +13,18 @@ export default function CtaCteCliente() {
   const [mediosPago, setMediosPago] = useState([]);
   const [showCobro, setShowCobro] = useState(false);
   const [cobro, setCobro] = useState({ monto: '', descripcion: '', medio_pago_id: '' });
+  const [cheque, setCheque] = useState({ numero: '', banco: '', emisor: '', fecha_emision: '', fecha_acreditacion: '' });
+  const [retenciones, setRetenciones] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [ultimoCobroId, setUltimoCobroId] = useState(null);
+
+  const medioSeleccionado = mediosPago.find((m) => String(m.id) === String(cobro.medio_pago_id));
+  const esCheque = medioSeleccionado?.nombre === 'Cheque';
+
+  const addRetencion = () => setRetenciones((p) => [...p, { tipo: 'ganancias', descripcion: '', porcentaje: '', monto: '' }]);
+  const removeRetencion = (i) => setRetenciones((p) => p.filter((_, idx) => idx !== i));
+  const updateRetencion = (i, field, value) => setRetenciones((p) => p.map((r, idx) => idx === i ? { ...r, [field]: value } : r));
 
   const load = async () => {
     const { data } = await getEstadoCuentaCliente(clienteId);
@@ -34,14 +44,24 @@ export default function CtaCteCliente() {
     setError('');
     setLoading(true);
     try {
-      await cobrar({
+      if (esCheque && (!cheque.numero || !cheque.fecha_acreditacion)) {
+        setError('Ingrese número de cheque y fecha de acreditación');
+        setLoading(false);
+        return;
+      }
+      const { data } = await cobrar({
         cliente_id: parseInt(clienteId),
         monto: parseFloat(cobro.monto),
         descripcion: cobro.descripcion || undefined,
-        medio_pago_id: cobro.medio_pago_id ? parseInt(cobro.medio_pago_id) : undefined
+        medio_pago_id: cobro.medio_pago_id ? parseInt(cobro.medio_pago_id) : undefined,
+        cheque: esCheque ? cheque : undefined,
+        retenciones: retenciones.filter((r) => r.monto && parseFloat(r.monto) > 0)
       });
+      setUltimoCobroId(data.id);
       setShowCobro(false);
       setCobro((p) => ({ ...p, monto: '', descripcion: '' }));
+      setCheque({ numero: '', banco: '', emisor: '', fecha_emision: '', fecha_acreditacion: '' });
+      setRetenciones([]);
       load();
     } catch (err) {
       setError(err.response?.data?.error || 'Error al registrar cobro');
@@ -75,14 +95,20 @@ export default function CtaCteCliente() {
         </div>
       </div>
 
-      <div className="flex gap-3 mb-5">
-        <button onClick={() => setShowCobro(true)}
+      <div className="flex gap-3 mb-5 flex-wrap">
+        <button onClick={() => { setUltimoCobroId(null); setShowCobro(true); }}
           className="bg-green-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-green-700 transition-colors">
           Registrar cobro
         </button>
+        {ultimoCobroId && (
+          <button onClick={() => downloadPdfCobro(ultimoCobroId).catch(console.error)}
+            className="bg-green-100 border border-green-300 text-green-700 px-4 py-2 rounded text-sm font-medium hover:bg-green-200 transition-colors">
+            Imprimir último recibo
+          </button>
+        )}
         <button onClick={() => downloadPdfCliente(clienteId).catch(console.error)}
           className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
-          Descargar PDF
+          Estado de cuenta PDF
         </button>
       </div>
 
@@ -113,6 +139,85 @@ export default function CtaCteCliente() {
                 placeholder="Cobro en efectivo..."
                 className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500" />
             </div>
+
+            {esCheque && (
+              <div className="border border-blue-200 rounded-lg p-3 bg-blue-50 space-y-3">
+                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Datos del cheque</p>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">N° de cheque *</label>
+                    <input value={cheque.numero}
+                      onChange={(e) => setCheque((p) => ({ ...p, numero: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Banco</label>
+                    <input value={cheque.banco}
+                      onChange={(e) => setCheque((p) => ({ ...p, banco: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Emisor</label>
+                    <input value={cheque.emisor}
+                      onChange={(e) => setCheque((p) => ({ ...p, emisor: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 mb-1">Fecha emisión</label>
+                    <input type="date" value={cheque.fecha_emision}
+                      onChange={(e) => setCheque((p) => ({ ...p, fecha_emision: e.target.value }))}
+                      className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Fecha acreditación *</label>
+                  <input type="date" value={cheque.fecha_acreditacion}
+                    onChange={(e) => setCheque((p) => ({ ...p, fecha_acreditacion: e.target.value }))}
+                    className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+              </div>
+            )}
+
+            {/* Retenciones */}
+            <div className="border border-gray-200 rounded-lg p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">Retenciones</p>
+                <button type="button" onClick={addRetencion}
+                  className="text-xs text-blue-600 hover:underline">+ Agregar</button>
+              </div>
+              {retenciones.map((ret, i) => (
+                <div key={i} className="grid grid-cols-12 gap-1.5 items-end">
+                  <div className="col-span-3">
+                    <select value={ret.tipo} onChange={(e) => updateRetencion(i, 'tipo', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+                      <option value="ganancias">Ganancias</option>
+                      <option value="iva">IVA</option>
+                      <option value="iibb">IIBB</option>
+                      <option value="suss">SUSS</option>
+                      <option value="otro">Otro</option>
+                    </select>
+                  </div>
+                  <div className="col-span-4">
+                    <input placeholder="Descripción" value={ret.descripcion}
+                      onChange={(e) => updateRetencion(i, 'descripcion', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  </div>
+                  <div className="col-span-3">
+                    <input type="number" placeholder="Monto" value={ret.monto}
+                      onChange={(e) => updateRetencion(i, 'monto', e.target.value)}
+                      className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+                  </div>
+                  <div className="col-span-2 text-right">
+                    <button type="button" onClick={() => removeRetencion(i)}
+                      className="text-red-400 hover:text-red-600 text-xs">✕</button>
+                  </div>
+                </div>
+              ))}
+              {retenciones.length === 0 && (
+                <p className="text-xs text-gray-400">Sin retenciones</p>
+              )}
+            </div>
+
             {error && <p className="text-red-600 text-sm">{error}</p>}
             <div className="flex gap-3 pt-1">
               <button onClick={handleCobrar} disabled={loading}

@@ -542,6 +542,80 @@ async function comprobantesAfip(req, res) {
   }
 }
 
+// ── Ventas por cliente ────────────────────────────────────────────────────────
+
+async function ventasPorCliente(req, res) {
+  try {
+    const { cliente_id, desde, hasta, estado, format } = req.query;
+
+    const applyFilters = (b) => {
+      if (cliente_id) b.where('v.cliente_id', cliente_id);
+      if (estado) b.where('v.estado', estado);
+      else b.whereNot('v.estado', 'borrador');
+      if (desde) b.where('v.created_at', '>=', desde);
+      if (hasta) b.where('v.created_at', '<=', hasta + ' 23:59:59');
+    };
+
+    const filas = await db('ventas as v')
+      .leftJoin('clientes as c', 'v.cliente_id', 'c.id')
+      .modify(applyFilters)
+      .select(
+        'v.id', 'v.numero', 'v.tipo_comprobante', 'v.estado', 'v.tipo_pago',
+        'v.subtotal', 'v.descuento_monto', 'v.total', 'v.created_at',
+        'c.nombre as cliente', 'c.cuit as cuit'
+      )
+      .orderBy('v.created_at', 'desc');
+
+    const totalMonto = filas.reduce((s, r) => s + parseFloat(r.total || 0), 0);
+    const cantidad = filas.length;
+
+    const TIPO_LABEL = {
+      remito: 'Remito', factura_interna: 'Comp. Interno',
+      factura_a: 'Factura A', factura_b: 'Factura B',
+      nota_debito_a: 'ND A', nota_debito_b: 'ND B',
+      nota_credito_a: 'NC A', nota_credito_b: 'NC B'
+    };
+
+    if (format === 'pdf') {
+      const clienteNombre = filas[0]?.cliente || `Cliente ${cliente_id}`;
+      const subtitulo = [
+        desde && `Desde: ${desde}`, hasta && `Hasta: ${hasta}`, estado && `Estado: ${estado}`
+      ].filter(Boolean).join(' | ');
+      return generarReporteTablaPDF({
+        titulo: `Ventas — ${clienteNombre}`,
+        subtitulo: subtitulo || undefined,
+        columnas: [
+          { key: 'numero',          label: 'N°',        width: 70,  render: (r) => String(r.numero).padStart(8, '0') },
+          { key: 'created_at',      label: 'Fecha',     width: 65,  render: (r) => new Date(r.created_at).toLocaleDateString('es-AR') },
+          { key: 'tipo_comprobante',label: 'Tipo',      width: 80,  render: (r) => TIPO_LABEL[r.tipo_comprobante] || r.tipo_comprobante },
+          { key: 'estado',          label: 'Estado',    width: 70 },
+          { key: 'tipo_pago',       label: 'Pago',      width: 70 },
+          { key: 'total',           label: 'Total',     width: 80, align: 'right', render: (r) => `$${fmtNum(r.total)}` },
+        ],
+        filas,
+        totales: {
+          'Cantidad de comprobantes': cantidad,
+          'Total': `$${fmtNum(totalMonto)}`
+        }
+      }, res);
+    }
+
+    if (format === 'csv') {
+      const csv = toCSV(
+        ['N°', 'Fecha', 'Cliente', 'CUIT', 'Tipo', 'Estado', 'Pago', 'Subtotal', 'Descuento', 'Total'],
+        filas,
+        ['numero', 'created_at', 'cliente', 'cuit', 'tipo_comprobante', 'estado', 'tipo_pago', 'subtotal', 'descuento_monto', 'total']
+      );
+      return sendCSV(res, 'ventas-por-cliente.csv', csv);
+    }
+
+    res.json({ data: filas, total: cantidad, total_monto: totalMonto });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al generar reporte de ventas por cliente' });
+  }
+}
+
 module.exports = {
   kpis,
   ventasPorPeriodo,
@@ -550,6 +624,7 @@ module.exports = {
   rotacionStock,
   kardex,
   deudoresClientes,
-  comprobantesAfip
+  comprobantesAfip,
+  ventasPorCliente
 };
 

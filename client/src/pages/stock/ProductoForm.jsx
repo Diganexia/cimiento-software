@@ -8,6 +8,17 @@ const EMPTY = {
   precio_costo: '', precio_venta: '', stock_minimo: ''
 };
 
+const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+const Field = ({ label, children, required }) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">
+      {label}{required && <span className="text-red-500 ml-1">*</span>}
+    </label>
+    {children}
+  </div>
+);
+
 export default function ProductoForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -81,17 +92,6 @@ export default function ProductoForm() {
       setLoading(false);
     }
   };
-
-  const Field = ({ label, children, required }) => (
-    <div>
-      <label className="block text-sm font-medium text-gray-700 mb-1">
-        {label}{required && <span className="text-red-500 ml-1">*</span>}
-      </label>
-      {children}
-    </div>
-  );
-
-  const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 
   return (
     <div className="p-6 max-w-2xl">

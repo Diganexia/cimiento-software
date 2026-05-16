@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { getDepositos, transferir } from '../../services/stockService';
 import { getProductos } from '../../services/productosService';
 
+const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const Label = ({ children }) => <label className="block text-sm font-medium text-gray-700 mb-1">{children}</label>;
+
 export default function Transferencia() {
   const navigate = useNavigate();
   const [depositos, setDepositos] = useState([]);
@@ -38,9 +41,6 @@ export default function Transferencia() {
       setLoading(false);
     }
   };
-
-  const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const Label = ({ children }) => <label className="block text-sm font-medium text-gray-700 mb-1">{children}</label>;
 
   return (
     <div className="p-6 max-w-lg">

@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createHashRouter } from 'react-router-dom';
 import Login from '../pages/Login';
 import Dashboard from '../pages/Dashboard';
 import Layout from '../components/Layout';
@@ -17,6 +17,7 @@ import Proveedores from '../pages/proveedores/Proveedores';
 import ProveedorForm from '../pages/proveedores/ProveedorForm';
 import Clientes from '../pages/clientes/Clientes';
 import ClienteForm from '../pages/clientes/ClienteForm';
+import VentasCliente from '../pages/clientes/VentasCliente';
 import PuntoVenta from '../pages/ventas/PuntoVenta';
 import Ventas from '../pages/ventas/Ventas';
 import VentaDetalle from '../pages/ventas/VentaDetalle';
@@ -36,7 +37,7 @@ import Splash from '../pages/Splash';
 import ServerConfig from '../pages/ServerConfig';
 import Backup from '../pages/configuracion/Backup';
 
-const router = createBrowserRouter([
+const router = createHashRouter([
   { path: '/splash', element: <Splash /> },
   { path: '/server-config', element: <ServerConfig /> },
   { path: '/login', element: <Login /> },
@@ -63,9 +64,10 @@ const router = createBrowserRouter([
           { path: 'proveedores',           element: <Proveedores /> },
           { path: 'proveedores/nuevo',     element: <ProveedorForm /> },
           { path: 'proveedores/:id/editar',element: <ProveedorForm /> },
-          { path: 'clientes',              element: <Clientes /> },
-          { path: 'clientes/nuevo',        element: <ClienteForm /> },
-          { path: 'clientes/:id/editar',   element: <ClienteForm /> },
+          { path: 'clientes',                    element: <Clientes /> },
+          { path: 'clientes/nuevo',              element: <ClienteForm /> },
+          { path: 'clientes/:id/editar',         element: <ClienteForm /> },
+          { path: 'clientes/:clienteId/ventas',  element: <VentasCliente /> },
           { path: 'ventas',                element: <Ventas /> },
           { path: 'ventas/nueva',          element: <PuntoVenta /> },
           { path: 'ventas/:id',            element: <VentaDetalle /> },

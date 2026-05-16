@@ -6,6 +6,7 @@ router.use(authenticateToken);
 
 router.get('/kpis',                    ctrl.kpis);
 router.get('/ventas-periodo',          ctrl.ventasPorPeriodo);
+router.get('/ventas-por-cliente',      ctrl.ventasPorCliente);
 router.get('/ranking-productos',       ctrl.rankingProductos);
 router.get('/stock-valorizado',        ctrl.stockValorizado);
 router.get('/rotacion-stock',          ctrl.rotacionStock);

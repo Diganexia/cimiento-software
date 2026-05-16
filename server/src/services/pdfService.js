@@ -24,7 +24,11 @@ const TIPO_LABEL = {
   remito: 'REMITO',
   factura_interna: 'COMPROBANTE INTERNO',
   factura_a: 'FACTURA A',
-  factura_b: 'FACTURA B'
+  factura_b: 'FACTURA B',
+  nota_debito_a: 'NOTA DE DÉBITO A',
+  nota_debito_b: 'NOTA DE DÉBITO B',
+  nota_credito_a: 'NOTA DE CRÉDITO A',
+  nota_credito_b: 'NOTA DE CRÉDITO B'
 };
 
 function fmt(n) {
@@ -426,4 +430,113 @@ function generarReporteTablaPDF({ titulo, subtitulo, columnas, filas, totales, l
   doc.end();
 }
 
-module.exports = { generarVentaPDF, generarEstadoCuentaPDF, generarArqueoPDF, generarReporteTablaPDF };
+function generarReciboPDF({ cobro, cliente, medioPago, retenciones = [] }, res) {
+  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const emp = empresa();
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="recibo-${cobro.id}.pdf"`);
+  doc.pipe(res);
+
+  // Header empresa
+  doc.fontSize(14).font('Helvetica-Bold').text(emp.nombre, 50, 50);
+  doc.fontSize(8).font('Helvetica').fillColor('#555');
+  if (emp.cuit) doc.text(`CUIT: ${emp.cuit}`);
+  if (emp.direccion) doc.text(emp.direccion);
+  if (emp.telefono) doc.text(`Tel: ${emp.telefono}`);
+
+  // Título RECIBO
+  doc.fontSize(22).font('Helvetica-Bold').fillColor('#000')
+    .text('RECIBO', 350, 50, { align: 'right', width: 200 });
+  doc.fontSize(11).font('Helvetica')
+    .text(`N° ${String(cobro.id).padStart(8, '0')}`, 350, 80, { align: 'right', width: 200 });
+  const fecha = cobro.created_at
+    ? new Date(cobro.created_at).toLocaleDateString('es-AR')
+    : new Date().toLocaleDateString('es-AR');
+  doc.text(`Fecha: ${fecha}`, 350, 95, { align: 'right', width: 200 });
+
+  doc.moveTo(50, 130).lineTo(545, 130).strokeColor('#ccc').stroke();
+
+  // Cliente
+  let y = 145;
+  doc.fontSize(9).font('Helvetica-Bold').fillColor('#000').text('CLIENTE', 50, y);
+  doc.font('Helvetica').fillColor('#333');
+  doc.text(cliente.nombre || cliente.razon_social || '', 50, y + 12);
+  if (cliente.cuit) doc.text(`CUIT: ${cliente.cuit}`, 50, y + 24);
+  else if (cliente.dni) doc.text(`DNI: ${cliente.dni}`, 50, y + 24);
+  if (cliente.direccion) doc.text(cliente.direccion, 50, y + 36);
+
+  // Medio de pago
+  if (medioPago) {
+    doc.font('Helvetica-Bold').fillColor('#000').text('Medio de pago:', 350, y + 12, { width: 200, align: 'right' });
+    doc.font('Helvetica').fillColor('#333').text(medioPago.nombre, 350, y + 24, { width: 200, align: 'right' });
+    if (medioPago.numero_cheque) {
+      doc.text(`Cheque N° ${medioPago.numero_cheque}`, 350, y + 36, { width: 200, align: 'right' });
+      if (medioPago.banco) doc.text(`Banco: ${medioPago.banco}`, 350, y + 48, { width: 200, align: 'right' });
+    }
+  }
+
+  y = 220;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 12;
+
+  // Detalle cobro
+  doc.fontSize(9).font('Helvetica-Bold').fillColor('#555').text('Concepto', 50, y, { width: 310 });
+  doc.text('Importe', 365, y, { width: 180, align: 'right' });
+  y += 12;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 8;
+
+  doc.font('Helvetica').fillColor('#000').fontSize(10);
+  doc.text(cobro.descripcion || 'Cobro en cuenta corriente', 50, y, { width: 310 });
+  doc.font('Helvetica-Bold').text(`$${fmt(cobro.monto)}`, 365, y, { width: 180, align: 'right' });
+  y += 18;
+
+  // Retenciones
+  if (retenciones.length > 0) {
+    for (const ret of retenciones) {
+      doc.font('Helvetica').fontSize(9).fillColor('#555')
+        .text(`Retención ${ret.tipo}${ret.descripcion ? ` — ${ret.descripcion}` : ''}`, 50, y, { width: 310 });
+      doc.fillColor('#b91c1c').text(`-$${fmt(ret.monto)}`, 365, y, { width: 180, align: 'right' });
+      y += 14;
+    }
+    const totalRetenciones = retenciones.reduce((s, r) => s + parseFloat(r.monto), 0);
+    y += 4;
+    doc.moveTo(50, y).lineTo(545, y).strokeColor('#eee').stroke();
+    y += 8;
+    doc.font('Helvetica').fontSize(9).fillColor('#555').text('Total retenciones:', 50, y, { width: 310 });
+    doc.fillColor('#b91c1c').text(`-$${fmt(totalRetenciones)}`, 365, y, { width: 180, align: 'right' });
+    y += 14;
+  }
+
+  y += 4;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 10;
+
+  // Neto cobrado
+  const totalRetenciones = retenciones.reduce((s, r) => s + parseFloat(r.monto), 0);
+  const netoCobrado = parseFloat(cobro.monto) - totalRetenciones;
+  doc.font('Helvetica-Bold').fontSize(12).fillColor('#000').text('NETO COBRADO:', 50, y);
+  doc.fontSize(13).text(`$${fmt(netoCobrado)}`, 365, y, { width: 180, align: 'right' });
+  y += 24;
+
+  // Saldos
+  doc.fontSize(8).font('Helvetica').fillColor('#555');
+  doc.text(`Saldo anterior: $${fmt(cobro.saldo_anterior)}`, 50, y);
+  doc.text(`Nuevo saldo: $${fmt(cobro.saldo_posterior)}`, 200, y);
+  y += 40;
+
+  // Firma
+  doc.moveTo(50, y).lineTo(210, y).strokeColor('#000').stroke();
+  doc.moveTo(335, y).lineTo(545, y).strokeColor('#000').stroke();
+  y += 6;
+  doc.fontSize(8).fillColor('#333').text('Firma y aclaración cliente', 50, y, { width: 160, align: 'center' });
+  doc.text('Firma y sello empresa', 335, y, { width: 210, align: 'center' });
+
+  doc.fontSize(7).fillColor('#999')
+    .text('Recibo válido como comprobante de pago', 50, 800, { align: 'center', width: 495 });
+
+  doc.end();
+}
+
+module.exports = { generarVentaPDF, generarEstadoCuentaPDF, generarArqueoPDF, generarReporteTablaPDF, generarReciboPDF };

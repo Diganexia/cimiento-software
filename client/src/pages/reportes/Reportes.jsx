@@ -663,10 +663,110 @@ function TabAfip() {
   );
 }
 
+// ── Tab: Ventas por cliente ───────────────────────────────────────────────────
+
+function TabVentasCliente() {
+  const [clientes, setClientes] = useState([]);
+  const [clienteId, setClienteId] = useState('');
+  const [desde, setDesde] = useState(firstOfMonth());
+  const [hasta, setHasta] = useState(today());
+  const [estado, setEstado] = useState('');
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    api.get('/clientes', { params: { limit: 200 } }).then(({ data: d }) => setClientes(d.data || []));
+  }, []);
+
+  const params = { cliente_id: clienteId || undefined, desde, hasta, estado: estado || undefined };
+
+  const generar = async () => {
+    if (!clienteId) { setErr('Seleccioná un cliente'); return; }
+    setLoading(true); setErr('');
+    try {
+      const { data: d } = await api.get('/reportes/ventas-por-cliente', { params });
+      setData(d);
+    } catch (e) { setErr(e.response?.data?.error || 'Error'); }
+    finally { setLoading(false); }
+  };
+
+  const TIPO_LABEL = {
+    remito: 'Remito', factura_interna: 'Comp. Interno',
+    factura_a: 'Factura A', factura_b: 'Factura B',
+    nota_debito_a: 'ND A', nota_debito_b: 'ND B',
+    nota_credito_a: 'NC A', nota_credito_b: 'NC B'
+  };
+
+  return (
+    <div>
+      <FilterRow onGenerate={generar} loading={loading}>
+        <Field label="Cliente *">
+          <select value={clienteId} onChange={(e) => setClienteId(e.target.value)} className={SELECT}>
+            <option value="">Seleccioná un cliente</option>
+            {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}{c.cuit ? ` — ${c.cuit}` : ''}</option>)}
+          </select>
+        </Field>
+        <Field label="Desde"><input type="date" value={desde} onChange={(e) => setDesde(e.target.value)} className={INPUT} /></Field>
+        <Field label="Hasta"><input type="date" value={hasta} onChange={(e) => setHasta(e.target.value)} className={INPUT} /></Field>
+        <Field label="Estado">
+          <select value={estado} onChange={(e) => setEstado(e.target.value)} className={SELECT}>
+            <option value="">Todos</option>
+            <option value="confirmada">Confirmadas</option>
+            <option value="anulada">Anuladas</option>
+          </select>
+        </Field>
+      </FilterRow>
+      {err && <p className="text-red-600 text-sm mb-3">{err}</p>}
+      {data && (
+        <>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm text-gray-600">
+              {data.total} comprobante{data.total !== 1 ? 's' : ''} —
+              Total: <span className="font-semibold text-gray-800">${fmt(data.total_monto)}</span>
+            </p>
+            <ExportButtons
+              onPDF={() => downloadPDF('/reportes/ventas-por-cliente', params, 'ventas-cliente.pdf').catch(console.error)}
+              onCSV={() => downloadCSV('/reportes/ventas-por-cliente', params, 'ventas-cliente.csv').catch(console.error)}
+              loading={loading}
+            />
+          </div>
+          <table className="w-full text-sm">
+            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+              <tr>
+                <th className="px-3 py-2 text-left">N°</th>
+                <th className="px-3 py-2 text-left">Fecha</th>
+                <th className="px-3 py-2 text-left">Tipo</th>
+                <th className="px-3 py-2 text-left">Estado</th>
+                <th className="px-3 py-2 text-left">Pago</th>
+                <th className="px-3 py-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {data.data.map((r) => (
+                <tr key={r.id} className="hover:bg-gray-50">
+                  <td className="px-3 py-2 font-mono text-gray-700 text-xs">{String(r.numero).padStart(8, '0')}</td>
+                  <td className="px-3 py-2 text-gray-500 text-xs">{new Date(r.created_at).toLocaleDateString('es-AR')}</td>
+                  <td className="px-3 py-2 text-gray-700">{TIPO_LABEL[r.tipo_comprobante] || r.tipo_comprobante}</td>
+                  <td className="px-3 py-2 text-gray-600 capitalize text-xs">{r.estado}</td>
+                  <td className="px-3 py-2 text-gray-600 capitalize text-xs">{r.tipo_pago}</td>
+                  <td className="px-3 py-2 text-right font-semibold text-gray-800">${fmt(r.total)}</td>
+                </tr>
+              ))}
+              {!data.data.length && <tr><td colSpan={6} className="px-3 py-6 text-center text-gray-400">Sin ventas para este cliente</td></tr>}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 
 const TABS = [
   { label: 'Ventas', component: <TabVentas key="ventas" /> },
+  { label: 'Ventas por cliente', component: <TabVentasCliente key="ventas-cliente" /> },
   { label: 'Ranking productos', component: <TabRanking key="ranking" /> },
   { label: 'Stock valorizado', component: <TabStockValorizado key="stock" /> },
   { label: 'Rotación', component: <TabRotacion key="rotacion" /> },

@@ -94,7 +94,7 @@ const estadoCuentaCliente = async (req, res) => {
 };
 
 const cobrar = async (req, res) => {
-  const { cliente_id, monto, descripcion, medio_pago_id } = req.body;
+  const { cliente_id, monto, descripcion, medio_pago_id, cheque, retenciones = [] } = req.body;
   if (!cliente_id || !monto) return res.status(400).json({ error: 'cliente_id y monto son requeridos' });
 
   const trx = await db.transaction();
@@ -115,6 +115,22 @@ const cobrar = async (req, res) => {
     if (medio_pago_id) {
       const arqueo = await trx('arqueos').where('estado', 'abierto').orderBy('abierto_at', 'desc').first();
       if (arqueo) {
+        let chequeId = null;
+        if (cheque?.numero && cheque?.fecha_acreditacion) {
+          const [{ id: cid }] = await trx('cheques').insert({
+            numero: cheque.numero,
+            banco: cheque.banco || null,
+            emisor: cheque.emisor || null,
+            fecha_emision: cheque.fecha_emision || null,
+            fecha_acreditacion: cheque.fecha_acreditacion,
+            monto: montoNum,
+            estado: 'cartera',
+            cliente_id: parseInt(cliente_id),
+            usuario_id: req.user.id
+          }).returning('id');
+          chequeId = cid;
+        }
+
         await trx('movimientos_caja').insert({
           arqueo_id: arqueo.id,
           medio_pago_id: parseInt(medio_pago_id),
@@ -124,17 +140,67 @@ const cobrar = async (req, res) => {
           referencia_id: id,
           referencia_tipo: 'cobro_cta_cte',
           descripcion: descripcion || 'Cobro cuenta corriente',
+          cheque_id: chequeId,
           usuario_id: req.user.id
         });
       }
     }
 
+    if (retenciones.length > 0) {
+      const retencionRows = retenciones.map((r) => ({
+        tipo: r.tipo,
+        descripcion: r.descripcion || null,
+        porcentaje: r.porcentaje || null,
+        monto: parseFloat(r.monto),
+        cuenta_corriente_cliente_id: id,
+        usuario_id: req.user.id
+      }));
+      await trx('retenciones').insert(retencionRows);
+    }
+
     await trx.commit();
-    res.json({ ok: true, saldo_anterior: saldoAnterior, saldo_posterior: saldoAnterior - montoNum });
+    res.json({ ok: true, id, saldo_anterior: saldoAnterior, saldo_posterior: saldoAnterior - montoNum });
   } catch (err) {
     await trx.rollback();
     console.error(err);
     res.status(500).json({ error: 'Error al registrar cobro' });
+  }
+};
+
+const pdfCobro = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const cobro = await db('cuenta_corriente_clientes').where('id', id).first();
+    if (!cobro) return res.status(404).json({ error: 'Cobro no encontrado' });
+
+    const cliente = await db('clientes').where('id', cobro.cliente_id).first();
+    const { generarReciboPDF } = require('../services/pdfService');
+
+    let medioPago = null;
+    if (cobro.medio_pago_id) {
+      const mp = await db('medios_pago').where('id', cobro.medio_pago_id).first();
+      if (mp) {
+        medioPago = { nombre: mp.nombre };
+        const movCaja = await db('movimientos_caja')
+          .where('referencia_tipo', 'cobro_cta_cte')
+          .where('referencia_id', cobro.id)
+          .first();
+        if (movCaja?.cheque_id) {
+          const ch = await db('cheques').where('id', movCaja.cheque_id).first();
+          if (ch) {
+            medioPago.numero_cheque = ch.numero;
+            medioPago.banco = ch.banco;
+            medioPago.fecha_acreditacion = ch.fecha_acreditacion;
+          }
+        }
+      }
+    }
+
+    const retenciones = await db('retenciones').where('cuenta_corriente_cliente_id', cobro.id);
+    generarReciboPDF({ cobro, cliente, medioPago, retenciones }, res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al generar recibo' });
   }
 };
 
@@ -390,7 +456,7 @@ const pagarCuota = async (req, res) => {
 };
 
 module.exports = {
-  resumenClientes, estadoCuentaCliente, cobrar, pdfCliente,
+  resumenClientes, estadoCuentaCliente, cobrar, pdfCliente, pdfCobro,
   resumenProveedores, estadoCuentaProveedor, pagar, pdfProveedor,
   cuotasPendientes, pagarCuota
 };

@@ -374,6 +374,33 @@ Las apps se actualizan solas al publicar una nueva release en GitHub.
 
 ---
 
+## Capacidad y volumen de datos
+
+El motor de base de datos es PostgreSQL completo (no SQLite ni similar). El límite real lo impone el hardware de la PC servidora, no el software.
+
+### Volúmenes cómodos para un corralón típico
+
+| Entidad | Volumen cómodo | Observaciones |
+|---------|---------------|---------------|
+| Productos | hasta ~50.000 SKUs | sin límite práctico real |
+| Ventas/año | hasta ~100.000 | sin límite práctico real |
+| Ítems de venta | millones | sin límite práctico real |
+| Movimientos de stock | millones | sin límite práctico real |
+| Años de datos | 10–20 años | depende del disco disponible |
+
+Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la base de datos en 10 años ocupa aproximadamente **2–5 GB** incluyendo índices.
+
+### Cuellos de botella conocidos
+
+1. **Reportes sin paginación** — algunos endpoints devuelven todos los registros en una sola respuesta. Con cientos de miles de filas pueden ser lentos o consumir mucha memoria.
+2. **PDFs de reportes grandes** — pdfKit construye el PDF en memoria; un reporte de 50.000+ filas puede tardar 30–60 segundos o agotar RAM.
+3. **Usuarios concurrentes** — el servidor embebido comparte CPU/RAM con la UI de la PC servidora; con 5–8 clientes haciendo consultas pesadas en simultáneo puede haber latencia.
+4. **Backups** — `pg_dump` de una BD de 5 GB tarda varios minutos (no bloquea la operación).
+
+> **Plan de mitigación:** si los reportes se vuelven lentos con el tiempo, el fix es agregar paginación y límites a esas queries en el servidor. No requiere cambios en la BD ni en el esquema.
+
+---
+
 ## Credenciales iniciales
 
 | Campo | Valor |
@@ -398,3 +425,14 @@ Las apps se actualizan solas al publicar una nueva release en GitHub.
 - [x] **Fase 8** — Reportes y dashboard con KPIs
 - [x] **Fase 9** — Deploy: dos instaladores, embedded-postgres, splash, backup automático
 - [x] **Distribución** — GitHub Releases + auto-updater configurado (v1.0.0 publicada)
+- [x] **Fase 10** — Mejoras post-feedback cliente (en curso)
+  - [x] 10.1 Recibo PDF de cobro (`GET /api/cta-cte/clientes/cobro/:id/pdf`, botón en UI)
+  - [x] 10.2 Cheque como medio de pago (tabla `cheques`, migración 010, seed actualizado, campos en modal cobro, datos en recibo PDF)
+  - [x] 10.3 Retenciones (tabla `retenciones`, migración 011, integrada en cobro y PDF recibo, UI en modal cobro)
+  - [x] 10.4 Nota de débito/crédito A/B con ARCA (migración 012, TIPO_CBTE extendido en afipService, labels en pdfService, selector en PuntoVenta, validación REQUIERE_AFIP)
+  - [x] 10.5 Vista de ventas por cliente (`/clientes/:clienteId/ventas`, filtros fecha/estado, totales, PDF/Ver por fila, link desde tabla Clientes)
+  - [x] 10.6 Reporte ventas por cliente (`GET /api/reportes/ventas-por-cliente`, tab en Reportes, filtros fecha/estado, PDF+CSV, totales)
+  - [x] 10.7 Tipo de documento selector (migración 013 agrega `pasaporte`+`tipo_documento`, selector dinámico en ClienteForm, display en lista)
+- [x] **Bugs UI corregidos (2026-05-15)**
+  - Bug 1 (focus loss): `Field`/`Label` definidos dentro de componentes padre → React los destruía/remontaba en cada render. Movidos a nivel de módulo en `ProductoForm.jsx`, `ClienteForm.jsx`, `CompraForm.jsx`, `ProveedorForm.jsx`, `Transferencia.jsx`.
+  - Bug 2 (sidebar múltiple highlight): NavLink sin `end` hacía que rutas como `/ventas` activen también al navegar a `/ventas/nueva`. Se añadió `end: true` a los ítems: Productos, Ventas, Clientes, Compras, Proveedores, Configuración.

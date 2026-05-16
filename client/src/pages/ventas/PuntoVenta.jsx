@@ -10,8 +10,14 @@ const TIPO_OPTIONS = [
   { value: 'remito', label: 'Remito' },
   { value: 'factura_interna', label: 'Comp. Interno' },
   { value: 'factura_b', label: 'Factura B' },
-  { value: 'factura_a', label: 'Factura A' }
+  { value: 'factura_a', label: 'Factura A' },
+  { value: 'nota_debito_a', label: 'Nota Débito A' },
+  { value: 'nota_debito_b', label: 'Nota Débito B' },
+  { value: 'nota_credito_a', label: 'Nota Crédito A' },
+  { value: 'nota_credito_b', label: 'Nota Crédito B' },
 ];
+
+const REQUIERE_AFIP = new Set(['factura_a', 'factura_b', 'nota_debito_a', 'nota_debito_b', 'nota_credito_a', 'nota_credito_b']);
 
 export default function PuntoVenta() {
   const navigate = useNavigate();
@@ -121,8 +127,8 @@ export default function PuntoVenta() {
       setError(`El total pagado ($${fmt(totalPagado)}) no coincide con el total ($${fmt(total)})`);
       return;
     }
-    if ((tipoComprobante === 'factura_a' || tipoComprobante === 'factura_b') && !puntoVentaId) {
-      setError('Seleccione un punto de venta AFIP para emitir factura electrónica');
+    if (REQUIERE_AFIP.has(tipoComprobante) && !puntoVentaId) {
+      setError('Seleccione un punto de venta AFIP para emitir este comprobante');
       return;
     }
 
@@ -307,7 +313,7 @@ export default function PuntoVenta() {
                 {TIPO_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
-            {(tipoComprobante === 'factura_a' || tipoComprobante === 'factura_b') && puntosVenta.length > 0 && (
+            {REQUIERE_AFIP.has(tipoComprobante) && puntosVenta.length > 0 && (
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">Punto de venta AFIP</label>
                 <select value={puntoVentaId} onChange={(e) => setPuntoVentaId(e.target.value)}

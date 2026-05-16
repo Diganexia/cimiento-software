@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const ctrl = require('../controllers/ctaCteController');
+
 const authenticateToken = require('../middleware/authenticateToken');
 const authorize = require('../middleware/authorize');
 
@@ -9,11 +10,12 @@ const ver  = authorize('cta_cte', 'ver');
 const cobrar = authorize('cta_cte', 'cobrar');
 const pagar  = authorize('cta_cte', 'pagar');
 
-// Clientes
+// Clientes — rutas estáticas antes de las dinámicas
 router.get('/clientes',                    auth, ver,    ctrl.resumenClientes);
+router.post('/clientes/cobro',             auth, cobrar, ctrl.cobrar);
+router.get('/clientes/cobro/:id/pdf',      auth, ver,    ctrl.pdfCobro);
 router.get('/clientes/:clienteId',         auth, ver,    ctrl.estadoCuentaCliente);
 router.get('/clientes/:clienteId/pdf',     auth, ver,    ctrl.pdfCliente);
-router.post('/clientes/cobro',             auth, cobrar, ctrl.cobrar);
 
 // Proveedores
 router.get('/proveedores',                 auth, ver,    ctrl.resumenProveedores);

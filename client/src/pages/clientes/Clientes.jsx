@@ -70,7 +70,9 @@ export default function Clientes() {
             {data.map((c) => (
               <tr key={c.id} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-medium text-gray-800">{c.nombre}</td>
-                <td className="px-4 py-3 text-gray-600">{c.cuit || c.dni || '—'}</td>
+                <td className="px-4 py-3 text-gray-600">
+                  {c.cuit ? `CUIT: ${c.cuit}` : c.dni ? `DNI: ${c.dni}` : c.pasaporte ? `PAS: ${c.pasaporte}` : '—'}
+                </td>
                 <td className="px-4 py-3 text-gray-600">{TIPO_IVA_LABEL[c.tipo_iva] || c.tipo_iva}</td>
                 <td className="px-4 py-3 text-gray-600">{c.telefono || '—'}</td>
                 <td className="px-4 py-3">
@@ -79,6 +81,7 @@ export default function Clientes() {
                     : <span className="text-gray-400 text-xs">No</span>}
                 </td>
                 <td className="px-4 py-3 text-right space-x-3">
+                  <Link to={`/clientes/${c.id}/ventas`} className="text-green-600 hover:text-green-800 text-xs">Ventas</Link>
                   <Link to={`/clientes/${c.id}/editar`} className="text-blue-600 hover:text-blue-800 text-xs">Editar</Link>
                   <button onClick={() => handleEliminar(c.id)} className="text-red-500 hover:text-red-700 text-xs">Dar de baja</button>
                 </td>

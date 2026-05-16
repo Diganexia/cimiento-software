@@ -24,7 +24,8 @@ api.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
       localStorage.removeItem('ferreteria_token');
-      window.location.href = '/login';
+      // Use hash navigation so it works correctly under file:// protocol
+      window.location.hash = '/login';
     }
     return Promise.reject(error);
   }

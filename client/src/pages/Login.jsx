@@ -6,17 +6,20 @@ import api from '../lib/api';
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  // Read mode once on mount to avoid calling sendSync during re-renders
+  const [mode] = useState(() => window.electronAPI?.getMode?.() ?? null);
+  const [serverUrl] = useState(() => window.electronAPI?.getServerUrl?.() ?? null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const navigate = useNavigate();
 
-  // Client mode: redirect to server-config if no server URL saved
   useEffect(() => {
-    if (window.electronAPI?.getMode() === 'client' && !window.electronAPI.getServerUrl()) {
+    if (mode === 'client' && !serverUrl) {
       navigate('/server-config', { replace: true });
     }
-  }, [navigate]);
+  }, [mode, serverUrl, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -39,9 +42,9 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Ferretería</h1>
         <p className="text-sm text-gray-500 text-center mb-6">Sistema de gestión</p>
 
-        {window.electronAPI?.getMode() === 'client' && (
+        {mode === 'client' && serverUrl && (
           <div className="mb-4 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 flex items-center justify-between">
-            <span>Servidor: <span className="font-mono text-gray-700">{window.electronAPI.getServerUrl()}</span></span>
+            <span>Servidor: <span className="font-mono text-gray-700">{serverUrl}</span></span>
             <button onClick={() => navigate('/server-config')} className="text-blue-600 hover:underline ml-2">Cambiar</button>
           </div>
         )}
@@ -61,13 +64,32 @@ export default function Login() {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                tabIndex={-1}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-5 0-9-4-9-7s4-7 9-7a9.97 9.97 0 014.9 1.275M15 12a3 3 0 11-4.5-2.598M3 3l18 18" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.477 0 8.268 2.943 9.542 7-1.274 4.057-5.065 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
 
           {error && (

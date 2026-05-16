@@ -10,6 +10,9 @@ const EMPTY_HEADER = {
   numero_remito: '', fecha_comprobante: '', observaciones: ''
 };
 
+const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+const Label = ({ children }) => <label className="block text-sm font-medium text-gray-700 mb-1">{children}</label>;
+
 export default function CompraForm() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -106,9 +109,6 @@ export default function CompraForm() {
       setLoading(false);
     }
   };
-
-  const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const Label = ({ children }) => <label className="block text-sm font-medium text-gray-700 mb-1">{children}</label>;
 
   return (
     <div className="p-6 max-w-4xl">

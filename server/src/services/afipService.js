@@ -15,7 +15,15 @@ function getClient() {
 }
 
 // Tipos de comprobante AFIP
-const TIPO_CBTE = { factura_a: 1, factura_b: 6 };
+// Factura A=1, ND A=2, NC A=3, Factura B=6, ND B=7, NC B=8
+const TIPO_CBTE = {
+  factura_a: 1,
+  nota_debito_a: 2,
+  nota_credito_a: 3,
+  factura_b: 6,
+  nota_debito_b: 7,
+  nota_credito_b: 8
+};
 // Tipos de IVA
 const IVA_21 = { id: 5, alicuota: 0.21 };
 // Tipos de documento

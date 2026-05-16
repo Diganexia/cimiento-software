@@ -3,9 +3,18 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getCliente, createCliente, updateCliente } from '../../services/clientesService';
 
 const EMPTY = {
-  nombre: '', razon_social: '', cuit: '', dni: '', telefono: '', email: '',
-  direccion: '', tipo_iva: 'consumidor_final', tiene_cuenta_corriente: false, limite_credito: ''
+  nombre: '', razon_social: '', cuit: '', dni: '', pasaporte: '', tipo_documento: 'cuit',
+  telefono: '', email: '', direccion: '', tipo_iva: 'consumidor_final',
+  tiene_cuenta_corriente: false, limite_credito: ''
 };
+
+const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
+
+const Label = ({ children, required }) => (
+  <label className="block text-sm font-medium text-gray-700 mb-1">
+    {children}{required && <span className="text-red-500 ml-1">*</span>}
+  </label>
+);
 
 export default function ClienteForm() {
   const { id } = useParams();
@@ -22,6 +31,8 @@ export default function ClienteForm() {
         razon_social: data.razon_social || '',
         cuit: data.cuit || '',
         dni: data.dni || '',
+        pasaporte: data.pasaporte || '',
+        tipo_documento: data.tipo_documento || (data.cuit ? 'cuit' : data.dni ? 'dni' : 'cuit'),
         telefono: data.telefono || '',
         email: data.email || '',
         direccion: data.direccion || '',
@@ -50,13 +61,6 @@ export default function ClienteForm() {
     }
   };
 
-  const inputCls = 'w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
-  const Label = ({ children, required }) => (
-    <label className="block text-sm font-medium text-gray-700 mb-1">
-      {children}{required && <span className="text-red-500 ml-1">*</span>}
-    </label>
-  );
-
   return (
     <div className="p-6 max-w-xl">
       <div className="flex items-center gap-3 mb-6">
@@ -79,12 +83,24 @@ export default function ClienteForm() {
             <input value={form.razon_social} onChange={set('razon_social')} className={inputCls} />
           </div>
           <div>
-            <Label>CUIT</Label>
-            <input value={form.cuit} onChange={set('cuit')} className={inputCls} placeholder="20-12345678-9" />
+            <Label>Tipo de documento</Label>
+            <select value={form.tipo_documento} onChange={set('tipo_documento')} className={inputCls}>
+              <option value="cuit">CUIT</option>
+              <option value="dni">DNI</option>
+              <option value="pasaporte">Pasaporte</option>
+            </select>
           </div>
           <div>
-            <Label>DNI</Label>
-            <input value={form.dni} onChange={set('dni')} className={inputCls} />
+            <Label>{form.tipo_documento === 'cuit' ? 'CUIT' : form.tipo_documento === 'dni' ? 'DNI' : 'N° Pasaporte'}</Label>
+            {form.tipo_documento === 'cuit' && (
+              <input value={form.cuit} onChange={set('cuit')} className={inputCls} placeholder="20-12345678-9" />
+            )}
+            {form.tipo_documento === 'dni' && (
+              <input value={form.dni} onChange={set('dni')} className={inputCls} placeholder="12345678" />
+            )}
+            {form.tipo_documento === 'pasaporte' && (
+              <input value={form.pasaporte} onChange={set('pasaporte')} className={inputCls} placeholder="AAA123456" />
+            )}
           </div>
           <div>
             <Label>Teléfono</Label>
