@@ -1,0 +1,34 @@
+const { contextBridge, ipcRenderer } = require('electron');
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  platform: process.platform,
+
+  // ── Mode & config ──────────────────────────────────────────────────────────
+  getMode: () => ipcRenderer.sendSync('get-mode'),
+  getServerUrl: () => ipcRenderer.sendSync('get-server-url'),
+  saveServerUrl: (url) => ipcRenderer.invoke('save-server-url', url),
+  testConnection: (url) => ipcRenderer.invoke('test-connection', url),
+  getLocalIP: () => ipcRenderer.sendSync('get-local-ip'),
+
+  // ── Boot status (server mode) ─────────────────────────────────────────────
+  onBootStatus: (cb) => {
+    const handler = (_event, status) => cb(status);
+    ipcRenderer.on('boot-status', handler);
+    return () => ipcRenderer.removeListener('boot-status', handler);
+  },
+  onBootComplete: (cb) => {
+    const handler = () => cb();
+    ipcRenderer.once('boot-complete', handler);
+  },
+  onBootError: (cb) => {
+    const handler = (_event, msg) => cb(msg);
+    ipcRenderer.once('boot-error', handler);
+  },
+
+  // ── Backup ────────────────────────────────────────────────────────────────
+  doBackup: () => ipcRenderer.invoke('backup-do'),
+  listBackups: () => ipcRenderer.invoke('backup-list'),
+  restoreBackup: (filename) => ipcRenderer.invoke('backup-restore', filename),
+  deleteBackup: (filename) => ipcRenderer.invoke('backup-delete', filename),
+  getBackupDir: () => ipcRenderer.sendSync('backup-get-dir')
+});

@@ -1,0 +1,44 @@
+{
+  "appId": "com.ferreteria.cliente",
+  "productName": "Corralon Cliente",
+  "electronVersion": "29.4.6",
+  "copyright": "Ferretería Software",
+  "directories": {
+    "output": "dist-electron/client"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "artifactName": "Corralon-Cliente-Setup-${version}.${ext}",
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "assets/icon.ico",
+    "installerHeaderIcon": "assets/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Corralon Cliente"
+  },
+  "asarUnpack": [
+    "node_modules/embedded-postgres/**/*",
+    "node_modules/@embedded-postgres/**/*"
+  ],
+  "toolsets": {
+    "winCodeSign": "1.1.0"
+  },
+  "extraMetadata": {
+    "main": "electron/main.js"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "Diganexia",
+    "repo": "ferreteria-software",
+    "channel": "client"
+  }
+}
