@@ -410,7 +410,7 @@ function TabKardex() {
   const [err, setErr] = useState('');
 
   useEffect(() => {
-    api.get('/productos').then(({ data: d }) => setProductos(d.rows || d)).catch(() => {});
+    api.get('/productos').then(({ data: d }) => setProductos(d.data || d.rows || d)).catch(() => {});
     api.get('/depositos').then(({ data: d }) => setDepositos(d)).catch(() => {});
   }, []);
 
