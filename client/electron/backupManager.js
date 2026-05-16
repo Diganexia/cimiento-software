@@ -17,14 +17,22 @@ function pgExe(name) {
     const full = path.join(binDir, exe);
     if (fs.existsSync(full)) return full;
   }
-  return exe; // fallback to PATH
+  // Último intento: buscar en PATH
+  // Si tampoco está, el execFile fallará con ENOENT y se captura en el llamador
+  return exe;
 }
 
 function runExe(exePath, args, env) {
   return new Promise((resolve, reject) => {
     execFile(exePath, args, { env, timeout: 120000 }, (err, stdout, stderr) => {
-      if (err) reject(new Error(stderr || err.message));
-      else resolve(stdout);
+      if (err) {
+        const msg = err.code === 'ENOENT'
+          ? `No se encontró el ejecutable: ${exePath}. Verificá que la base de datos embebida esté correctamente instalada.`
+          : (stderr || err.message);
+        reject(new Error(msg));
+      } else {
+        resolve(stdout);
+      }
     });
   });
 }
@@ -50,8 +58,10 @@ async function doBackup(backupDir) {
 
   const { DB_NAME } = require('./dbManager');
   const env = buildEnv();
+  const pgDumpPath = pgExe('pg_dump');
+  console.log('[backup] usando pg_dump:', pgDumpPath);
 
-  await runExe(pgExe('pg_dump'), [
+  await runExe(pgDumpPath, [
     '-h', '127.0.0.1',
     '-p', String(process.env.DB_PORT || 5433),
     '-U', process.env.DB_USER || 'corralon',

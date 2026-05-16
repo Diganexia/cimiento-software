@@ -6,10 +6,10 @@ import {
   getUnidades, createUnidad, updateUnidad, deleteUnidad,
   getMediosPago, createMedioPago, updateMedioPago, deleteMedioPago,
   getDepositos, createDeposito, updateDeposito, deleteDeposito,
-  getCajas, createCaja, updateCaja
+  getCajas, createCaja, updateCaja, deleteCaja
 } from '../../services/configuracionService';
 
-const TABS = ['Empresa', 'AFIP', 'Rubros', 'Unidades', 'Medios de pago', 'Depósitos', 'Cajas'];
+const TABS = ['Empresa', 'ARCA', 'Rubros', 'Unidades', 'Medios de pago', 'Depósitos', 'Cajas'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -116,9 +116,9 @@ function TabEmpresa() {
   );
 }
 
-// ── Tab: AFIP (puntos de venta) ────────────────────────────────────────────────
+// ── Tab: ARCA (puntos de venta) ────────────────────────────────────────────────
 
-function TabAFIP() {
+function TabARCA() {
   const { items, reload } = useList(getPuntosVenta);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -152,7 +152,7 @@ function TabAFIP() {
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
-        <p className="text-sm text-gray-600">Puntos de venta habilitados en AFIP</p>
+        <p className="text-sm text-gray-600">Puntos de venta habilitados en ARCA</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
       {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
@@ -262,6 +262,84 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
   );
 }
 
+// ── Tab: Cajas ────────────────────────────────────────────────────────────────
+
+function TabCajas() {
+  const { items, reload } = useList(getCajas);
+  const [adding, setAdding] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [err, setErr] = useState('');
+
+  const handleCreate = async (vals) => {
+    setErr('');
+    try { await createCaja(vals); reload(); setAdding(false); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
+  };
+
+  const handleUpdate = async (id, vals) => {
+    setErr('');
+    try {
+      const payload = { ...vals, activo: vals.activo === 'true' || vals.activo === true };
+      await updateCaja(id, payload); reload(); setEditing(null);
+    }
+    catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
+  };
+
+  const handleDelete = async (id) => {
+    if (!window.confirm('¿Eliminar esta caja? Si tiene arqueos no se podrá eliminar.')) return;
+    setErr('');
+    try { await deleteCaja(id); reload(); }
+    catch (e) { setErr(e.response?.data?.error || 'Error al eliminar'); }
+  };
+
+  const addFields = [{ key: 'nombre', label: 'Nombre', placeholder: 'Ej: Caja principal' }];
+  const editFields = [
+    { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Caja principal' },
+    { key: 'activo', label: 'Activo', type: 'select', options: [{ value: 'true', label: 'Sí' }, { value: 'false', label: 'No' }] }
+  ];
+
+  return (
+    <div>
+      <div className="flex justify-between items-center mb-3">
+        <p className="text-sm text-gray-600">Cajas del sistema</p>
+        <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
+      </div>
+      {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
+      <table className="w-full text-sm">
+        <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+          <tr>
+            <th className="px-4 py-2 text-left">Nombre</th>
+            <th className="px-4 py-2 text-center">Activo</th>
+            <th className="px-4 py-2"></th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {adding && (
+            <InlineForm fields={addFields} onSave={handleCreate} onCancel={() => setAdding(false)} />
+          )}
+          {items.map((r) => editing === r.id ? (
+            <InlineForm key={r.id} fields={editFields} initial={{ ...r, activo: String(r.activo) }}
+              onSave={(v) => handleUpdate(r.id, v)} onCancel={() => setEditing(null)} />
+          ) : (
+            <tr key={r.id} className="hover:bg-gray-50">
+              <td className="px-4 py-2 text-gray-800">{r.nombre}</td>
+              <td className="px-4 py-2 text-center">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  {r.activo ? 'Sí' : 'No'}
+                </span>
+              </td>
+              <RowActions onEdit={() => setEditing(r.id)} onDelete={() => handleDelete(r.id)} />
+            </tr>
+          ))}
+          {!items.length && !adding && (
+            <tr><td colSpan={3} className="px-4 py-6 text-center text-gray-400">Sin cajas registradas</td></tr>
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function Configuracion() {
@@ -269,7 +347,7 @@ export default function Configuracion() {
 
   const tabContent = [
     <TabEmpresa key="empresa" />,
-    <TabAFIP key="afip" />,
+    <TabARCA key="arca" />,
     <SimpleListTab key="rubros"
       loader={getRubros} creator={createRubro} updater={updateRubro} deleter={deleteRubro}
       title="Rubro"
@@ -325,21 +403,7 @@ export default function Configuracion() {
         { key: 'descripcion', label: 'Descripción', placeholder: 'Descripción (opcional)' }
       ]}
     />,
-    <SimpleListTab key="cajas"
-      loader={getCajas} creator={createCaja} updater={updateCaja} deleter={null}
-      title="Caja"
-      columns={[
-        { key: 'nombre', label: 'Nombre' },
-        { key: 'activo', label: 'Activo', render: (r) => (
-          <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
-            {r.activo ? 'Sí' : 'No'}
-          </span>
-        )}
-      ]}
-      fields={[
-        { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Caja principal' }
-      ]}
-    />
+    <TabCajas key="cajas" />
   ];
 
   return (

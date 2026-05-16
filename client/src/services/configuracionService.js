@@ -38,3 +38,4 @@ export const deleteDeposito = (id) => api.delete(`/configuracion/depositos/${id}
 export const getCajas = () => api.get('/configuracion/cajas');
 export const createCaja = (data) => api.post('/configuracion/cajas', data);
 export const updateCaja = (id, data) => api.put(`/configuracion/cajas/${id}`, data);
+export const deleteCaja = (id) => api.delete(`/configuracion/cajas/${id}`);

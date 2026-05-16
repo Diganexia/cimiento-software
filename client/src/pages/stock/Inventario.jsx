@@ -80,7 +80,7 @@ export default function Inventario() {
     try {
       const items = Object.entries(conteos).map(([producto_id, cantidad_contada]) => ({
         producto_id: parseInt(producto_id),
-        cantidad_contada: parseFloat(cantidad_contada) || 0
+        cantidad_contada: parseInt(cantidad_contada, 10) || 0
       }));
       await updateInventarioItems(inventarioId, items);
       const { data: inv } = await getInventario(inventarioId);
@@ -201,7 +201,7 @@ export default function Inventario() {
                       <input
                         type="number"
                         min="0"
-                        step="0.001"
+                        step="1"
                         value={conteos[item.producto_id] ?? ''}
                         onChange={(e) => setConteos((c) => ({ ...c, [item.producto_id]: e.target.value }))}
                         className="w-28 border border-gray-300 rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500"

@@ -515,7 +515,7 @@ async function comprobantesAfip(req, res) {
 
     if (format === 'pdf') {
       return generarReporteTablaPDF({
-        titulo: 'Comprobantes AFIP emitidos',
+        titulo: 'Comprobantes ARCA emitidos',
         subtitulo: `PerÃ­odo: ${desde} â†’ ${hasta}`,
         landscape: true,
         columnas: [

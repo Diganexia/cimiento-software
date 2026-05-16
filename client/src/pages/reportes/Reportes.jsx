@@ -574,7 +574,7 @@ function TabDeudores() {
   );
 }
 
-// ── Tab: Comprobantes AFIP ────────────────────────────────────────────────────
+// ── Tab: Comprobantes ARCA ────────────────────────────────────────────────────
 
 function TabAfip() {
   const [desde, setDesde] = useState(firstOfMonth());
@@ -772,7 +772,7 @@ const TABS = [
   { label: 'Rotación', component: <TabRotacion key="rotacion" /> },
   { label: 'Kardex', component: <TabKardex key="kardex" /> },
   { label: 'Deudores', component: <TabDeudores key="deudores" /> },
-  { label: 'Comprobantes AFIP', component: <TabAfip key="afip" /> }
+  { label: 'Comprobantes ARCA', component: <TabAfip key="afip" /> }
 ];
 
 export default function Reportes() {

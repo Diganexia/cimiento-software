@@ -43,6 +43,7 @@ router.delete('/depositos/:id', authorize('configuracion', 'editar'), ctrl.delet
 router.get('/cajas', ctrl.listCajas);
 router.post('/cajas', authorize('configuracion', 'editar'), ctrl.createCaja);
 router.put('/cajas/:id', authorize('configuracion', 'editar'), ctrl.updateCaja);
+router.delete('/cajas/:id', authorize('configuracion', 'editar'), ctrl.deleteCaja);
 
 module.exports = router;
 

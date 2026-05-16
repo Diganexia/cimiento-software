@@ -324,6 +324,18 @@ async function updateCaja(req, res) {
   }
 }
 
+async function deleteCaja(req, res) {
+  try {
+    const usado = await db('arqueos').where('caja_id', req.params.id).first();
+    if (usado) return res.status(409).json({ error: 'La caja tiene arqueos registrados — desactivela en lugar de eliminarla' });
+    const deleted = await db('cajas').where('id', req.params.id).delete();
+    if (!deleted) return res.status(404).json({ error: 'No encontrado' });
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
 module.exports = {
   getEmpresa, updateEmpresa,
   listPuntosVenta, createPuntoVenta, updatePuntoVenta, deletePuntoVenta,
@@ -331,6 +343,6 @@ module.exports = {
   listUnidades, createUnidad, updateUnidad, deleteUnidad,
   listMediosPago, createMedioPago, updateMedioPago, deleteMedioPago,
   listDepositos, createDeposito, updateDeposito, deleteDeposito,
-  listCajas, createCaja, updateCaja
+  listCajas, createCaja, updateCaja, deleteCaja
 };
 

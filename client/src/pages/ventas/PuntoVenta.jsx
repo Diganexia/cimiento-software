@@ -159,7 +159,7 @@ export default function PuntoVenta() {
       return;
     }
     if (REQUIERE_AFIP.has(tipoComprobante) && !puntoVentaId) {
-      setError('Seleccione un punto de venta AFIP para emitir este comprobante');
+      setError('Seleccione un punto de venta ARCA para emitir este comprobante');
       return;
     }
 
@@ -190,7 +190,12 @@ export default function PuntoVenta() {
       });
       setConfirmada(data);
     } catch (err) {
-      setError(err.response?.data?.error || 'Error al procesar la venta');
+      const esTimeout = !err.response;
+      const msg = err.response?.data?.error || 'Error al procesar la venta';
+      setError(esTimeout
+        ? `${msg} — Verificá en el listado de Ventas que no se haya generado antes de reintentar.`
+        : msg
+      );
     } finally {
       setLoading(false);
     }
@@ -347,7 +352,7 @@ export default function PuntoVenta() {
             </div>
             {REQUIERE_AFIP.has(tipoComprobante) && puntosVenta.length > 0 && (
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Punto de venta AFIP</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Punto de venta ARCA</label>
                 <select value={puntoVentaId} onChange={(e) => setPuntoVentaId(e.target.value)}
                   className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                   <option value="">Seleccionar...</option>

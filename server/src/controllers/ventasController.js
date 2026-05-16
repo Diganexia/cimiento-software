@@ -92,6 +92,9 @@ const crear = async (req, res) => {
 
   const trx = await db.transaction();
   try {
+    // Advisory lock evita que dos transacciones simultáneas asignen el mismo número.
+    // Se libera automáticamente al hacer commit o rollback.
+    await trx.raw('SELECT pg_advisory_xact_lock(1)');
     const { maxnum } = await trx('ventas').max('numero as maxnum').first();
     const numero = (parseInt(maxnum) || 0) + 1;
 

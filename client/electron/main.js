@@ -127,7 +127,6 @@ function createSplashWindow() {
     splashWindow.loadURL('http://localhost:5173/#/splash');
   } else {
     splashWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: '/splash' });
-    splashWindow.webContents.openDevTools({ mode: 'detach' });
   }
 }
 
@@ -145,7 +144,6 @@ function createMainWindow(serverUrl) {
     mainWindow.loadURL('http://localhost:5173');
   } else {
     mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-    mainWindow.webContents.openDevTools({ mode: 'detach' });
   }
 
   mainWindow.once('ready-to-show', () => {
@@ -156,7 +154,13 @@ function createMainWindow(serverUrl) {
     }
   });
 
-  mainWindow.on('closed', () => { mainWindow = null; });
+  mainWindow.on('closed', () => {
+    mainWindow = null;
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.destroy();
+      splashWindow = null;
+    }
+  });
 }
 
 // ── IPC handlers ──────────────────────────────────────────────────────────────

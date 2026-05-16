@@ -55,13 +55,14 @@ function generarVentaPDF(venta, items, cliente, comprobante, res) {
   // Tipo + número
   doc.fontSize(22).font('Helvetica-Bold').fillColor('#000')
     .text(label, 350, 50, { align: 'right', width: 200 });
+  const numY = doc.y;
   doc.fontSize(11).font('Helvetica')
-    .text(`N° ${String(venta.numero).padStart(8, '0')}`, 350, 80, { align: 'right', width: 200 });
+    .text(`N° ${String(venta.numero).padStart(8, '0')}`, 350, numY, { align: 'right', width: 200 });
 
   const fecha = venta.created_at
     ? new Date(venta.created_at).toLocaleDateString('es-AR')
     : new Date().toLocaleDateString('es-AR');
-  doc.text(`Fecha: ${fecha}`, 350, 95, { align: 'right', width: 200 });
+  doc.text(`Fecha: ${fecha}`, 350, numY + 15, { align: 'right', width: 200 });
 
   // Line separator
   doc.moveTo(50, 130).lineTo(545, 130).strokeColor('#ccc').stroke();
@@ -114,26 +115,26 @@ function generarVentaPDF(venta, items, cliente, comprobante, res) {
   y += 10;
 
   // Totals
-  const colL = 380, colR = 460, colW = 85;
+  const colLabel = 330, colR = 460, colW = 85;
   doc.font('Helvetica').fontSize(9);
-  doc.text('Subtotal:', colL, y, { width: colR - colL });
+  doc.text('Subtotal:', colLabel, y, { width: colR - colLabel });
   doc.text(`$${fmt(venta.subtotal)}`, colR, y, { width: colW, align: 'right' });
 
   if (parseFloat(venta.descuento_monto) > 0) {
     y += 14;
-    doc.text(`Descuento (${fmt(venta.descuento_porcentaje)}%):`, colL, y, { width: colR - colL });
+    doc.text(`Descuento (${fmt(venta.descuento_porcentaje)}%):`, colLabel, y, { width: colR - colLabel });
     doc.text(`-$${fmt(venta.descuento_monto)}`, colR, y, { width: colW, align: 'right' });
   }
 
   if (parseFloat(venta.redondeo_monto) > 0) {
     y += 14;
-    doc.text('Redondeo:', colL, y, { width: colR - colL });
+    doc.text('Redondeo:', colLabel, y, { width: colR - colLabel });
     doc.text(`-$${fmt(venta.redondeo_monto)}`, colR, y, { width: colW, align: 'right' });
   }
 
   y += 16;
   doc.font('Helvetica-Bold').fontSize(11);
-  doc.text('TOTAL:', colL, y, { width: colR - colL });
+  doc.text('TOTAL:', colLabel, y, { width: colR - colLabel });
   doc.text(`$${fmt(venta.total)}`, colR, y, { width: colW, align: 'right' });
 
   // CAE block (AFIP)

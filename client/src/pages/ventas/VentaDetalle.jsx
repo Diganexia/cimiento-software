@@ -73,7 +73,7 @@ export default function VentaDetalle() {
 
       {venta.cae && (
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm">
-          <p className="font-medium text-blue-800 mb-1">Comprobante AFIP</p>
+          <p className="font-medium text-blue-800 mb-1">Comprobante ARCA</p>
           <p className="text-blue-700">CAE: {venta.cae} — Vence: {venta.cae_vencimiento}</p>
         </div>
       )}
