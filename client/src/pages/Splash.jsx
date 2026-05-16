@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { version } from '../../package.json';
 
 const STEPS = [
   'Iniciando base de datos...',
@@ -68,7 +69,7 @@ export default function Splash() {
         </div>
       )}
 
-      <p className="text-gray-700 text-xs absolute bottom-6">v1.0.0</p>
+      <p className="text-gray-700 text-xs absolute bottom-6">v{version}</p>
     </div>
   );
 }
