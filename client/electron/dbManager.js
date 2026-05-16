@@ -75,10 +75,12 @@ function _discoverPgBinDir(pg) {
       path.join(nmRoot, 'embedded-postgres', 'pg', 'bin'),
       path.join(nmRoot, 'embedded-postgres', 'bin'),
       path.join(nmRoot, 'embedded-postgres', 'dist', 'bin'),
-      // Subpaquetes @embedded-postgres/{platform}-{arch}
+      // Subpaquetes @embedded-postgres/{platform}-{arch}  (v18.x usa "native/bin")
+      path.join(nmRoot, '@embedded-postgres', `${platform}-${arch}`, 'native', 'bin'),
       path.join(nmRoot, '@embedded-postgres', `${platform}-${arch}`, 'pg', 'bin'),
       path.join(nmRoot, '@embedded-postgres', `${platform}-${arch}`, 'bin'),
       // Alias win32 (algunos usan "windows", otros "win32")
+      win32 && path.join(nmRoot, '@embedded-postgres', `win32-${arch}`, 'native', 'bin'),
       win32 && path.join(nmRoot, '@embedded-postgres', `win32-${arch}`, 'pg', 'bin'),
       win32 && path.join(nmRoot, '@embedded-postgres', `win32-${arch}`, 'bin'),
     ].filter(Boolean);
@@ -110,7 +112,7 @@ function _discoverPgBinDir(pg) {
     if (fs.existsSync(epScope)) {
       try {
         for (const pkg of fs.readdirSync(epScope)) {
-          for (const sub of ['pg/bin', 'bin']) {
+          for (const sub of ['native/bin', 'pg/bin', 'bin']) {
             const dir = path.join(epScope, pkg, sub);
             if (fs.existsSync(path.join(dir, pgExe))) return dir;
           }
