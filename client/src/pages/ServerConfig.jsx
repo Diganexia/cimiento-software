@@ -8,6 +8,7 @@ export default function ServerConfig() {
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [discovering, setDiscovering] = useState(false);
 
   // Only accessible in Electron client mode
   useEffect(() => {
@@ -37,10 +38,27 @@ export default function ServerConfig() {
     setSaving(true);
     try {
       await window.electronAPI.saveServerUrl(buildUrl());
-      // Reload the app with the new server URL
       window.location.href = '/login';
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDiscover = async () => {
+    setDiscovering(true);
+    setTestResult(null);
+    try {
+      const res = await window.electronAPI.discoverServer();
+      if (res.ok) {
+        await window.electronAPI.saveServerUrl(res.url);
+        window.location.href = '/login';
+      } else {
+        setTestResult({ ok: false, error: 'No se encontró el servidor en la red local.' });
+      }
+    } catch {
+      setTestResult({ ok: false, error: 'Error durante la búsqueda.' });
+    } finally {
+      setDiscovering(false);
     }
   };
 
@@ -53,6 +71,20 @@ export default function ServerConfig() {
         </div>
 
         <div className="space-y-4">
+          <button
+            onClick={handleDiscover}
+            disabled={discovering || saving}
+            className="w-full border border-blue-300 text-blue-600 py-2.5 rounded-lg text-sm hover:bg-blue-50 disabled:opacity-50 transition-colors"
+          >
+            {discovering ? 'Buscando en la red...' : 'Buscar servidor automáticamente'}
+          </button>
+
+          <div className="relative flex items-center gap-3">
+            <div className="flex-1 border-t border-gray-200" />
+            <span className="text-xs text-gray-400">o ingresá la IP manualmente</span>
+            <div className="flex-1 border-t border-gray-200" />
+          </div>
+
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
               IP del servidor

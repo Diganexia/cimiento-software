@@ -35,9 +35,11 @@ import Configuracion from '../pages/configuracion/Configuracion';
 import Reportes from '../pages/reportes/Reportes';
 import Splash from '../pages/Splash';
 import ServerConfig from '../pages/ServerConfig';
+import Setup from '../pages/Setup';
 import Backup from '../pages/configuracion/Backup';
 
 const router = createHashRouter([
+  { path: '/setup', element: <Setup /> },
   { path: '/splash', element: <Splash /> },
   { path: '/server-config', element: <ServerConfig /> },
   { path: '/login', element: <Login /> },

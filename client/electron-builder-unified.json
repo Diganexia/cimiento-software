@@ -1,0 +1,51 @@
+{
+  "appId": "com.ferreteria.app",
+  "productName": "Corralon",
+  "electronVersion": "29.4.6",
+  "copyright": "Ferretería Software",
+  "directories": {
+    "output": "dist-electron/unified"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*",
+    "package.json"
+  ],
+  "extraResources": [
+    {
+      "from": "../server",
+      "to": "server",
+      "filter": ["**/*", "!**/.env", "!**/.env.*", "!**/nodemon.json"]
+    }
+  ],
+  "artifactName": "Corralon-Setup-${version}.${ext}",
+  "win": {
+    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "icon": "assets/icon.ico"
+  },
+  "nsis": {
+    "oneClick": false,
+    "allowToChangeInstallationDirectory": true,
+    "installerIcon": "assets/icon.ico",
+    "installerHeaderIcon": "assets/icon.ico",
+    "createDesktopShortcut": true,
+    "createStartMenuShortcut": true,
+    "shortcutName": "Corralon"
+  },
+  "asarUnpack": [
+    "node_modules/embedded-postgres/**/*",
+    "node_modules/@embedded-postgres/**/*"
+  ],
+  "toolsets": {
+    "winCodeSign": "1.1.0"
+  },
+  "extraMetadata": {
+    "main": "electron/main.js"
+  },
+  "publish": {
+    "provider": "github",
+    "owner": "Diganexia",
+    "repo": "ferreteria-software",
+    "channel": "latest"
+  }
+}

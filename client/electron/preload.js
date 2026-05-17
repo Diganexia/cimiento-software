@@ -6,8 +6,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ── Mode & config ──────────────────────────────────────────────────────────
   getMode: () => ipcRenderer.sendSync('get-mode'),
   getServerUrl: () => ipcRenderer.sendSync('get-server-url'),
+  saveMode: (mode) => ipcRenderer.invoke('save-mode', mode),
   saveServerUrl: (url) => ipcRenderer.invoke('save-server-url', url),
   testConnection: (url) => ipcRenderer.invoke('test-connection', url),
+  discoverServer: () => ipcRenderer.invoke('discover-server'),
   getLocalIP: () => ipcRenderer.sendSync('get-local-ip'),
 
   // ── Boot status (server mode) ─────────────────────────────────────────────

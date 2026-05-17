@@ -4,6 +4,7 @@ const fs = require('fs');
 const os = require('os');
 const http = require('http');
 const crypto = require('crypto');
+const dgram = require('dgram');
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -27,30 +28,17 @@ function logError(...args) {
   try { fs.appendFileSync(getLogFile(), line); } catch { /* ignore */ }
 }
 
-// Redirect console.log/error so Express server logs also land in the log file
 const _origLog = console.log;
 const _origError = console.error;
 console.log = (...args) => { _origLog(...args); try { log(...args); } catch {} };
 console.error = (...args) => { _origError(...args); try { logError(...args); } catch {} };
 
-process.on('uncaughtException', (err) => {
-  logError('uncaughtException:', err.stack || err.message);
-});
-process.on('unhandledRejection', (reason) => {
-  logError('unhandledRejection:', reason?.stack || reason);
-});
-
-// ── Mode detection ────────────────────────────────────────────────────────────
-// Server build includes a 'server-mode.flag' in resources.
-function isServerMode() {
-  if (isDev) return process.env.SERVER_MODE === 'true';
-  return fs.existsSync(path.join(process.resourcesPath, 'server-mode.flag'));
-}
+process.on('uncaughtException', (err) => { logError('uncaughtException:', err.stack || err.message); });
+process.on('unhandledRejection', (reason) => { logError('unhandledRejection:', reason?.stack || reason); });
 
 // ── Paths ─────────────────────────────────────────────────────────────────────
 const userData = app.getPath('userData');
 const configPath = path.join(userData, 'app-config.json');
-const pgDataDir = path.join(userData, 'pgdata');
 const backupDir = path.join(userData, 'backups');
 
 function getServerDir() {
@@ -58,7 +46,7 @@ function getServerDir() {
   return path.join(process.resourcesPath, 'server');
 }
 
-// ── Config helpers ────────────────────────────────────────────────────────────
+// ── Config ────────────────────────────────────────────────────────────────────
 function loadConfig() {
   try {
     if (fs.existsSync(configPath)) return JSON.parse(fs.readFileSync(configPath, 'utf-8'));
@@ -79,7 +67,7 @@ function getOrCreateJwtSecret() {
   return secret;
 }
 
-// ── Local IP ──────────────────────────────────────────────────────────────────
+// ── Network helpers ───────────────────────────────────────────────────────────
 function getLocalIP() {
   const nets = os.networkInterfaces();
   for (const ifaces of Object.values(nets)) {
@@ -90,7 +78,6 @@ function getLocalIP() {
   return '127.0.0.1';
 }
 
-// ── Health check ──────────────────────────────────────────────────────────────
 function waitForServer(url, attempts = 30, delay = 1000) {
   return new Promise((resolve, reject) => {
     let tries = 0;
@@ -108,43 +95,95 @@ function waitForServer(url, attempts = 30, delay = 1000) {
   });
 }
 
+// ── UDP Discovery ─────────────────────────────────────────────────────────────
+const DISCOVERY_PORT = 45678;
+const DISCOVERY_MSG  = 'CORRALON_DISCOVER';
+const DISCOVERY_ACK  = 'CORRALON_SERVER:3001';
+
+let discoverySocket = null;
+
+function startDiscoveryListener() {
+  discoverySocket = dgram.createSocket('udp4');
+  discoverySocket.on('error', (err) => {
+    logError('UDP discovery error:', err.message);
+    discoverySocket.close();
+    discoverySocket = null;
+  });
+  discoverySocket.on('message', (msg, rinfo) => {
+    if (msg.toString() === DISCOVERY_MSG) {
+      const resp = Buffer.from(DISCOVERY_ACK);
+      discoverySocket.send(resp, rinfo.port, rinfo.address);
+    }
+  });
+  discoverySocket.bind(DISCOVERY_PORT, () => {
+    try { discoverySocket.setBroadcast(true); } catch {}
+    log('UDP discovery listener activo en puerto', DISCOVERY_PORT);
+  });
+}
+
+function discoverServer(timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    const sock = dgram.createSocket('udp4');
+    let done = false;
+
+    const finish = (url) => {
+      if (done) return;
+      done = true;
+      try { sock.close(); } catch {}
+      if (url) resolve(url);
+      else reject(new Error('Servidor no encontrado en la red local'));
+    };
+
+    sock.on('error', () => finish(null));
+    sock.on('message', (msg, rinfo) => {
+      const str = msg.toString();
+      if (str.startsWith('CORRALON_SERVER:')) {
+        const port = str.split(':')[1];
+        finish(`http://${rinfo.address}:${port}`);
+      }
+    });
+
+    sock.bind(() => {
+      try { sock.setBroadcast(true); } catch {}
+      const buf = Buffer.from(DISCOVERY_MSG);
+      sock.send(buf, DISCOVERY_PORT, '255.255.255.255');
+      setTimeout(() => finish(null), timeout);
+    });
+  });
+}
+
 // ── Windows ───────────────────────────────────────────────────────────────────
-let mainWindow = null;
+let mainWindow  = null;
 let splashWindow = null;
 
-function createSplashWindow() {
+function createSplashWindow(hash = '/splash') {
   splashWindow = new BrowserWindow({
-    width: 500,
-    height: 340,
-    frame: false,
-    resizable: false,
-    center: true,
+    width: 500, height: 340, frame: false, resizable: false, center: true,
     backgroundColor: '#111827',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
+  if (isDev) splashWindow.loadURL(`http://localhost:5173/#${hash}`);
+  else splashWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash });
+}
 
-  if (isDev) {
-    splashWindow.loadURL('http://localhost:5173/#/splash');
-  } else {
-    splashWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: '/splash' });
-  }
+function createSetupWindow() {
+  splashWindow = new BrowserWindow({
+    width: 620, height: 440, frame: false, resizable: false, center: true,
+    backgroundColor: '#111827',
+    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
+  });
+  if (isDev) splashWindow.loadURL('http://localhost:5173/#/setup');
+  else splashWindow.loadFile(path.join(__dirname, '../dist/index.html'), { hash: '/setup' });
 }
 
 function createMainWindow(serverUrl) {
   mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 820,
-    minWidth: 1024,
-    minHeight: 600,
-    show: false,
+    width: 1280, height: 820, minWidth: 1024, minHeight: 600, show: false,
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
 
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:5173');
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
-  }
+  if (isDev) mainWindow.loadURL('http://localhost:5173');
+  else mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
 
   mainWindow.once('ready-to-show', () => {
     mainWindow.show();
@@ -163,13 +202,22 @@ function createMainWindow(serverUrl) {
   });
 }
 
-// ── IPC handlers ──────────────────────────────────────────────────────────────
-function setupIPC(mode, serverUrl) {
-  ipcMain.on('get-mode', (e) => { e.returnValue = mode; });
-  ipcMain.on('get-server-url', (e) => { e.returnValue = serverUrl; });
+// ── IPC ───────────────────────────────────────────────────────────────────────
+function registerSyncIPC() {
+  // Lee dinámicamente desde config para reflejar el estado actual
+  ipcMain.on('get-mode', (e) => {
+    const cfg = loadConfig();
+    e.returnValue = cfg.mode || 'setup';
+  });
+  ipcMain.on('get-server-url', (e) => {
+    const cfg = loadConfig();
+    e.returnValue = cfg.serverUrl || null;
+  });
   ipcMain.on('get-local-ip', (e) => { e.returnValue = getLocalIP(); });
   ipcMain.on('backup-get-dir', (e) => { e.returnValue = backupDir; });
+}
 
+function registerUniversalAsyncIPC() {
   ipcMain.handle('save-server-url', (_e, url) => {
     saveConfig({ serverUrl: url });
     return true;
@@ -186,42 +234,61 @@ function setupIPC(mode, serverUrl) {
     });
   });
 
-  // Backup handlers (server mode only)
-  if (mode === 'server') {
-    const { doBackup, doRestore, listBackups } = require('./backupManager');
-
-    ipcMain.handle('backup-do', async () => {
-      const filename = await doBackup(backupDir);
-      return { ok: true, filename };
-    });
-
-    ipcMain.handle('backup-list', async () => {
-      return listBackups(backupDir);
-    });
-
-    ipcMain.handle('backup-restore', async (_e, filename) => {
-      await doRestore(backupDir, filename);
-      return { ok: true };
-    });
-
-    ipcMain.handle('backup-delete', async (_e, filename) => {
-      const filepath = path.join(backupDir, filename);
-      if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
-      return { ok: true };
-    });
-  }
+  ipcMain.handle('discover-server', async () => {
+    try {
+      const url = await discoverServer(8000);
+      saveConfig({ serverUrl: url });
+      return { ok: true, url };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  });
 }
 
-// ── Server mode boot ──────────────────────────────────────────────────────────
-async function bootServerMode() {
-  // Register sync IPC handlers before the splash window opens so
-  // ipcRenderer.sendSync('get-mode') in the renderer doesn't block indefinitely.
-  ipcMain.on('get-mode', (e) => { e.returnValue = 'server'; });
-  ipcMain.on('get-server-url', (e) => { e.returnValue = null; });
-  ipcMain.on('get-local-ip', (e) => { e.returnValue = getLocalIP(); });
-  ipcMain.on('backup-get-dir', (e) => { e.returnValue = backupDir; });
+function registerServerAsyncIPC() {
+  const { doBackup, doRestore, listBackups } = require('./backupManager');
 
-  createSplashWindow();
+  ipcMain.handle('backup-do', async () => {
+    const filename = await doBackup(backupDir);
+    return { ok: true, filename };
+  });
+  ipcMain.handle('backup-list', async () => listBackups(backupDir));
+  ipcMain.handle('backup-restore', async (_e, filename) => {
+    await doRestore(backupDir, filename);
+    return { ok: true };
+  });
+  ipcMain.handle('backup-delete', async (_e, filename) => {
+    const filepath = path.join(backupDir, filename);
+    if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    return { ok: true };
+  });
+}
+
+// ── Boot: Setup (primera vez) ─────────────────────────────────────────────────
+function bootSetup() {
+  createSetupWindow();
+
+  ipcMain.handle('save-mode', async (_e, mode) => {
+    saveConfig({ mode });
+    ipcMain.removeHandler('save-mode');
+
+    if (splashWindow && !splashWindow.isDestroyed()) {
+      splashWindow.destroy();
+      splashWindow = null;
+    }
+
+    if (mode === 'server') {
+      await bootServerMode();
+    } else {
+      await bootClientMode();
+    }
+    return { ok: true };
+  });
+}
+
+// ── Boot: Servidor ────────────────────────────────────────────────────────────
+async function bootServerMode() {
+  createSplashWindow('/splash');
 
   const sendStatus = (msg) => {
     if (splashWindow && !splashWindow.isDestroyed())
@@ -232,15 +299,14 @@ async function bootServerMode() {
     log('Boot: iniciando en modo servidor');
     const { startDatabase, runMigrations } = require('./dbManager');
 
-    const { isFirstRun } = await startDatabase(pgDataDir, configPath, sendStatus);
+    const { isFirstRun } = await startDatabase(
+      path.join(userData, 'pgdata'), configPath, sendStatus
+    );
     log('Boot: base de datos lista, firstRun=', isFirstRun);
 
     const serverDir = getServerDir();
     const serverEntry = path.join(serverDir, 'src', 'index.js');
 
-    // Patch Module._resolveFilename BEFORE migrations and server load so that all
-    // server-side requires (knexfile.js, routes, controllers) find their deps in
-    // app.asar/node_modules even when called from outside the ASAR tree.
     const Module = require('module');
     const originalResolve = Module._resolveFilename.bind(Module);
     const appNodeModules = path.join(__dirname, '..', 'node_modules');
@@ -264,28 +330,27 @@ async function bootServerMode() {
     await runMigrations(serverDir, sendStatus);
 
     sendStatus('Iniciando servidor...');
-
-    // Set env vars for Express server
     process.env.NODE_ENV = 'production';
     process.env.PORT = '3001';
     process.env.JWT_SECRET = getOrCreateJwtSecret();
     process.env.ALLOWED_ORIGINS = '*';
-
     require(serverEntry);
 
     sendStatus('Verificando conexión...');
     await waitForServer('http://127.0.0.1:3001/api/health');
 
+    registerServerAsyncIPC();
+    startDiscoveryListener();
+
     const { scheduleAutoBackup } = require('./backupManager');
     scheduleAutoBackup(backupDir);
 
-    const serverUrl = 'http://127.0.0.1:3001';
-    setupIPC('server', serverUrl);
+    saveConfig({ serverUrl: `http://127.0.0.1:3001` });
 
     if (splashWindow && !splashWindow.isDestroyed())
       splashWindow.webContents.send('boot-complete');
 
-    createMainWindow(serverUrl);
+    createMainWindow('http://127.0.0.1:3001');
   } catch (err) {
     logError('Boot error:', err.stack || err.message);
     if (splashWindow && !splashWindow.isDestroyed())
@@ -293,17 +358,53 @@ async function bootServerMode() {
   }
 }
 
-// ── Client mode boot ──────────────────────────────────────────────────────────
+// ── Boot: Cliente ─────────────────────────────────────────────────────────────
 async function bootClientMode() {
   const cfg = loadConfig();
-  const serverUrl = cfg.serverUrl || null;
-  setupIPC('client', serverUrl);
-  createMainWindow(serverUrl);
+
+  if (cfg.serverUrl) {
+    // URL ya configurada — arrancar directamente
+    createMainWindow(cfg.serverUrl);
+    return;
+  }
+
+  // Sin URL — intentar auto-descubrimiento
+  createSplashWindow('/splash');
+
+  const sendStatus = (msg) => {
+    if (splashWindow && !splashWindow.isDestroyed())
+      splashWindow.webContents.send('boot-status', msg);
+  };
+
+  sendStatus('Buscando servidor en la red local...');
+
+  try {
+    const serverUrl = await discoverServer(8000);
+    saveConfig({ serverUrl });
+    log('Boot cliente: servidor encontrado en', serverUrl);
+    sendStatus('Servidor encontrado. Conectando...');
+    if (splashWindow && !splashWindow.isDestroyed())
+      splashWindow.webContents.send('boot-complete');
+    createMainWindow(serverUrl);
+  } catch (err) {
+    log('Boot cliente: servidor no encontrado, mostrando config manual');
+    if (splashWindow && !splashWindow.isDestroyed())
+      splashWindow.webContents.send('boot-error', 'No se encontró el servidor automáticamente.');
+    // La splash mostrará el botón para ir a /server-config
+    // createMainWindow se llama desde el handler de save-server-url via reload
+  }
 }
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
-  if (isServerMode()) {
+  registerSyncIPC();
+  registerUniversalAsyncIPC();
+
+  const cfg = loadConfig();
+
+  if (!cfg.mode) {
+    bootSetup();
+  } else if (cfg.mode === 'server') {
     await bootServerMode();
   } else {
     await bootClientMode();
@@ -311,25 +412,32 @@ app.whenReady().then(async () => {
 });
 
 app.on('window-all-closed', async () => {
-  if (isServerMode()) {
+  if (loadConfig().mode === 'server') {
     try {
       const { stopDatabase } = require('./dbManager');
       await stopDatabase();
     } catch { /* ignore */ }
+    if (discoverySocket) {
+      try { discoverySocket.close(); } catch {}
+      discoverySocket = null;
+    }
   }
   if (process.platform !== 'darwin') app.quit();
 });
 
 app.on('activate', () => {
   if (BrowserWindow.getAllWindows().length === 0) {
-    isServerMode() ? bootServerMode() : bootClientMode();
+    const cfg = loadConfig();
+    if (!cfg.mode) bootSetup();
+    else if (cfg.mode === 'server') bootServerMode();
+    else bootClientMode();
   }
 });
 
 // ── Auto-updater ──────────────────────────────────────────────────────────────
 if (!isDev) {
   const { autoUpdater } = require('electron-updater');
-  autoUpdater.channel = isServerMode() ? 'server' : 'client';
+  autoUpdater.channel = 'latest';
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
@@ -344,11 +452,8 @@ if (!isDev) {
     });
   });
 
-  autoUpdater.on('error', (err) => {
-    logError('Auto-updater error:', err.message);
-  });
+  autoUpdater.on('error', (err) => { logError('Auto-updater error:', err.message); });
 
-  // Chequear actualizaciones al iniciar y cada 4 horas
   app.whenReady().then(() => {
     setTimeout(() => autoUpdater.checkForUpdates(), 10000);
     setInterval(() => autoUpdater.checkForUpdates(), 4 * 60 * 60 * 1000);
