@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   getEmpresa, updateEmpresa,
   getPuntosVenta, createPuntoVenta, updatePuntoVenta, deletePuntoVenta,
@@ -42,18 +42,18 @@ function InlineForm({ fields, onSave, onCancel, initial = {} }) {
         <td key={f.key} className="px-4 py-2">
           {f.type === 'select' ? (
             <select value={vals[f.key] || ''} onChange={set(f.key)}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500">
               {f.options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
             </select>
           ) : (
             <input value={vals[f.key] || ''} onChange={set(f.key)} placeholder={f.placeholder || f.label}
-              className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
+              className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500" />
           )}
         </td>
       ))}
       <td className="px-4 py-2 text-right space-x-2">
         <button onClick={() => onSave(vals)} className="text-green-700 hover:text-green-900 text-xs font-medium">Guardar</button>
-        <button onClick={onCancel} className="text-gray-500 hover:text-gray-700 text-xs">Cancelar</button>
+        <button onClick={onCancel} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 text-xs">Cancelar</button>
       </td>
     </tr>
   );
@@ -86,13 +86,13 @@ function TabEmpresa() {
     }
   };
 
-  if (!form) return <p className="text-gray-400 text-sm">Cargando...</p>;
+  if (!form) return <p className="text-gray-400 dark:text-gray-500 text-sm">Cargando...</p>;
 
   const field = (label, key, type = 'text') => (
     <div key={key}>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">{label}</label>
       <input type={type} value={form[key] || ''} onChange={set(key)}
-        className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
     </div>
   );
 
@@ -152,12 +152,12 @@ function TabARCA() {
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
-        <p className="text-sm text-gray-600">Puntos de venta habilitados en ARCA</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Puntos de venta habilitados en ARCA</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
       {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
       <table className="w-full text-sm">
-        <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+        <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
           <tr>
             <th className="px-4 py-2 text-left">N°</th>
             <th className="px-4 py-2 text-left">Nombre</th>
@@ -166,7 +166,7 @@ function TabARCA() {
             <th className="px-4 py-2"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {adding && (
             <InlineForm fields={fields} onSave={handleCreate} onCancel={() => setAdding(false)} />
           )}
@@ -174,12 +174,12 @@ function TabARCA() {
             <InlineForm key={r.id} fields={fields.slice(1)} initial={r}
               onSave={(v) => handleUpdate(r.id, v)} onCancel={() => setEditing(null)} />
           ) : (
-            <tr key={r.id} className="hover:bg-gray-50">
-              <td className="px-4 py-2 font-mono text-gray-700">{r.numero}</td>
-              <td className="px-4 py-2 text-gray-800">{r.nombre}</td>
-              <td className="px-4 py-2 text-gray-500 capitalize">{r.tipo}</td>
+            <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td className="px-4 py-2 font-mono text-gray-700 dark:text-gray-200">{r.numero}</td>
+              <td className="px-4 py-2 text-gray-800 dark:text-gray-100">{r.nombre}</td>
+              <td className="px-4 py-2 text-gray-500 dark:text-gray-400 capitalize">{r.tipo}</td>
               <td className="px-4 py-2 text-center">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                   {r.activo ? 'Sí' : 'No'}
                 </span>
               </td>
@@ -187,7 +187,7 @@ function TabARCA() {
             </tr>
           ))}
           {!items.length && !adding && (
-            <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400">Sin puntos de venta</td></tr>
+            <tr><td colSpan={5} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">Sin puntos de venta</td></tr>
           )}
         </tbody>
       </table>
@@ -226,17 +226,17 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
     <div>
       {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
       <div className="flex justify-between items-center mb-3">
-        <p className="text-sm text-gray-600">{title}s del sistema</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">{title}s del sistema</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
       <table className="w-full text-sm">
-        <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+        <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
           <tr>
             {columns.map((c) => <th key={c.key} className="px-4 py-2 text-left">{c.label}</th>)}
             <th className="px-4 py-2"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {adding && (
             <InlineForm fields={fields} onSave={handleCreate} onCancel={() => setAdding(false)} />
           )}
@@ -244,9 +244,9 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
             <InlineForm key={r.id} fields={fields} initial={r}
               onSave={(v) => handleUpdate(r.id, v)} onCancel={() => setEditing(null)} />
           ) : (
-            <tr key={r.id} className="hover:bg-gray-50">
+            <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
               {columns.map((c) => (
-                <td key={c.key} className="px-4 py-2 text-gray-700">
+                <td key={c.key} className="px-4 py-2 text-gray-700 dark:text-gray-200">
                   {c.render ? c.render(r) : (r[c.key] ?? '—')}
                 </td>
               ))}
@@ -254,7 +254,7 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
             </tr>
           ))}
           {!items.length && !adding && (
-            <tr><td colSpan={columns.length + 1} className="px-4 py-6 text-center text-gray-400">Sin registros</td></tr>
+            <tr><td colSpan={columns.length + 1} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">Sin registros</td></tr>
           )}
         </tbody>
       </table>
@@ -301,19 +301,19 @@ function TabCajas() {
   return (
     <div>
       <div className="flex justify-between items-center mb-3">
-        <p className="text-sm text-gray-600">Cajas del sistema</p>
+        <p className="text-sm text-gray-600 dark:text-gray-300">Cajas del sistema</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
       {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
       <table className="w-full text-sm">
-        <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+        <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
           <tr>
             <th className="px-4 py-2 text-left">Nombre</th>
             <th className="px-4 py-2 text-center">Activo</th>
             <th className="px-4 py-2"></th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-gray-100">
+        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {adding && (
             <InlineForm fields={addFields} onSave={handleCreate} onCancel={() => setAdding(false)} />
           )}
@@ -321,10 +321,10 @@ function TabCajas() {
             <InlineForm key={r.id} fields={editFields} initial={{ ...r, activo: String(r.activo) }}
               onSave={(v) => handleUpdate(r.id, v)} onCancel={() => setEditing(null)} />
           ) : (
-            <tr key={r.id} className="hover:bg-gray-50">
-              <td className="px-4 py-2 text-gray-800">{r.nombre}</td>
+            <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+              <td className="px-4 py-2 text-gray-800 dark:text-gray-100">{r.nombre}</td>
               <td className="px-4 py-2 text-center">
-                <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                   {r.activo ? 'Sí' : 'No'}
                 </span>
               </td>
@@ -332,7 +332,7 @@ function TabCajas() {
             </tr>
           ))}
           {!items.length && !adding && (
-            <tr><td colSpan={3} className="px-4 py-6 text-center text-gray-400">Sin cajas registradas</td></tr>
+            <tr><td colSpan={3} className="px-4 py-6 text-center text-gray-400 dark:text-gray-500">Sin cajas registradas</td></tr>
           )}
         </tbody>
       </table>
@@ -377,7 +377,7 @@ export default function Configuracion() {
       columns={[
         { key: 'nombre', label: 'Nombre' },
         { key: 'activo', label: 'Activo', render: (r) => (
-          <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
             {r.activo ? 'Sí' : 'No'}
           </span>
         )}
@@ -393,7 +393,7 @@ export default function Configuracion() {
         { key: 'nombre', label: 'Nombre' },
         { key: 'descripcion', label: 'Descripción', render: (r) => r.descripcion || '—' },
         { key: 'activo', label: 'Activo', render: (r) => (
-          <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+          <span className={`text-xs px-2 py-0.5 rounded-full ${r.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
             {r.activo ? 'Sí' : 'No'}
           </span>
         )}
@@ -409,17 +409,17 @@ export default function Configuracion() {
   return (
     <div className="p-6 max-w-4xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-800">Configuración</h1>
-        <p className="text-sm text-gray-500">Parámetros generales del sistema</p>
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Configuración</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Parámetros generales del sistema</p>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200 mb-6">
+      <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-6">
         {TABS.map((t, i) => (
           <button key={t} onClick={() => setTab(i)}
             className={`px-4 py-2 text-sm transition-colors ${
               tab === i
                 ? 'border-b-2 border-blue-600 text-blue-600 font-medium'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
             }`}
           >
             {t}
@@ -427,7 +427,7 @@ export default function Configuracion() {
         ))}
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         {tabContent[tab]}
       </div>
     </div>

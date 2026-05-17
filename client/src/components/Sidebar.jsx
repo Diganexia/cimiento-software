@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import useThemeStore from '../store/themeStore';
 import api from '../lib/api';
 
 const NAV = [
@@ -194,6 +195,7 @@ export default function Sidebar() {
   const usuario = useAuthStore((s) => s.usuario);
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const navigate = useNavigate();
+  const { dark, toggle } = useThemeStore();
 
   const handleLogout = async () => {
     await api.post('/auth/logout').catch(() => {});
@@ -239,7 +241,10 @@ export default function Sidebar() {
 
       <div className="border-t border-gray-700 px-4 py-3">
         <p className="text-xs font-medium text-gray-300 truncate">{usuario?.nombre}</p>
-        <p className="text-xs text-gray-500 mb-2">{usuario?.rol}</p>
+        <p className="text-xs text-gray-500 mb-1">{usuario?.rol}</p>
+        <button onClick={toggle} className="block text-xs text-gray-400 hover:text-gray-200 mb-2 transition-colors">
+          {dark ? 'Modo claro' : 'Modo oscuro'}
+        </button>
         <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 transition-colors">
           Cerrar sesión
         </button>

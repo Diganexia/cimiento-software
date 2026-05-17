@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getCuotas, pagarCuota } from '../../services/ctaCteService';
 import api from '../../lib/api';
@@ -62,20 +62,20 @@ export default function Cuotas() {
 
   return (
     <div className="p-6">
-      <h1 className="text-xl font-semibold text-gray-800 mb-6">Cuotas de clientes</h1>
+      <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100 mb-6">Cuotas de clientes</h1>
 
       <div className="flex gap-2 mb-4">
         {['pendiente', 'vencida', 'pagada', 'todas'].map((e) => (
           <button key={e} onClick={() => setEstado(e)}
-            className={`px-4 py-1.5 rounded-full text-sm capitalize transition-colors ${estado === e ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+            className={`px-4 py-1.5 rounded-full text-sm capitalize transition-colors ${estado === e ? 'bg-blue-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'}`}>
             {e === 'todas' ? 'Todas' : e}
           </button>
         ))}
       </div>
 
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600 text-xs uppercase tracking-wide">
+          <thead className="bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs uppercase tracking-wide">
             <tr>
               <th className="px-4 py-3 text-left">Cliente</th>
               <th className="px-4 py-3 text-left">Venta</th>
@@ -86,20 +86,20 @@ export default function Cuotas() {
               <th className="px-4 py-3"></th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {data.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50">
-                <td className="px-4 py-2.5 font-medium text-gray-800">{c.cliente}</td>
-                <td className="px-4 py-2.5 text-gray-500 font-mono text-xs">
+              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                <td className="px-4 py-2.5 font-medium text-gray-800 dark:text-gray-100">{c.cliente}</td>
+                <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 font-mono text-xs">
                   #{String(c.venta_numero).padStart(8, '0')}
                 </td>
-                <td className="px-4 py-2.5 text-center text-gray-700">{c.numero_cuota}</td>
-                <td className="px-4 py-2.5 text-right font-medium text-gray-800">${fmt(c.monto)}</td>
+                <td className="px-4 py-2.5 text-center text-gray-700 dark:text-gray-200">{c.numero_cuota}</td>
+                <td className="px-4 py-2.5 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(c.monto)}</td>
                 <td className="px-4 py-2.5">
                   <span className={
                     c.estado === 'pendiente' && isVencida(c.fecha_vencimiento) ? 'text-red-600 font-medium' :
                     c.estado === 'pendiente' && isProxima(c.fecha_vencimiento) ? 'text-yellow-600 font-medium' :
-                    'text-gray-600'
+                    'text-gray-600 dark:text-gray-300'
                   }>
                     {new Date(c.fecha_vencimiento).toLocaleDateString('es-AR')}
                   </span>
@@ -120,7 +120,7 @@ export default function Cuotas() {
               </tr>
             ))}
             {!data.length && (
-              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">Sin cuotas</td></tr>
+              <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500">Sin cuotas</td></tr>
             )}
           </tbody>
         </table>
@@ -129,18 +129,18 @@ export default function Cuotas() {
       {/* Pago modal */}
       {pagando && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-base font-semibold text-gray-800">Cobrar cuota</h2>
-            <div className="bg-gray-50 rounded-lg p-3 text-sm space-y-1">
-              <p className="text-gray-700"><span className="font-medium">Cliente:</span> {pagando.cliente}</p>
-              <p className="text-gray-700"><span className="font-medium">Cuota:</span> {pagando.numero_cuota}</p>
-              <p className="text-gray-700"><span className="font-medium">Monto:</span> ${fmt(pagando.monto)}</p>
-              <p className="text-gray-700"><span className="font-medium">Vence:</span> {new Date(pagando.fecha_vencimiento).toLocaleDateString('es-AR')}</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">Cobrar cuota</h2>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 text-sm space-y-1">
+              <p className="text-gray-700 dark:text-gray-200"><span className="font-medium">Cliente:</span> {pagando.cliente}</p>
+              <p className="text-gray-700 dark:text-gray-200"><span className="font-medium">Cuota:</span> {pagando.numero_cuota}</p>
+              <p className="text-gray-700 dark:text-gray-200"><span className="font-medium">Monto:</span> ${fmt(pagando.monto)}</p>
+              <p className="text-gray-700 dark:text-gray-200"><span className="font-medium">Vence:</span> {new Date(pagando.fecha_vencimiento).toLocaleDateString('es-AR')}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Medio de pago</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Medio de pago</label>
               <select value={medioId} onChange={(e) => setMedioId(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500">
                 <option value="">Sin movimiento de caja</option>
                 {mediosPago.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
               </select>
@@ -152,7 +152,7 @@ export default function Cuotas() {
                 {loading ? 'Guardando...' : 'Confirmar cobro'}
               </button>
               <button onClick={() => { setPagando(null); setError(''); }}
-                className="px-4 py-2 rounded text-sm border border-gray-300 hover:bg-gray-50">
+                className="px-4 py-2 rounded text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                 Cancelar
               </button>
             </div>

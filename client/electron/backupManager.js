@@ -1,123 +1,121 @@
 /**
- * Backup y restauración usando pg_dump / pg_restore.
+ * Backup y restauración usando el módulo pg directamente (sin pg_dump externo).
  * Guarda backups en userData/backups con retención de 30 días.
  */
 
-const { execFile } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
 const RETENTION_DAYS = 30;
 
-function pgExe(name) {
-  const { getPgBinDir } = require('./dbManager');
-  const binDir = getPgBinDir();
-  const exe = process.platform === 'win32' ? `${name}.exe` : name;
-  if (binDir) {
-    const full = path.join(binDir, exe);
-    if (fs.existsSync(full)) return full;
-  }
-  // Último intento: buscar en PATH
-  // Si tampoco está, el execFile fallará con ENOENT y se captura en el llamador
-  return exe;
-}
-
-function runExe(exePath, args, env) {
-  return new Promise((resolve, reject) => {
-    execFile(exePath, args, { env, timeout: 120000 }, (err, stdout, stderr) => {
-      if (err) {
-        const msg = err.code === 'ENOENT'
-          ? `No se encontró el ejecutable: ${exePath}. Verificá que la base de datos embebida esté correctamente instalada.`
-          : (stderr || err.message);
-        reject(new Error(msg));
-      } else {
-        resolve(stdout);
-      }
-    });
-  });
-}
-
-function buildEnv(dbPassword) {
+function getClient() {
   const { DB_PORT, DB_NAME, DB_USER } = require('./dbManager');
-  return {
-    ...process.env,
-    PGPASSWORD: dbPassword || process.env.DB_PASS,
-    PGHOST: '127.0.0.1',
-    PGPORT: String(DB_PORT),
-    PGDATABASE: DB_NAME,
-    PGUSER: DB_USER
-  };
+  const { Client } = require('pg');
+  return new Client({
+    host: '127.0.0.1',
+    port: DB_PORT,
+    user: DB_USER,
+    database: DB_NAME,
+    password: process.env.DB_PASS
+  });
 }
 
 async function doBackup(backupDir) {
   if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-  const filename = `backup-${timestamp}.dump`;
-  const filepath = path.join(backupDir, filename);
+  const client = getClient();
+  await client.connect();
 
-  const { DB_NAME } = require('./dbManager');
-  const env = buildEnv();
-  const pgDumpPath = pgExe('pg_dump');
-  console.log('[backup] usando pg_dump:', pgDumpPath);
+  try {
+    const tablesRes = await client.query(`
+      SELECT table_name FROM information_schema.tables
+      WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+      ORDER BY table_name
+    `);
 
-  await runExe(pgDumpPath, [
-    '-h', '127.0.0.1',
-    '-p', String(process.env.DB_PORT || 5433),
-    '-U', process.env.DB_USER || 'corralon',
-    '-F', 'c', // custom format (compressed)
-    '-f', filepath,
-    DB_NAME
-  ], env);
+    const backup = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      tables: {},
+      sequences: {}
+    };
 
-  // Purge old backups
-  pruneBackups(backupDir);
+    for (const { table_name } of tablesRes.rows) {
+      const res = await client.query(`SELECT * FROM "${table_name}"`);
+      backup.tables[table_name] = res.rows;
+    }
 
-  return filename;
+    const seqRes = await client.query(`
+      SELECT sequence_name FROM information_schema.sequences
+      WHERE sequence_schema = 'public'
+    `);
+    for (const { sequence_name } of seqRes.rows) {
+      const val = await client.query(`SELECT last_value FROM "${sequence_name}"`);
+      backup.sequences[sequence_name] = val.rows[0]?.last_value ?? null;
+    }
+
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const filename = `backup-${timestamp}.json`;
+    const filepath = path.join(backupDir, filename);
+    fs.writeFileSync(filepath, JSON.stringify(backup));
+
+    pruneBackups(backupDir);
+    return filename;
+  } finally {
+    await client.end().catch(() => {});
+  }
 }
 
 async function doRestore(backupDir, filename) {
   const filepath = path.join(backupDir, filename);
   if (!fs.existsSync(filepath)) throw new Error('Archivo de backup no encontrado');
 
-  const { DB_NAME } = require('./dbManager');
-  const env = buildEnv();
+  if (filename.endsWith('.dump')) {
+    throw new Error('El formato .dump (versión anterior) ya no es compatible. Solo se pueden restaurar backups .json.');
+  }
 
-  // Drop all connections and recreate database
-  await runExe(pgExe('psql'), [
-    '-h', '127.0.0.1',
-    '-p', String(process.env.DB_PORT || 5433),
-    '-U', process.env.DB_USER || 'corralon',
-    '-d', 'postgres',
-    '-c', `SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname='${DB_NAME}' AND pid <> pg_backend_pid();`
-  ], env).catch(() => {});
+  const backup = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+  if (!backup.tables) throw new Error('Formato de backup inválido');
 
-  await runExe(pgExe('dropdb'), [
-    '-h', '127.0.0.1', '-p', String(process.env.DB_PORT || 5433),
-    '-U', process.env.DB_USER || 'corralon',
-    '--if-exists', DB_NAME
-  ], env);
+  const client = getClient();
+  await client.connect();
 
-  await runExe(pgExe('createdb'), [
-    '-h', '127.0.0.1', '-p', String(process.env.DB_PORT || 5433),
-    '-U', process.env.DB_USER || 'corralon',
-    DB_NAME
-  ], env);
+  try {
+    await client.query("SET session_replication_role = 'replica'");
 
-  await runExe(pgExe('pg_restore'), [
-    '-h', '127.0.0.1',
-    '-p', String(process.env.DB_PORT || 5433),
-    '-U', process.env.DB_USER || 'corralon',
-    '-d', DB_NAME,
-    '-v',
-    filepath
-  ], env);
+    for (const table of Object.keys(backup.tables).reverse()) {
+      await client.query(`TRUNCATE TABLE "${table}" RESTART IDENTITY CASCADE`);
+    }
+
+    for (const [table, rows] of Object.entries(backup.tables)) {
+      if (!rows.length) continue;
+      const columns = Object.keys(rows[0]);
+      const colList = columns.map((c) => `"${c}"`).join(', ');
+      for (const row of rows) {
+        const values = columns.map((c) => row[c]);
+        const placeholders = values.map((_, i) => `$${i + 1}`).join(', ');
+        await client.query(
+          `INSERT INTO "${table}" (${colList}) VALUES (${placeholders})`,
+          values
+        );
+      }
+    }
+
+    for (const [seq, val] of Object.entries(backup.sequences)) {
+      if (val !== null && val !== undefined) {
+        await client.query(`SELECT setval($1, $2, true)`, [seq, val]);
+      }
+    }
+  } finally {
+    await client.query("SET session_replication_role = 'origin'").catch(() => {});
+    await client.end().catch(() => {});
+  }
 }
 
 function listBackups(backupDir) {
   if (!fs.existsSync(backupDir)) return [];
   return fs.readdirSync(backupDir)
-    .filter((f) => f.endsWith('.dump'))
+    .filter((f) => f.endsWith('.json') || f.endsWith('.dump'))
     .map((f) => {
       const stat = fs.statSync(path.join(backupDir, f));
       return { filename: f, size: stat.size, date: stat.mtime.toISOString() };
@@ -127,15 +125,13 @@ function listBackups(backupDir) {
 
 function pruneBackups(backupDir) {
   const cutoff = Date.now() - RETENTION_DAYS * 24 * 60 * 60 * 1000;
-  const files = listBackups(backupDir);
-  for (const f of files) {
+  for (const f of listBackups(backupDir)) {
     if (new Date(f.date).getTime() < cutoff) {
       try { fs.unlinkSync(path.join(backupDir, f.filename)); } catch { /* ignore */ }
     }
   }
 }
 
-// Auto-backup: call once after server starts; schedules daily at 02:00
 function scheduleAutoBackup(backupDir) {
   const now = new Date();
   const next = new Date(now);
@@ -145,7 +141,7 @@ function scheduleAutoBackup(backupDir) {
 
   setTimeout(async () => {
     try { await doBackup(backupDir); } catch { /* non-critical */ }
-    scheduleAutoBackup(backupDir); // reschedule
+    scheduleAutoBackup(backupDir);
   }, msUntilNext);
 }
 

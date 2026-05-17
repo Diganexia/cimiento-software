@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   LineChart, Line
@@ -24,12 +24,12 @@ function ExportButtons({ onPDF, onCSV, loading }) {
   return (
     <div className="flex gap-2">
       <button onClick={onCSV} disabled={loading}
-        className="border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs hover:bg-gray-50 disabled:opacity-50 transition-colors">
+        className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded text-xs hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
         Exportar CSV
       </button>
       {onPDF && (
         <button onClick={onPDF} disabled={loading}
-          className="border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-xs hover:bg-gray-50 disabled:opacity-50 transition-colors">
+          className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded text-xs hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors">
           Exportar PDF
         </button>
       )}
@@ -52,13 +52,13 @@ function FilterRow({ children, onGenerate, loading }) {
 function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-xs text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs text-gray-600 dark:text-gray-300 mb-1">{label}</label>
       {children}
     </div>
   );
 }
 
-const INPUT = "border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500";
+const INPUT = "border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500";
 const SELECT = INPUT;
 
 // ── Tab: Ventas por período ───────────────────────────────────────────────────
@@ -100,8 +100,8 @@ function TabVentas() {
       {rows && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">
-              {rows.length} período{rows.length !== 1 ? 's' : ''} — Total: <span className="font-semibold text-gray-800">${fmt(totales?.total)}</span>
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {rows.length} período{rows.length !== 1 ? 's' : ''} — Total: <span className="font-semibold text-gray-800 dark:text-gray-100">${fmt(totales?.total)}</span>
             </p>
             <ExportButtons
               onPDF={() => downloadPDF('/reportes/ventas-periodo', params, 'ventas-periodo.pdf').catch(console.error)}
@@ -124,7 +124,7 @@ function TabVentas() {
             </div>
           )}
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">Fecha</th>
                 <th className="px-3 py-2 text-right">Cant. ventas</th>
@@ -132,16 +132,16 @@ function TabVentas() {
                 <th className="px-3 py-2 text-right">Descuentos</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {rows.map((r, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-700">{r.fecha}</td>
-                  <td className="px-3 py-2 text-right text-gray-600">{r.cantidad}</td>
-                  <td className="px-3 py-2 text-right font-medium text-gray-800">${fmt(r.total)}</td>
-                  <td className="px-3 py-2 text-right text-gray-500">${fmt(r.descuentos)}</td>
+                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">{r.fecha}</td>
+                  <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{r.cantidad}</td>
+                  <td className="px-3 py-2 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(r.total)}</td>
+                  <td className="px-3 py-2 text-right text-gray-500 dark:text-gray-400">${fmt(r.descuentos)}</td>
                 </tr>
               ))}
-              {!rows.length && <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-400">Sin ventas en el período</td></tr>}
+              {!rows.length && <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin ventas en el período</td></tr>}
             </tbody>
           </table>
         </>
@@ -188,7 +188,7 @@ function TabRanking() {
       {rows && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">{rows.length} producto{rows.length !== 1 ? 's' : ''}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{rows.length} producto{rows.length !== 1 ? 's' : ''}</p>
             <ExportButtons
               onPDF={() => downloadPDF('/reportes/ranking-productos', params, 'ranking-productos.pdf').catch(console.error)}
               onCSV={() => downloadCSV('/reportes/ranking-productos', params, 'ranking-productos.csv').catch(console.error)}
@@ -211,7 +211,7 @@ function TabRanking() {
             </div>
           )}
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">#</th>
                 <th className="px-3 py-2 text-left">Código</th>
@@ -220,17 +220,17 @@ function TabRanking() {
                 <th className="px-3 py-2 text-right">Total $</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {rows.map((r) => (
-                <tr key={r.posicion} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-400 font-mono">{r.posicion}</td>
-                  <td className="px-3 py-2 text-gray-500 font-mono">{r.codigo || '—'}</td>
-                  <td className="px-3 py-2 text-gray-800">{r.nombre}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">{r.total_vendido}</td>
-                  <td className="px-3 py-2 text-right font-medium text-gray-800">${fmt(r.total_monto)}</td>
+                <tr key={r.posicion} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-400 dark:text-gray-500 font-mono">{r.posicion}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono">{r.codigo || '—'}</td>
+                  <td className="px-3 py-2 text-gray-800 dark:text-gray-100">{r.nombre}</td>
+                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-200">{r.total_vendido}</td>
+                  <td className="px-3 py-2 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(r.total_monto)}</td>
                 </tr>
               ))}
-              {!rows.length && <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-400">Sin ventas en el período</td></tr>}
+              {!rows.length && <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin ventas en el período</td></tr>}
             </tbody>
           </table>
         </>
@@ -278,10 +278,10 @@ function TabStockValorizado() {
       {data && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               {data.rows.length} producto{data.rows.length !== 1 ? 's' : ''} —
-              Valor costo: <span className="font-semibold text-gray-800">${fmt(data.totales.valor_costo)}</span>{' '}
-              | Valor venta: <span className="font-semibold text-gray-800">${fmt(data.totales.valor_venta)}</span>
+              Valor costo: <span className="font-semibold text-gray-800 dark:text-gray-100">${fmt(data.totales.valor_costo)}</span>{' '}
+              | Valor venta: <span className="font-semibold text-gray-800 dark:text-gray-100">${fmt(data.totales.valor_venta)}</span>
             </p>
             <ExportButtons
               onPDF={() => downloadPDF('/reportes/stock-valorizado', params, 'stock-valorizado.pdf').catch(console.error)}
@@ -290,7 +290,7 @@ function TabStockValorizado() {
             />
           </div>
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">Depósito</th>
                 <th className="px-3 py-2 text-left">Código</th>
@@ -302,20 +302,20 @@ function TabStockValorizado() {
                 <th className="px-3 py-2 text-right">Valor venta</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.rows.map((r, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-500">{r.deposito}</td>
-                  <td className="px-3 py-2 text-gray-500 font-mono">{r.codigo || '—'}</td>
-                  <td className="px-3 py-2 text-gray-800">{r.nombre}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">{r.cantidad}</td>
-                  <td className="px-3 py-2 text-right text-gray-600">${fmt(r.precio_costo)}</td>
-                  <td className="px-3 py-2 text-right text-gray-600">${fmt(r.precio_venta)}</td>
-                  <td className="px-3 py-2 text-right font-medium text-gray-800">${fmt(r.valor_costo)}</td>
+                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{r.deposito}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono">{r.codigo || '—'}</td>
+                  <td className="px-3 py-2 text-gray-800 dark:text-gray-100">{r.nombre}</td>
+                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-200">{r.cantidad}</td>
+                  <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-300">${fmt(r.precio_costo)}</td>
+                  <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-300">${fmt(r.precio_venta)}</td>
+                  <td className="px-3 py-2 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(r.valor_costo)}</td>
                   <td className="px-3 py-2 text-right font-medium text-blue-700">${fmt(r.valor_venta)}</td>
                 </tr>
               ))}
-              {!data.rows.length && <tr><td colSpan={8} className="px-3 py-6 text-center text-gray-400">Sin stock disponible</td></tr>}
+              {!data.rows.length && <tr><td colSpan={8} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin stock disponible</td></tr>}
             </tbody>
           </table>
         </>
@@ -358,7 +358,7 @@ function TabRotacion() {
       {rows && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">{rows.length} producto{rows.length !== 1 ? 's' : ''} sin rotación</p>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{rows.length} producto{rows.length !== 1 ? 's' : ''} sin rotación</p>
             <ExportButtons
               onCSV={() => downloadCSV('/reportes/rotacion-stock', { dias }, 'rotacion-stock.csv').catch(console.error)}
               onPDF={() => downloadPDF('/reportes/rotacion-stock', { dias }, 'rotacion-stock.pdf').catch(console.error)}
@@ -366,7 +366,7 @@ function TabRotacion() {
             />
           </div>
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">Código</th>
                 <th className="px-3 py-2 text-left">Nombre</th>
@@ -375,19 +375,19 @@ function TabRotacion() {
                 <th className="px-3 py-2 text-right">Stock actual</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {rows.map((r, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-500 font-mono">{r.codigo || '—'}</td>
-                  <td className="px-3 py-2 text-gray-800">{r.nombre}</td>
-                  <td className="px-3 py-2 text-gray-500">{r.ultimo_movimiento}</td>
+                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono">{r.codigo || '—'}</td>
+                  <td className="px-3 py-2 text-gray-800 dark:text-gray-100">{r.nombre}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{r.ultimo_movimiento}</td>
                   <td className={`px-3 py-2 text-right font-medium ${r.dias_sin_movimiento > 60 ? 'text-red-600' : 'text-orange-600'}`}>
                     {r.dias_sin_movimiento === '—' ? '—' : `${r.dias_sin_movimiento}d`}
                   </td>
-                  <td className="px-3 py-2 text-right text-gray-700">{r.stock_actual}</td>
+                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-200">{r.stock_actual}</td>
                 </tr>
               ))}
-              {!rows.length && <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-400">Todos los productos tienen rotación activa</td></tr>}
+              {!rows.length && <tr><td colSpan={5} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Todos los productos tienen rotación activa</td></tr>}
             </tbody>
           </table>
         </>
@@ -432,7 +432,7 @@ function TabKardex() {
     ENTRADA_COMPRA: 'text-green-700', SALIDA_VENTA: 'text-red-600',
     AJUSTE_POSITIVO: 'text-green-600', AJUSTE_NEGATIVO: 'text-red-500',
     TRANSFERENCIA_ENTRADA: 'text-blue-600', TRANSFERENCIA_SALIDA: 'text-blue-500',
-    INVENTARIO: 'text-gray-600'
+    INVENTARIO: 'text-gray-600 dark:text-gray-300'
   };
 
   return (
@@ -457,9 +457,9 @@ function TabKardex() {
       {data && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">
-              <span className="font-medium text-gray-800">{data.producto.nombre}</span>
-              {data.producto.codigo && <span className="text-gray-400 ml-1">({data.producto.codigo})</span>}
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              <span className="font-medium text-gray-800 dark:text-gray-100">{data.producto.nombre}</span>
+              {data.producto.codigo && <span className="text-gray-400 dark:text-gray-500 ml-1">({data.producto.codigo})</span>}
               {' — '}{data.rows.length} movimiento{data.rows.length !== 1 ? 's' : ''}
             </p>
             <ExportButtons
@@ -469,7 +469,7 @@ function TabKardex() {
             />
           </div>
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">Fecha</th>
                 <th className="px-3 py-2 text-left">Tipo</th>
@@ -481,20 +481,20 @@ function TabKardex() {
                 <th className="px-3 py-2 text-left">Motivo</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.rows.map((r, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-400 text-xs whitespace-nowrap">{r.fecha}</td>
-                  <td className={`px-3 py-2 text-xs font-medium ${TIPO_COLOR[r.tipo] || 'text-gray-600'}`}>{r.tipo}</td>
-                  <td className="px-3 py-2 text-gray-500 text-xs">{r.deposito_origen}</td>
-                  <td className="px-3 py-2 text-gray-500 text-xs">{r.deposito_destino}</td>
-                  <td className="px-3 py-2 text-right font-medium text-gray-800">{r.cantidad}</td>
-                  <td className="px-3 py-2 text-right text-gray-400">{r.cantidad_anterior}</td>
-                  <td className="px-3 py-2 text-right text-gray-700">{r.cantidad_posterior}</td>
-                  <td className="px-3 py-2 text-gray-500 text-xs">{r.motivo || '—'}</td>
+                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-400 dark:text-gray-500 text-xs whitespace-nowrap">{r.fecha}</td>
+                  <td className={`px-3 py-2 text-xs font-medium ${TIPO_COLOR[r.tipo] || 'text-gray-600 dark:text-gray-300'}`}>{r.tipo}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{r.deposito_origen}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{r.deposito_destino}</td>
+                  <td className="px-3 py-2 text-right font-medium text-gray-800 dark:text-gray-100">{r.cantidad}</td>
+                  <td className="px-3 py-2 text-right text-gray-400 dark:text-gray-500">{r.cantidad_anterior}</td>
+                  <td className="px-3 py-2 text-right text-gray-700 dark:text-gray-200">{r.cantidad_posterior}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{r.motivo || '—'}</td>
                 </tr>
               ))}
-              {!data.rows.length && <tr><td colSpan={8} className="px-3 py-6 text-center text-gray-400">Sin movimientos en el período</td></tr>}
+              {!data.rows.length && <tr><td colSpan={8} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin movimientos en el período</td></tr>}
             </tbody>
           </table>
         </>
@@ -524,10 +524,10 @@ function TabDeudores() {
   return (
     <div>
       <div className="flex items-center justify-between mb-4">
-        <p className="text-sm text-gray-500">Clientes con saldo deudor en cuenta corriente</p>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Clientes con saldo deudor en cuenta corriente</p>
         <div className="flex gap-2">
           <button onClick={generar} disabled={loading}
-            className="border border-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm hover:bg-gray-50 transition-colors">
+            className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-3 py-1.5 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Actualizar
           </button>
           {data && (
@@ -548,7 +548,7 @@ function TabDeudores() {
             </div>
           )}
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">Nombre</th>
                 <th className="px-3 py-2 text-left">CUIT</th>
@@ -556,16 +556,16 @@ function TabDeudores() {
                 <th className="px-3 py-2 text-right">Saldo deudor</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.rows.map((r) => (
-                <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-800 font-medium">{r.nombre}</td>
-                  <td className="px-3 py-2 text-gray-500">{r.cuit || '—'}</td>
-                  <td className="px-3 py-2 text-gray-500">{r.telefono || '—'}</td>
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-800 dark:text-gray-100 font-medium">{r.nombre}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{r.cuit || '—'}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400">{r.telefono || '—'}</td>
                   <td className="px-3 py-2 text-right font-bold text-red-600">${fmt(r.saldo)}</td>
                 </tr>
               ))}
-              {!data.rows.length && <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-400">Sin clientes deudores</td></tr>}
+              {!data.rows.length && <tr><td colSpan={4} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin clientes deudores</td></tr>}
             </tbody>
           </table>
         </>
@@ -616,9 +616,9 @@ function TabAfip() {
       {data && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               {data.totales.cantidad} comprobante{data.totales.cantidad !== 1 ? 's' : ''} —
-              Total: <span className="font-semibold text-gray-800">${fmt(data.totales.total)}</span>
+              Total: <span className="font-semibold text-gray-800 dark:text-gray-100">${fmt(data.totales.total)}</span>
             </p>
             <ExportButtons
               onPDF={() => downloadPDF('/reportes/comprobantes-afip', params, 'comprobantes-afip.pdf').catch(console.error)}
@@ -627,7 +627,7 @@ function TabAfip() {
             />
           </div>
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">Fecha</th>
                 <th className="px-3 py-2 text-left">Tipo</th>
@@ -638,23 +638,23 @@ function TabAfip() {
                 <th className="px-3 py-2 text-right">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.rows.map((r, i) => (
-                <tr key={i} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 text-gray-500 text-xs">{r.fecha}</td>
-                  <td className="px-3 py-2 text-gray-700 capitalize text-xs">{r.tipo_comprobante.replace('_', ' ')}</td>
-                  <td className="px-3 py-2 text-right text-gray-600 font-mono">{r.numero}</td>
-                  <td className="px-3 py-2 text-gray-500 font-mono text-xs">{r.cae || '—'}</td>
+                <tr key={i} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{r.fecha}</td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200 capitalize text-xs">{r.tipo_comprobante.replace('_', ' ')}</td>
+                  <td className="px-3 py-2 text-right text-gray-600 dark:text-gray-300 font-mono">{r.numero}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 font-mono text-xs">{r.cae || '—'}</td>
                   <td className="px-3 py-2 text-center">
-                    <span className={`text-xs px-2 py-0.5 rounded-full ${ESTADO_COLOR[r.estado] || 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${ESTADO_COLOR[r.estado] || 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300'}`}>
                       {r.estado}
                     </span>
                   </td>
-                  <td className="px-3 py-2 text-gray-700">{r.cliente}</td>
-                  <td className="px-3 py-2 text-right font-medium text-gray-800">${fmt(r.total)}</td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">{r.cliente}</td>
+                  <td className="px-3 py-2 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(r.total)}</td>
                 </tr>
               ))}
-              {!data.rows.length && <tr><td colSpan={7} className="px-3 py-6 text-center text-gray-400">Sin comprobantes en el período</td></tr>}
+              {!data.rows.length && <tr><td colSpan={7} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin comprobantes en el período</td></tr>}
             </tbody>
           </table>
         </>
@@ -721,9 +721,9 @@ function TabVentasCliente() {
       {data && (
         <>
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm text-gray-600">
+            <p className="text-sm text-gray-600 dark:text-gray-300">
               {data.total} comprobante{data.total !== 1 ? 's' : ''} —
-              Total: <span className="font-semibold text-gray-800">${fmt(data.total_monto)}</span>
+              Total: <span className="font-semibold text-gray-800 dark:text-gray-100">${fmt(data.total_monto)}</span>
             </p>
             <ExportButtons
               onPDF={() => downloadPDF('/reportes/ventas-por-cliente', params, 'ventas-cliente.pdf').catch(console.error)}
@@ -732,7 +732,7 @@ function TabVentasCliente() {
             />
           </div>
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-3 py-2 text-left">N°</th>
                 <th className="px-3 py-2 text-left">Fecha</th>
@@ -742,18 +742,18 @@ function TabVentasCliente() {
                 <th className="px-3 py-2 text-right">Total</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {data.data.map((r) => (
-                <tr key={r.id} className="hover:bg-gray-50">
-                  <td className="px-3 py-2 font-mono text-gray-700 text-xs">{String(r.numero).padStart(8, '0')}</td>
-                  <td className="px-3 py-2 text-gray-500 text-xs">{new Date(r.created_at).toLocaleDateString('es-AR')}</td>
-                  <td className="px-3 py-2 text-gray-700">{TIPO_LABEL[r.tipo_comprobante] || r.tipo_comprobante}</td>
-                  <td className="px-3 py-2 text-gray-600 capitalize text-xs">{r.estado}</td>
-                  <td className="px-3 py-2 text-gray-600 capitalize text-xs">{r.tipo_pago}</td>
-                  <td className="px-3 py-2 text-right font-semibold text-gray-800">${fmt(r.total)}</td>
+                <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-3 py-2 font-mono text-gray-700 dark:text-gray-200 text-xs">{String(r.numero).padStart(8, '0')}</td>
+                  <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">{new Date(r.created_at).toLocaleDateString('es-AR')}</td>
+                  <td className="px-3 py-2 text-gray-700 dark:text-gray-200">{TIPO_LABEL[r.tipo_comprobante] || r.tipo_comprobante}</td>
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300 capitalize text-xs">{r.estado}</td>
+                  <td className="px-3 py-2 text-gray-600 dark:text-gray-300 capitalize text-xs">{r.tipo_pago}</td>
+                  <td className="px-3 py-2 text-right font-semibold text-gray-800 dark:text-gray-100">${fmt(r.total)}</td>
                 </tr>
               ))}
-              {!data.data.length && <tr><td colSpan={6} className="px-3 py-6 text-center text-gray-400">Sin ventas para este cliente</td></tr>}
+              {!data.data.length && <tr><td colSpan={6} className="px-3 py-6 text-center text-gray-400 dark:text-gray-500">Sin ventas para este cliente</td></tr>}
             </tbody>
           </table>
         </>
@@ -781,17 +781,17 @@ export default function Reportes() {
   return (
     <div className="p-6 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-xl font-semibold text-gray-800">Reportes</h1>
-        <p className="text-sm text-gray-500">Análisis y exportaciones. Los reportes se generan en tiempo real.</p>
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Reportes</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Análisis y exportaciones. Los reportes se generan en tiempo real.</p>
       </div>
 
-      <div className="flex gap-1 border-b border-gray-200 mb-6 flex-wrap">
+      <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-6 flex-wrap">
         {TABS.map((t, i) => (
           <button key={t.label} onClick={() => setTab(i)}
             className={`px-4 py-2 text-sm transition-colors whitespace-nowrap ${
               tab === i
                 ? 'border-b-2 border-blue-600 text-blue-600 font-medium'
-                : 'text-gray-500 hover:text-gray-700'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700'
             }`}
           >
             {t.label}
@@ -799,7 +799,7 @@ export default function Reportes() {
         ))}
       </div>
 
-      <div className="bg-white rounded-lg border border-gray-200 p-6">
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         {TABS[tab].component}
       </div>
     </div>

@@ -1,9 +1,9 @@
-import { Outlet } from 'react-router-dom';
+﻿import { Outlet } from 'react-router-dom';
 import Sidebar from './Sidebar';
 
 export default function Layout() {
   return (
-    <div className="flex h-screen bg-gray-100 overflow-hidden">
+    <div className="flex h-screen bg-gray-100 dark:bg-gray-900 overflow-hidden">
       <Sidebar />
       <main className="flex-1 overflow-auto">
         <Outlet />

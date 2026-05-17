@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip
@@ -40,8 +40,8 @@ function getLast7Days() {
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-gray-200 rounded shadow px-3 py-2 text-xs">
-      <p className="font-medium text-gray-700 mb-1">{label}</p>
+    <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow px-3 py-2 text-xs">
+      <p className="font-medium text-gray-700 dark:text-gray-200 mb-1">{label}</p>
       <p className="text-blue-600">Ventas: <span className="font-semibold">${fmt(payload[0]?.value)}</span></p>
     </div>
   );
@@ -84,14 +84,14 @@ export default function Dashboard() {
     <div className="p-6">
       <div className="mb-5 flex items-start justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
             Bienvenido, {usuario?.nombre}
           </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             {new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded font-mono">v{version}</span>
+        <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">v{version}</span>
       </div>
 
       <div className="mb-5">
@@ -125,14 +125,14 @@ export default function Dashboard() {
           label="Stock bajo mínimo"
           value={kpis != null ? String(kpis.stockBajo) : '—'}
           sub="productos"
-          color={kpis?.stockBajo > 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gray-50 border-gray-200 text-gray-600'}
+          color={kpis?.stockBajo > 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}
           to="/stock/productos"
         />
       </div>
 
       {/* Chart */}
-      <div className="bg-white rounded-lg border border-gray-200 p-5 mb-6">
-        <p className="text-sm font-medium text-gray-700 mb-4">Ventas — últimos 7 días</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-4">Ventas — últimos 7 días</p>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData} barCategoryGap="35%">
@@ -145,7 +145,7 @@ export default function Dashboard() {
             </BarChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-40 flex items-center justify-center text-gray-400 text-sm">
+          <div className="h-40 flex items-center justify-center text-gray-400 dark:text-gray-500 text-sm">
             Sin datos de ventas
           </div>
         )}
@@ -170,7 +170,7 @@ export default function Dashboard() {
           { label: 'Punto de venta', to: '/ventas/nueva', color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
           { label: 'Stock', to: '/stock/vista', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
           { label: 'Reportes', to: '/reportes', color: 'bg-purple-50 border-purple-200 text-purple-700' },
-          { label: 'Configuración', to: '/configuracion', color: 'bg-gray-50 border-gray-200 text-gray-700' }
+          { label: 'Configuración', to: '/configuracion', color: 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200' }
         ].map((c) => (
           <Link key={c.to} to={c.to}
             className={`block p-3 rounded-lg border text-sm font-medium transition-shadow hover:shadow-sm ${c.color}`}>

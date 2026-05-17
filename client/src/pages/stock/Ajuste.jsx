@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { ajustar, getDepositos } from '../../services/stockService';
@@ -100,12 +100,12 @@ export default function Ajuste() {
   return (
     <div className="p-6 max-w-xl mx-auto">
       <div className="flex items-center gap-3 mb-6">
-        <button onClick={() => navigate('/stock/vista')} className="text-gray-500 hover:text-gray-700">
+        <button onClick={() => navigate('/stock/vista')} className="text-gray-500 dark:text-gray-400 hover:text-gray-700">
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h1 className="text-xl font-semibold text-gray-800">Ajuste de stock</h1>
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Ajuste de stock</h1>
       </div>
 
       {exito && (
@@ -119,15 +119,15 @@ export default function Ajuste() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 shadow-sm p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-6 space-y-5">
 
         {/* Depósito */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Depósito</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Depósito</label>
           <select
             value={depositoId}
             onChange={(e) => { setDepositoId(e.target.value); setCantidadActual(null); }}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Seleccionar depósito...</option>
             {depositos.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
@@ -136,11 +136,11 @@ export default function Ajuste() {
 
         {/* Producto */}
         <div className="relative">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Producto</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Producto</label>
           {productoId ? (
-            <div className="flex items-center justify-between border border-gray-300 rounded px-3 py-2 text-sm bg-gray-50">
-              <span className="text-gray-800">{productoNombre}</span>
-              <button type="button" onClick={limpiar} className="text-gray-400 hover:text-gray-600 ml-2">✕</button>
+            <div className="flex items-center justify-between border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700">
+              <span className="text-gray-800 dark:text-gray-100">{productoNombre}</span>
+              <button type="button" onClick={limpiar} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 ml-2">✕</button>
             </div>
           ) : (
             <>
@@ -149,11 +149,11 @@ export default function Ajuste() {
                 placeholder="Buscar producto por nombre o código..."
                 value={busqueda}
                 onChange={(e) => setBusqueda(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
-              {buscando && <p className="text-xs text-gray-400 mt-1">Buscando...</p>}
+              {buscando && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Buscando...</p>}
               {productos.length > 0 && (
-                <ul className="absolute z-10 w-full bg-white border border-gray-200 rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
+                <ul className="absolute z-10 w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg mt-1 max-h-48 overflow-y-auto">
                   {productos.map((p) => (
                     <li key={p.id}>
                       <button
@@ -162,7 +162,7 @@ export default function Ajuste() {
                         className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex justify-between"
                       >
                         <span>{p.nombre}</span>
-                        <span className="text-gray-400 text-xs">{p.codigo}</span>
+                        <span className="text-gray-400 dark:text-gray-500 text-xs">{p.codigo}</span>
                       </button>
                     </li>
                   ))}
@@ -174,18 +174,18 @@ export default function Ajuste() {
 
         {/* Stock actual */}
         {productoId && (
-          <div className="bg-gray-50 rounded px-4 py-3 text-sm">
-            <span className="text-gray-500">Stock actual en depósito: </span>
-            <span className="font-semibold text-gray-800">
+          <div className="bg-gray-50 dark:bg-gray-700 rounded px-4 py-3 text-sm">
+            <span className="text-gray-500 dark:text-gray-400">Stock actual en depósito: </span>
+            <span className="font-semibold text-gray-800 dark:text-gray-100">
               {cantidadActual !== null ? parseFloat(parseFloat(cantidadActual).toFixed(3)).toString() : '—'}
-              {cantidadActual !== null && productoUnidad && <span className="text-gray-500 ml-1">{productoUnidad}</span>}
+              {cantidadActual !== null && productoUnidad && <span className="text-gray-500 dark:text-gray-400 ml-1">{productoUnidad}</span>}
             </span>
           </div>
         )}
 
         {/* Cantidad nueva */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Cantidad nueva</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Cantidad nueva</label>
           <input
             type="number"
             min="0"
@@ -193,10 +193,10 @@ export default function Ajuste() {
             value={cantidadNueva}
             onChange={(e) => { setCantidadNueva(e.target.value); setExito(false); }}
             placeholder="0"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           {delta !== null && (
-            <p className={`text-xs mt-1 ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-600' : 'text-gray-400'}`}>
+            <p className={`text-xs mt-1 ${delta > 0 ? 'text-green-600' : delta < 0 ? 'text-red-600' : 'text-gray-400 dark:text-gray-500'}`}>
               {delta === 0 ? 'Sin cambio' : `${delta > 0 ? '+' : ''}${parseFloat(delta.toFixed(3))} ${productoUnidad || 'unidades'}`}
             </p>
           )}
@@ -204,13 +204,13 @@ export default function Ajuste() {
 
         {/* Motivo */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Motivo</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Motivo</label>
           <input
             type="text"
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
             placeholder="Ej: Conteo físico, devolución, merma..."
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 

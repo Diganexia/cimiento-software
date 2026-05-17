@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+﻿import { useEffect, useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { getProductos, getRubros, deleteProducto } from '../../services/productosService';
 import StockBadge from '../../components/StockBadge';
@@ -57,7 +57,7 @@ export default function Productos() {
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-semibold text-gray-800">Productos</h1>
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Productos</h1>
         {canCreate && (
           <Link to="/stock/productos/nuevo" className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors">
             + Nuevo producto
@@ -66,18 +66,18 @@ export default function Productos() {
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-4 flex flex-wrap gap-3">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4 mb-4 flex flex-wrap gap-3">
         <input
           type="text"
           placeholder="Buscar por nombre, código..."
           value={busqueda}
           onChange={(e) => { setBusqueda(e.target.value); setPage(1); }}
-          className="border border-gray-300 rounded px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm w-64 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <select
           value={rubroId}
           onChange={(e) => { setRubroId(e.target.value); setPage(1); }}
-          className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="">Todos los rubros</option>
           {rubros.map((r) => <option key={r.id} value={r.id}>{r.label}</option>)}
@@ -85,7 +85,7 @@ export default function Productos() {
         <select
           value={activo}
           onChange={(e) => { setActivo(e.target.value); setPage(1); }}
-          className="border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
         >
           <option value="true">Activos</option>
           <option value="false">Inactivos</option>
@@ -94,41 +94,41 @@ export default function Productos() {
       </div>
 
       {/* Tabla */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className="bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Nombre</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Código</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Rubro</th>
-                <th className="text-left px-4 py-3 text-gray-600 font-medium">Unidad</th>
-                <th className="text-right px-4 py-3 text-gray-600 font-medium">P. Venta</th>
-                <th className="text-center px-4 py-3 text-gray-600 font-medium">Stock</th>
-                <th className="text-center px-4 py-3 text-gray-600 font-medium">Estado</th>
+                <th className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">Nombre</th>
+                <th className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">Código</th>
+                <th className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">Rubro</th>
+                <th className="text-left px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">Unidad</th>
+                <th className="text-right px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">P. Venta</th>
+                <th className="text-center px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">Stock</th>
+                <th className="text-center px-4 py-3 text-gray-600 dark:text-gray-300 font-medium">Estado</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {loading ? (
-                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Cargando...</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400 dark:text-gray-500">Cargando...</td></tr>
               ) : productos.length === 0 ? (
-                <tr><td colSpan={8} className="text-center py-8 text-gray-400">Sin resultados</td></tr>
+                <tr><td colSpan={8} className="text-center py-8 text-gray-400 dark:text-gray-500">Sin resultados</td></tr>
               ) : (
                 productos.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 font-medium text-gray-800">{p.nombre}</td>
-                    <td className="px-4 py-3 text-gray-500 font-mono text-xs">{p.codigo || '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.rubro || '—'}</td>
-                    <td className="px-4 py-3 text-gray-600">{p.unidad_abreviatura}</td>
-                    <td className="px-4 py-3 text-right text-gray-800 font-medium">
+                  <tr key={p.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                    <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{p.nombre}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 font-mono text-xs">{p.codigo || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.rubro || '—'}</td>
+                    <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{p.unidad_abreviatura}</td>
+                    <td className="px-4 py-3 text-right text-gray-800 dark:text-gray-100 font-medium">
                       ${parseFloat(p.precio_venta).toLocaleString('es-AR')}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <StockBadge stock={p.stock_total} minimo={p.stock_minimo} />
                     </td>
                     <td className="px-4 py-3 text-center">
-                      <span className={`text-xs px-2 py-0.5 rounded-full ${p.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${p.activo ? 'bg-green-100 text-green-700' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'}`}>
                         {p.activo ? 'Activo' : 'Inactivo'}
                       </span>
                     </td>

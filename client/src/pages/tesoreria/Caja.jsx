@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { getArqueoActual, getCajas, abrirCaja, cerrarCaja, movimientoManual, downloadPdfArqueo } from '../../services/cajaService';
 import api from '../../lib/api';
 
@@ -94,36 +94,36 @@ export default function Caja() {
     }
   };
 
-  if (estado === null) return <div className="p-6 text-gray-500">Cargando...</div>;
+  if (estado === null) return <div className="p-6 text-gray-500 dark:text-gray-400">Cargando...</div>;
 
   // ── No hay caja abierta ────────────────────────────────────────────────────
   if (!estado.arqueo) {
     return (
       <div className="p-6 flex items-center justify-center min-h-96">
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 max-w-sm w-full space-y-5">
+        <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm p-8 max-w-sm w-full space-y-5">
           <div className="text-center">
-            <div className="w-14 h-14 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-              <svg className="w-7 h-7 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-14 h-14 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-3">
+              <svg className="w-7 h-7 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h2 className="text-lg font-semibold text-gray-800">Caja cerrada</h2>
-            <p className="text-sm text-gray-500 mt-1">No hay ningún turno abierto</p>
+            <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Caja cerrada</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">No hay ningún turno abierto</p>
           </div>
 
           <div className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Caja</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Caja</label>
               <select value={cajaId} onChange={(e) => setCajaId(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {cajas.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Saldo inicial</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Saldo inicial</label>
               <input type="number" min="0" step="0.01" value={saldoInicial}
                 onChange={(e) => setSaldoInicial(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
           </div>
 
@@ -146,15 +146,15 @@ export default function Caja() {
       {/* Header */}
       <div className="flex items-start justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">{arqueo.caja}</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{arqueo.caja}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
             Abierta {new Date(arqueo.abierto_at).toLocaleString('es-AR')} · por {arqueo.usuario_apertura}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-xs text-gray-500 uppercase tracking-wide">Saldo actual</p>
-            <p className="text-2xl font-bold text-gray-900">${fmt(saldo_calculado)}</p>
+            <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Saldo actual</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${fmt(saldo_calculado)}</p>
           </div>
           <span className="w-2.5 h-2.5 rounded-full bg-green-500 mt-1 animate-pulse" />
         </div>
@@ -162,9 +162,9 @@ export default function Caja() {
 
       {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4 mb-6">
-        <div className="bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Saldo inicial</p>
-          <p className="text-xl font-bold text-gray-800">${fmt(arqueo.saldo_inicial)}</p>
+        <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Saldo inicial</p>
+          <p className="text-xl font-bold text-gray-800 dark:text-gray-100">${fmt(arqueo.saldo_inicial)}</p>
         </div>
         <div className="bg-green-50 rounded-lg border border-green-200 p-4">
           <p className="text-xs text-green-600 uppercase tracking-wide mb-1">Ingresos</p>
@@ -178,48 +178,48 @@ export default function Caja() {
 
       <div className="flex gap-4 mb-6">
         {/* Por medio de pago */}
-        <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm font-medium text-gray-700 mb-3">Por medio de pago</p>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Por medio de pago</p>
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-gray-500 uppercase">
+              <tr className="text-xs text-gray-500 dark:text-gray-400 uppercase">
                 <th className="text-left pb-2">Medio</th>
                 <th className="text-right pb-2">Ingresos</th>
                 <th className="text-right pb-2">Egresos</th>
                 <th className="text-right pb-2">Neto</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {resumen.map((r, i) => (
                 <tr key={i}>
-                  <td className="py-1.5 text-gray-700">{r.medio_pago}</td>
+                  <td className="py-1.5 text-gray-700 dark:text-gray-200">{r.medio_pago}</td>
                   <td className="py-1.5 text-right text-green-700">${fmt(r.ingresos)}</td>
                   <td className="py-1.5 text-right text-red-600">{r.egresos > 0 ? `-$${fmt(r.egresos)}` : '—'}</td>
-                  <td className="py-1.5 text-right font-medium text-gray-800">${fmt(r.neto)}</td>
+                  <td className="py-1.5 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(r.neto)}</td>
                 </tr>
               ))}
-              {!resumen.length && <tr><td colSpan={4} className="py-3 text-center text-gray-400 text-xs">Sin movimientos aún</td></tr>}
+              {!resumen.length && <tr><td colSpan={4} className="py-3 text-center text-gray-400 dark:text-gray-500 text-xs">Sin movimientos aún</td></tr>}
             </tbody>
           </table>
         </div>
 
         {/* Últimos movimientos */}
-        <div className="flex-1 bg-white rounded-lg border border-gray-200 p-4">
-          <p className="text-sm font-medium text-gray-700 mb-3">Últimos movimientos</p>
+        <div className="flex-1 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Últimos movimientos</p>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {movimientos.map((m) => (
               <div key={m.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
                 <div>
-                  <span className="text-gray-700">{CONCEPTO_LABEL[m.concepto] || m.concepto}</span>
-                  {m.descripcion && <span className="text-gray-400 text-xs ml-1">— {m.descripcion.slice(0, 30)}</span>}
-                  <span className="text-gray-400 text-xs block">{m.medio_pago}</span>
+                  <span className="text-gray-700 dark:text-gray-200">{CONCEPTO_LABEL[m.concepto] || m.concepto}</span>
+                  {m.descripcion && <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">— {m.descripcion.slice(0, 30)}</span>}
+                  <span className="text-gray-400 dark:text-gray-500 text-xs block">{m.medio_pago}</span>
                 </div>
                 <span className={`font-semibold ${m.tipo === 'ingreso' ? 'text-green-700' : 'text-red-600'}`}>
                   {m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}
                 </span>
               </div>
             ))}
-            {!movimientos.length && <p className="text-center text-gray-400 text-xs py-4">Sin movimientos</p>}
+            {!movimientos.length && <p className="text-center text-gray-400 dark:text-gray-500 text-xs py-4">Sin movimientos</p>}
           </div>
         </div>
       </div>
@@ -227,11 +227,11 @@ export default function Caja() {
       {/* Actions */}
       <div className="flex gap-3">
         <button onClick={() => setShowMovManual(true)}
-          className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
+          className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
           + Movimiento manual
         </button>
         <button onClick={() => downloadPdfArqueo('actual').catch(console.error)}
-          className="bg-gray-100 border border-gray-300 text-gray-700 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
+          className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
           Imprimir resumen
         </button>
         <button onClick={() => { setShowCierre(true); setError(''); setSaldoDeclarado(String(saldo_calculado.toFixed(2))); }}
@@ -243,19 +243,19 @@ export default function Caja() {
       {/* Cierre modal */}
       {showCierre && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-base font-semibold text-gray-800">Cerrar caja</h2>
-            <div className="bg-gray-50 rounded-lg p-3 space-y-1 text-sm">
-              <div className="flex justify-between text-gray-600"><span>Saldo inicial:</span><span>${fmt(arqueo.saldo_inicial)}</span></div>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">Cerrar caja</h2>
+            <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3 space-y-1 text-sm">
+              <div className="flex justify-between text-gray-600 dark:text-gray-300"><span>Saldo inicial:</span><span>${fmt(arqueo.saldo_inicial)}</span></div>
               <div className="flex justify-between text-green-700"><span>Ingresos:</span><span>+${fmt(ingresos)}</span></div>
               <div className="flex justify-between text-red-600"><span>Egresos:</span><span>-${fmt(egresos)}</span></div>
-              <div className="flex justify-between font-semibold text-gray-800 pt-1 border-t border-gray-200"><span>Saldo calculado:</span><span>${fmt(saldo_calculado)}</span></div>
+              <div className="flex justify-between font-semibold text-gray-800 dark:text-gray-100 pt-1 border-t border-gray-200 dark:border-gray-700"><span>Saldo calculado:</span><span>${fmt(saldo_calculado)}</span></div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Saldo declarado (dinero en caja)</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Saldo declarado (dinero en caja)</label>
               <input type="number" min="0" step="0.01" value={saldoDeclarado}
                 onChange={(e) => setSaldoDeclarado(e.target.value)}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
                 autoFocus />
               {saldoDeclarado !== '' && (
                 <p className={`text-xs mt-1 ${Math.abs(parseFloat(saldoDeclarado) - saldo_calculado) > 0.01 ? 'text-red-500' : 'text-green-600'}`}>
@@ -270,7 +270,7 @@ export default function Caja() {
                 {loading ? 'Cerrando...' : 'Confirmar cierre'}
               </button>
               <button onClick={() => setShowCierre(false)}
-                className="px-4 py-2 rounded text-sm border border-gray-300 hover:bg-gray-50">
+                className="px-4 py-2 rounded text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                 Cancelar
               </button>
             </div>
@@ -281,37 +281,37 @@ export default function Caja() {
       {/* Movimiento manual modal */}
       {showMovManual && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
-            <h2 className="text-base font-semibold text-gray-800">Movimiento manual</h2>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-sm space-y-4">
+            <h2 className="text-base font-semibold text-gray-800 dark:text-gray-100">Movimiento manual</h2>
             <div className="flex gap-2">
               {['ingreso', 'egreso'].map((t) => (
                 <button key={t} onClick={() => setMovForm((p) => ({ ...p, tipo: t }))}
                   className={`flex-1 py-2 rounded text-sm font-medium capitalize transition-colors ${movForm.tipo === t
                     ? (t === 'ingreso' ? 'bg-green-600 text-white' : 'bg-red-600 text-white')
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}>
+                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-200'}`}>
                   {t}
                 </button>
               ))}
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Monto *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Monto *</label>
               <input type="number" min="0.01" step="0.01" value={movForm.monto}
                 onChange={(e) => setMovForm((p) => ({ ...p, monto: e.target.value }))}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 autoFocus />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Medio de pago *</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Medio de pago *</label>
               <select value={movForm.medio_pago_id} onChange={(e) => setMovForm((p) => ({ ...p, medio_pago_id: e.target.value }))}
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 {mediosPago.map((m) => <option key={m.id} value={m.id}>{m.nombre}</option>)}
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Descripción</label>
               <input value={movForm.descripcion} onChange={(e) => setMovForm((p) => ({ ...p, descripcion: e.target.value }))}
                 placeholder="Ej: Pago de luz, retiro de efectivo..."
-                className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
             </div>
             {error && <p className="text-red-600 text-sm">{error}</p>}
             <div className="flex gap-3">
@@ -320,7 +320,7 @@ export default function Caja() {
                 {loading ? 'Guardando...' : 'Registrar'}
               </button>
               <button onClick={() => { setShowMovManual(false); setError(''); }}
-                className="px-4 py-2 rounded text-sm border border-gray-300 hover:bg-gray-50">
+                className="px-4 py-2 rounded text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700">
                 Cancelar
               </button>
             </div>

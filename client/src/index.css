@@ -1,3 +1,22 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dark mode: indicar al browser que use esquema oscuro para controles nativos */
+.dark {
+  color-scheme: dark;
+}
+
+/* Dark mode: inputs, selects y textareas — override de clases Tailwind */
+.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+.dark select,
+.dark textarea {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+.dark input:not([type="checkbox"]):not([type="radio"])::placeholder,
+.dark textarea::placeholder {
+  color: #9ca3af;
+}

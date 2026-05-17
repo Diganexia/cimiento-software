@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 
 const fmtSize = (bytes) => {
   if (bytes >= 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
@@ -70,7 +70,7 @@ export default function Backup() {
   if (!isElectron) {
     return (
       <div className="p-6 max-w-2xl">
-        <p className="text-gray-500 text-sm">Esta función solo está disponible en la aplicación de escritorio (build servidor).</p>
+        <p className="text-gray-500 dark:text-gray-400 text-sm">Esta función solo está disponible en la aplicación de escritorio (build servidor).</p>
       </div>
     );
   }
@@ -79,8 +79,8 @@ export default function Backup() {
     <div className="p-6 max-w-3xl">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-xl font-semibold text-gray-800">Backup y restauración</h1>
-          <p className="text-sm text-gray-500">Backups automáticos diarios a las 02:00 hs. Retención: 30 días.</p>
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Backup y restauración</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Backups automáticos diarios a las 02:00 hs. Retención: 30 días.</p>
         </div>
         <button
           onClick={handleBackup}
@@ -98,17 +98,17 @@ export default function Backup() {
         <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{err}</div>
       )}
 
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-100 bg-gray-50">
-          <p className="text-sm font-medium text-gray-700">Backups disponibles ({backups.length})</p>
+      <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Backups disponibles ({backups.length})</p>
         </div>
         {loading ? (
-          <p className="px-4 py-6 text-gray-400 text-sm text-center">Cargando...</p>
+          <p className="px-4 py-6 text-gray-400 dark:text-gray-500 text-sm text-center">Cargando...</p>
         ) : backups.length === 0 ? (
-          <p className="px-4 py-8 text-gray-400 text-sm text-center">Sin backups. Creá uno ahora.</p>
+          <p className="px-4 py-8 text-gray-400 dark:text-gray-500 text-sm text-center">Sin backups. Creá uno ahora.</p>
         ) : (
           <table className="w-full text-sm">
-            <thead className="text-xs text-gray-500 uppercase tracking-wide border-b border-gray-200">
+            <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="px-4 py-2 text-left">Archivo</th>
                 <th className="px-4 py-2 text-left">Fecha</th>
@@ -116,14 +116,14 @@ export default function Backup() {
                 <th className="px-4 py-2 text-right">Acciones</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
               {backups.map((b) => (
-                <tr key={b.filename} className="hover:bg-gray-50">
-                  <td className="px-4 py-2.5 font-mono text-xs text-gray-700">{b.filename}</td>
-                  <td className="px-4 py-2.5 text-gray-500 text-xs">
+                <tr key={b.filename} className="hover:bg-gray-50 dark:hover:bg-gray-700">
+                  <td className="px-4 py-2.5 font-mono text-xs text-gray-700 dark:text-gray-200">{b.filename}</td>
+                  <td className="px-4 py-2.5 text-gray-500 dark:text-gray-400 text-xs">
                     {new Date(b.date).toLocaleString('es-AR')}
                   </td>
-                  <td className="px-4 py-2.5 text-right text-gray-500 text-xs">{fmtSize(b.size)}</td>
+                  <td className="px-4 py-2.5 text-right text-gray-500 dark:text-gray-400 text-xs">{fmtSize(b.size)}</td>
                   <td className="px-4 py-2.5 text-right space-x-3">
                     <button
                       onClick={() => handleRestore(b.filename)}
