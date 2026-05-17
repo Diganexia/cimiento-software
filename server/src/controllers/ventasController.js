@@ -138,12 +138,15 @@ const crear = async (req, res) => {
       }))
     );
 
+    let arcaError = null;
     if (confirmar) {
-      await _confirmar(id, req.user.id, pagos, punto_venta_id, cuotas, trx);
+      ({ arcaError } = await _confirmar(id, req.user.id, pagos, punto_venta_id, cuotas, trx));
     }
 
     await trx.commit();
-    res.status(201).json({ id, numero, estado: confirmar ? 'confirmada' : 'borrador' });
+    const body = { id, numero, estado: confirmar ? 'confirmada' : 'borrador' };
+    if (arcaError) body.arca_error = arcaError;
+    res.status(201).json(body);
   } catch (err) {
     await trx.rollback();
     console.error(err);
@@ -159,9 +162,9 @@ const confirmarVenta = async (req, res) => {
     if (venta.estado !== 'borrador') { await trx.rollback(); return res.status(400).json({ error: 'La venta ya fue procesada' }); }
 
     const { pagos = [], punto_venta_id, cuotas } = req.body;
-    await _confirmar(venta.id, req.user.id, pagos, punto_venta_id, cuotas, trx);
+    const { arcaError } = await _confirmar(venta.id, req.user.id, pagos, punto_venta_id, cuotas, trx);
     await trx.commit();
-    res.json({ ok: true });
+    res.json({ ok: true, ...(arcaError && { arca_error: arcaError }) });
   } catch (err) {
     await trx.rollback();
     console.error(err);
@@ -236,7 +239,10 @@ const pdf = async (req, res) => {
 
 async function _confirmar(venta_id, usuario_id, pagos, punto_venta_id, cuotas, trx) {
   const venta = await trx('ventas').where('id', venta_id).first();
-  if (venta.estado === 'confirmada') return;
+  if (venta.estado === 'confirmada') return { arcaError: null };
+
+  const arqueo = await trx('arqueos').where('estado', 'abierto').first();
+  if (!arqueo) throw new Error('No hay caja abierta. Abrí la caja en Tesorería → Caja antes de operar.');
 
   const items = await trx('ventas_items').where('venta_id', venta_id);
 
@@ -259,23 +265,20 @@ async function _confirmar(venta_id, usuario_id, pagos, punto_venta_id, cuotas, t
     }, trx);
   }
 
-  // Cash register movement
+  // Cash register movement (arqueo is guaranteed open from check above)
   if (venta.tipo_pago !== 'cuenta_corriente' && pagos.length) {
-    const arqueo = await trx('arqueos').where('estado', 'abierto').orderBy('abierto_at', 'desc').first();
-    if (arqueo) {
-      for (const pago of pagos) {
-        await trx('movimientos_caja').insert({
-          arqueo_id: arqueo.id,
-          medio_pago_id: pago.medio_pago_id,
-          tipo: 'ingreso',
-          concepto: 'venta',
-          monto: parseFloat(pago.monto),
-          referencia_id: venta_id,
-          referencia_tipo: 'venta',
-          descripcion: `Venta #${venta.numero}`,
-          usuario_id
-        });
-      }
+    for (const pago of pagos) {
+      await trx('movimientos_caja').insert({
+        arqueo_id: arqueo.id,
+        medio_pago_id: pago.medio_pago_id,
+        tipo: 'ingreso',
+        concepto: 'venta',
+        monto: parseFloat(pago.monto),
+        referencia_id: venta_id,
+        referencia_tipo: 'venta',
+        descripcion: `Venta #${venta.numero}`,
+        usuario_id
+      });
     }
   }
 
@@ -321,7 +324,8 @@ async function _confirmar(venta_id, usuario_id, pagos, punto_venta_id, cuotas, t
     await trx('cuotas_cliente').insert(rows);
   }
 
-  // AFIP electronic billing
+  // ARCA electronic billing (non-blocking: errors are recorded but don't cancel the sale)
+  let arcaError = null;
   if ((venta.tipo_comprobante === 'factura_a' || venta.tipo_comprobante === 'factura_b') && punto_venta_id) {
     const puntoVenta = await trx('puntos_venta_afip').where('id', punto_venta_id).first();
     if (puntoVenta) {
@@ -350,17 +354,19 @@ async function _confirmar(venta_id, usuario_id, pagos, punto_venta_id, cuotas, t
           updated_at: trx.fn.now()
         });
       } catch (afipErr) {
+        console.error('[ARCA] Error al emitir comprobante:', afipErr.message);
         await trx('comprobantes_afip').where('id', cbteId).update({
           estado: 'error',
           respuesta_afip: JSON.stringify({ error: afipErr.message }),
           updated_at: trx.fn.now()
         });
-        throw afipErr;
+        arcaError = afipErr.message;
       }
     }
   }
 
   await trx('ventas').where('id', venta_id).update({ estado: 'confirmada', updated_at: trx.fn.now() });
+  return { arcaError };
 }
 
 module.exports = { listar, detalle, crear, confirmarVenta, anular, pdf };

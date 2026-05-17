@@ -4,8 +4,18 @@ let _afip = null;
 
 function getClient() {
   if (_afip) return _afip;
-  const Afip = require('node-afip');
-  _afip = new Afip({
+  const mod = require('node-afip');
+  // node-afip v1.0.4 exporta { Persona: ... }, no una clase de WSFE.
+  // Para emitir comprobantes electrónicos se requiere el servicio WSFE configurado
+  // con certificado y clave privada en server/certs/.
+  const AfipClass = typeof mod === 'function' ? mod : (mod.Afip || mod.default);
+  if (typeof AfipClass !== 'function') {
+    throw new Error(
+      'El servicio ARCA no está disponible. Para emitir comprobantes electrónicos ' +
+      'configurá el CUIT y los certificados WSFE (server/certs/cert.crt y private.key).'
+    );
+  }
+  _afip = new AfipClass({
     cuit: process.env.AFIP_CUIT,
     certPath: process.env.AFIP_CERT_PATH || path.resolve(__dirname, '../../certs/cert.crt'),
     keyPath: process.env.AFIP_KEY_PATH || path.resolve(__dirname, '../../certs/private.key'),
@@ -89,7 +99,7 @@ async function emitirFactura({ venta, items, cliente, puntoVenta }) {
       ? (Array.isArray(det.Observaciones.Obs) ? det.Observaciones.Obs : [det.Observaciones.Obs])
           .map((o) => `[${o.Code}] ${o.Msg}`).join(', ')
       : 'Sin detalle';
-    throw new Error(`AFIP rechazó el comprobante: ${obs}`);
+    throw new Error(`ARCA rechazó el comprobante: ${obs}`);
   }
 
   return {

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../lib/api';
 import { crearVenta, getMediosPago, getPuntosVenta, downloadPdf } from '../../services/ventasService';
 import { getClientes } from '../../services/clientesService';
+import { getArqueoActual } from '../../services/cajaService';
 
 const fmt = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -47,20 +48,23 @@ export default function PuntoVenta() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [confirmada, setConfirmada] = useState(null);
+  const [cajaAbierta, setCajaAbierta] = useState(null); // null=cargando, true=ok, false=cerrada
 
   useEffect(() => {
     Promise.all([
       api.get('/depositos'),
       getClientes({ limit: 200, activo: 'true' }),
       getMediosPago(),
-      getPuntosVenta()
-    ]).then(([dep, cli, med, pv]) => {
+      getPuntosVenta(),
+      getArqueoActual().then(({ data }) => data).catch(() => null)
+    ]).then(([dep, cli, med, pv, arqueo]) => {
       setDepositos(dep.data);
       setClientes(cli.data.data || cli.data);
       setMediosPago(med.data);
       setPuntosVenta(pv.data);
       if (dep.data[0]) setDepositoId(String(dep.data[0].id));
       if (med.data[0]) setPagos([{ medio_pago_id: String(med.data[0].id), monto: '' }]);
+      setCajaAbierta(!!(arqueo?.arqueo));
     });
   }, []);
 
@@ -212,6 +216,12 @@ export default function PuntoVenta() {
           </div>
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Venta confirmada</h2>
           <p className="text-gray-600 dark:text-gray-300">N° {String(confirmada.numero).padStart(8, '0')}</p>
+          {confirmada.arca_error && (
+            <div className="px-4 py-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-yellow-800 dark:text-yellow-300 rounded text-sm text-left">
+              <p className="font-medium">Comprobante ARCA no emitido</p>
+              <p className="text-xs mt-1">{confirmada.arca_error}</p>
+            </div>
+          )}
           <div className="flex gap-3 justify-center pt-2">
             <button onClick={() => downloadPdf(confirmada.id).catch(console.error)}
               className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
@@ -235,6 +245,11 @@ export default function PuntoVenta() {
       <div className="flex items-center justify-between mb-4">
         <h1 className="text-lg font-semibold text-gray-800 dark:text-gray-100">Punto de Venta</h1>
       </div>
+      {cajaAbierta === false && (
+        <div className="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300 rounded text-sm">
+          Caja cerrada. Abrí la caja en <strong>Tesorería → Caja</strong> antes de realizar ventas.
+        </div>
+      )}
 
       <div className="flex gap-4 flex-1 min-h-0">
         {/* Left: product search + cart */}
@@ -453,7 +468,7 @@ export default function PuntoVenta() {
 
           {error && <p className="text-red-600 text-xs bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>}
 
-          <button onClick={handleSubmit} disabled={loading || !cart.length}
+          <button onClick={handleSubmit} disabled={loading || !cart.length || cajaAbierta === false}
             className="w-full bg-green-600 text-white py-3 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors">
             {loading ? 'Procesando...' : 'Confirmar venta'}
           </button>
