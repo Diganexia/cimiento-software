@@ -245,6 +245,18 @@ function registerUniversalAsyncIPC() {
       return { ok: false, error: err.message };
     }
   });
+
+  ipcMain.handle('save-pdf', async (_e, { tipo, filename, buffer }) => {
+    const documentsPath = app.getPath('documents');
+    const hoy = new Date();
+    const fecha = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${hoy.getFullYear()}`;
+    const dir = path.join(documentsPath, 'Cimiento', tipo, fecha);
+    fs.mkdirSync(dir, { recursive: true });
+    const filePath = path.join(dir, filename);
+    fs.writeFileSync(filePath, Buffer.from(buffer));
+    shell.openPath(filePath);
+    return filePath;
+  });
 }
 
 function registerServerAsyncIPC() {
@@ -269,18 +281,6 @@ function registerServerAsyncIPC() {
 // ── Boot: Setup (primera vez) ─────────────────────────────────────────────────
 function bootSetup() {
   createSetupWindow();
-
-  ipcMain.handle('save-pdf', async (_e, { tipo, filename, buffer }) => {
-    const documentsPath = app.getPath('documents');
-    const hoy = new Date();
-    const fecha = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${hoy.getFullYear()}`;
-    const dir = path.join(documentsPath, 'Cimiento', tipo, fecha);
-    fs.mkdirSync(dir, { recursive: true });
-    const filePath = path.join(dir, filename);
-    fs.writeFileSync(filePath, Buffer.from(buffer));
-    shell.openPath(filePath);
-    return filePath;
-  });
 
   ipcMain.handle('save-mode', async (_e, mode) => {
     saveConfig({ mode });
