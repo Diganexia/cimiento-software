@@ -45,7 +45,7 @@
 
 ---
 
-## Versión actual: v1.2.2
+## Versión actual: v1.2.3
 
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
@@ -76,6 +76,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.2.0 | Configuración: buscar actualizaciones manualmente con estado en tiempo real |
 | v1.2.1 | Stock General + filtro distribuidor + ventana 1366x768 + fix empresa persiste en AppData |
 | v1.2.2 | Fix PDF decimales cta cte + transferencias (tipo unificado, cantidades enteras) |
+| v1.2.3 | Fix transferencias (enum TRANSFERENCIA en BD) + movimientos labels + stock origen en form |
 
 ---
 
@@ -98,7 +99,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 
 ### Migraciones BD aplicadas
 
-`001` a `014` — todas aplicadas. La `010` agrega `cheques`, `011` retenciones, `012` extiende CHECK ventas para NC/ND, `013` agrega `pasaporte`/`tipo_documento` a clientes, `014` agrega `redondeo_monto` a `ventas`.
+`001` a `016` — todas aplicadas. La `010` agrega `cheques`, `011` retenciones, `012` extiende CHECK ventas para NC/ND, `013` agrega `pasaporte`/`tipo_documento` a clientes, `014` agrega `redondeo_monto` a `ventas`, `015` unique constraint en `ventas.numero`, `016` agrega valor `TRANSFERENCIA` al enum `movimientos_stock_tipo`.
 
 ---
 

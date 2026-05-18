@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getDepositos, transferir } from '../../services/stockService';
+import { getDepositos, transferir, getStock } from '../../services/stockService';
 import { getProductos } from '../../services/productosService';
 
 const inputCls = 'w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -12,6 +12,7 @@ export default function Transferencia() {
   const [productos, setProductos] = useState([]);
   const [busqueda, setBusqueda] = useState('');
   const [form, setForm] = useState({ producto_id: '', deposito_origen_id: '', deposito_destino_id: '', cantidad: '', motivo: '' });
+  const [stockOrigen, setStockOrigen] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [ok, setOk] = useState(false);
@@ -24,6 +25,14 @@ export default function Transferencia() {
     if (busqueda.length < 2) { setProductos([]); return; }
     getProductos({ q: busqueda, activo: 'true', limit: 10 }).then((r) => setProductos(r.data.data));
   }, [busqueda]);
+
+  useEffect(() => {
+    if (!form.producto_id || !form.deposito_origen_id) { setStockOrigen(null); return; }
+    getStock({ deposito_id: form.deposito_origen_id }).then((r) => {
+      const row = r.data.find((s) => s.producto_id === parseInt(form.producto_id));
+      setStockOrigen(row ? Math.floor(parseFloat(row.cantidad)) : 0);
+    }).catch(() => setStockOrigen(null));
+  }, [form.producto_id, form.deposito_origen_id]);
 
   const set = (f) => (e) => setForm((prev) => ({ ...prev, [f]: e.target.value }));
 
@@ -85,8 +94,13 @@ export default function Transferencia() {
         </div>
 
         <div>
-          <Label>Depósito origen</Label>
-          <select value={form.deposito_origen_id} onChange={set('deposito_origen_id')} className={inputCls} required>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Depósito origen</label>
+            {stockOrigen !== null && (
+              <span className="text-xs text-gray-500 dark:text-gray-400">Stock disponible: <strong className="text-gray-800 dark:text-gray-100">{stockOrigen}</strong></span>
+            )}
+          </div>
+          <select value={form.deposito_origen_id} onChange={(e) => { set('deposito_origen_id')(e); setStockOrigen(null); }} className={inputCls} required>
             <option value="">Seleccionar...</option>
             {depositos.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
           </select>
