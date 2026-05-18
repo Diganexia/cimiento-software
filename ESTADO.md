@@ -45,7 +45,7 @@
 
 ---
 
-## Versión actual: v1.2.3
+## Versión actual: v1.2.4
 
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
@@ -77,6 +77,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.2.1 | Stock General + filtro distribuidor + ventana 1366x768 + fix empresa persiste en AppData |
 | v1.2.2 | Fix PDF decimales cta cte + transferencias (tipo unificado, cantidades enteras) |
 | v1.2.3 | Fix transferencias (enum TRANSFERENCIA en BD) + movimientos labels + stock origen en form |
+| v1.2.4 | Fix migración 016: Knex usa CHECK constraint, no ENUM nativo — búsqueda dinámica del constraint |
 
 ---
 
