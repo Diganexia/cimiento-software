@@ -52,7 +52,8 @@ export default function Login() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
         <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Cimiento</h1>
         <p className="text-sm text-gray-500 text-center mb-1">Sistema de gestión</p>
-        <p className="text-xs text-gray-400 text-center mb-6">v{version}</p>
+        <p className="text-xs text-gray-400 text-center mb-4">v{version}</p>
+        <p className="text-xs text-gray-400 text-center mb-6">Un producto de <span className="font-medium text-gray-500">Diganexia</span></p>
 
         {mode === 'client' && serverUrl && (
           <div className="mb-4 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 flex items-center justify-between">
