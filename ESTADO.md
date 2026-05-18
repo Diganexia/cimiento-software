@@ -1,6 +1,6 @@
 # Estado del Proyecto — Ferretería Software
 
-> Actualizado el 2026-05-18.  
+> Actualizado el 2026-05-19.  
 > Repo: https://github.com/Diganexia/ferreteria-software
 
 ---
@@ -45,7 +45,7 @@
 
 ---
 
-## Versión actual: v1.1.7
+## Versión actual: v1.1.8
 
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
@@ -71,6 +71,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.1.5 | Dark mode en login + toggle sol/luna en config + título "Cimiento" en barra Windows |
 | v1.1.6 | Validación stock en POS + nombres PDF dinámicos + fuentes PDF +3pt + footer PDF fix |
 | v1.1.7 | PDFs guardados en Documentos/Cimiento/{tipo}/{fecha}/ + selector período dashboard |
+| v1.1.8 | Fix handler PDF IPC + carpeta configurable en Configuración + toast éxito/error |
 
 ---
 
