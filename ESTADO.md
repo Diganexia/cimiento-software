@@ -1,6 +1,6 @@
 # Estado del Proyecto — Ferretería Software
 
-> Generado el 2026-05-16 para continuación en cualquier equipo.  
+> Actualizado el 2026-05-18.  
 > Repo: https://github.com/Diganexia/ferreteria-software
 
 ---
@@ -45,9 +45,8 @@
 
 ---
 
-## Versión actual: v1.0.6
+## Versión actual: v1.1.7
 
-Release: https://github.com/Diganexia/ferreteria-software/releases/tag/v1.0.6
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
 ### Historial de releases
@@ -57,11 +56,21 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.0.0 | Release inicial completo (Fases 1–9) |
 | v1.0.1 | Fase 10 (mejoras post-feedback) + bugfixes UI |
 | v1.0.2 | Seeds limpios (sin datos de prueba) |
-| v1.0.3 | Fix Kardex crash (`e.map is not a function` — `/productos` devuelve `{data,total}` no array) |
-| v1.0.4 | Fix create en Configuración + decimales + inventario + versión visible en Login/Dashboard |
-| v1.0.5 | Fix versión hardcodeada `v1.0.0` en Splash — ahora lee `package.json` dinámicamente |
-| v1.0.6 | Fix DELETE depósito (500) + decimales en campos de cantidad + redondeo en POS |
-| v1.0.7 | Fix overlap PDF + redondeo en PDF + redondeo como campo propio en BD (migration 014) |
+| v1.0.3 | Fix Kardex crash (`e.map is not a function`) |
+| v1.0.4 | Fix create en Configuración + decimales + inventario + versión visible |
+| v1.0.5 | Fix versión hardcodeada en Splash |
+| v1.0.6 | Fix DELETE depósito + decimales cantidad + redondeo POS |
+| v1.0.7 | Fix overlap PDF + redondeo como campo en BD (migration 014) |
+| v1.0.8 | Fixes y mejoras por feedback de cliente |
+| v1.0.9 | Instalador unificado: modo servidor/cliente en runtime |
+| v1.1.0 | Backup sin pg_dump + modo oscuro en toda la app |
+| v1.1.1 | Fixes varios |
+| v1.1.2 | Bump version |
+| v1.1.3 | Fixes auth/dark mode/config + rename a Cimiento |
+| v1.1.4 | Login: crédito Diganexia |
+| v1.1.5 | Dark mode en login + toggle sol/luna en config + título "Cimiento" en barra Windows |
+| v1.1.6 | Validación stock en POS + nombres PDF dinámicos + fuentes PDF +3pt + footer PDF fix |
+| v1.1.7 | PDFs guardados en Documentos/Cimiento/{tipo}/{fecha}/ + selector período dashboard |
 
 ---
 
@@ -168,15 +177,9 @@ Checkbox "Redondear a $X.X00" en la sección de totales del POS. Solo aparece cu
 
 Era `Splash.jsx` (pantalla negra de carga de Electron) que tenía `v1.0.0` hardcodeado desde la Fase 9. Reemplazado por `import { version } from '../../package.json'` igual que en Login y Dashboard.
 
-### Posible Fase 11 — Un solo instalador (bajo análisis)
+### Instalador unificado (implementado en v1.0.9)
 
-El cliente (Luciano) propone eliminar el `Corralon-Cliente-Setup` y usar solo el `Corralon-Servidor-Setup` en todas las PCs.
-
-**Problema técnico:** El build servidor arranca embedded-postgres en cada PC → cada una tendría BD propia.
-
-**Solución propuesta:** Asistente de primer arranque que pregunte "¿Esta PC es el servidor o un cliente?" y guarde en `app-config.json`. Si es cliente: no arranca postgres, pide IP del servidor.
-
-**Archivos a modificar:** `client/electron/dbManager.js` y `client/electron/main.js` para leer modo desde `app-config.json` en vez del flag de recursos (`server-mode.flag`).
+Un solo instalador `Cimiento-Setup-X.Y.Z.exe`. Al primer arranque pregunta si es Servidor o Cliente y guarda en `app-config.json`. Config en `electron-builder-unified.json`.
 
 ---
 
