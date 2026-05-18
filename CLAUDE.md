@@ -87,4 +87,4 @@ Calculados con `MAX(numero)+1` dentro de transacción protegida con `pg_advisory
 
 ## Repo GitHub
 
-https://github.com/Diganexia/ferreteria-software (cuenta Diganexia)
+https://github.com/Diganexia/cimiento-software (cuenta Diganexia) — antes: ferreteria-software

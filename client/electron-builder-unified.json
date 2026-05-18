@@ -45,7 +45,7 @@
   "publish": {
     "provider": "github",
     "owner": "Diganexia",
-    "repo": "ferreteria-software",
+    "repo": "cimiento-software",
     "channel": "latest"
   }
 }
