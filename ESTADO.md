@@ -45,7 +45,7 @@
 
 ---
 
-## Versión actual: v1.2.1
+## Versión actual: v1.2.2
 
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
@@ -75,6 +75,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.1.9 | POS: stock por depósito seleccionado + fuente compacta en caja de movimientos |
 | v1.2.0 | Configuración: buscar actualizaciones manualmente con estado en tiempo real |
 | v1.2.1 | Stock General + filtro distribuidor + ventana 1366x768 + fix empresa persiste en AppData |
+| v1.2.2 | Fix PDF decimales cta cte + transferencias (tipo unificado, cantidades enteras) |
 
 ---
 
