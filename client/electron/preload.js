@@ -33,6 +33,15 @@ contextBridge.exposeInMainWorld('electronAPI', {
   setPdfPath: (newPath) => ipcRenderer.invoke('set-pdf-path', newPath),
   pickPdfFolder: () => ipcRenderer.invoke('pick-pdf-folder'),
 
+  // ── Updates ───────────────────────────────────────────────────────────────
+  checkForUpdates: () => ipcRenderer.invoke('check-for-updates'),
+  installUpdate: () => ipcRenderer.invoke('install-update'),
+  onUpdateStatus: (cb) => {
+    const handler = (_e, data) => cb(data);
+    ipcRenderer.on('update-status', handler);
+    return () => ipcRenderer.removeListener('update-status', handler);
+  },
+
   // ── Backup ────────────────────────────────────────────────────────────────
   doBackup: () => ipcRenderer.invoke('backup-do'),
   listBackups: () => ipcRenderer.invoke('backup-list'),

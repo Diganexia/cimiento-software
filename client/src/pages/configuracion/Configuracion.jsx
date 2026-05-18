@@ -430,6 +430,74 @@ function TabCajas() {
   );
 }
 
+// ── Widget: Actualizaciones ───────────────────────────────────────────────────
+
+function UpdateChecker() {
+  const [status, setStatus] = useState(null);
+  const [info, setInfo] = useState({});
+
+  useEffect(() => {
+    if (!window.electronAPI?.onUpdateStatus) return;
+    const unsub = window.electronAPI.onUpdateStatus((data) => {
+      setStatus(data.status);
+      setInfo(data);
+      if (data.status === 'not-available') setTimeout(() => setStatus(null), 4000);
+    });
+    return unsub;
+  }, []);
+
+  if (!window.electronAPI?.checkForUpdates) return null;
+
+  const handleCheck = async () => {
+    setStatus('checking');
+    setInfo({});
+    const result = await window.electronAPI.checkForUpdates();
+    if (result?.status === 'dev') { setStatus('dev'); setTimeout(() => setStatus(null), 3000); }
+  };
+
+  const statusUI = (() => {
+    switch (status) {
+      case 'checking':
+        return <span className="text-xs text-gray-500 dark:text-gray-400">Buscando actualizaciones...</span>;
+      case 'downloading':
+        return <span className="text-xs text-blue-600 dark:text-blue-400">Descargando... {info.percent ?? 0}%</span>;
+      case 'available':
+        return <span className="text-xs text-blue-600 dark:text-blue-400">Actualización disponible (v{info.version}) — descargando...</span>;
+      case 'downloaded':
+        return (
+          <span className="flex items-center gap-2">
+            <span className="text-xs text-green-600 dark:text-green-400">v{info.version} lista para instalar</span>
+            <button onClick={() => window.electronAPI.installUpdate?.()}
+              className="text-xs bg-green-600 text-white px-2 py-0.5 rounded hover:bg-green-700 transition-colors">
+              Reiniciar e instalar
+            </button>
+          </span>
+        );
+      case 'not-available':
+        return <span className="text-xs text-green-600 dark:text-green-400">Estás en la última versión.</span>;
+      case 'error':
+        return <span className="text-xs text-red-500 dark:text-red-400">Error: {info.error}</span>;
+      case 'dev':
+        return <span className="text-xs text-gray-400">No disponible en modo desarrollo.</span>;
+      default:
+        return null;
+    }
+  })();
+
+  return (
+    <div className="mt-5 pt-4 border-t border-gray-200 dark:border-gray-700 flex items-center gap-3">
+      <button
+        onClick={handleCheck}
+        disabled={status === 'checking' || status === 'downloading'}
+        className="shrink-0 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-300 px-3 py-1.5 rounded text-xs hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+      >
+        Buscar actualizaciones
+      </button>
+      {statusUI}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function Configuracion() {
@@ -552,6 +620,8 @@ export default function Configuracion() {
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
         {tabContent[tab]}
       </div>
+
+      <UpdateChecker />
     </div>
   );
 }

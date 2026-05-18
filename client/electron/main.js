@@ -278,6 +278,21 @@ function registerUniversalAsyncIPC() {
     if (canceled || !filePaths.length) return null;
     return filePaths[0];
   });
+
+  ipcMain.handle('check-for-updates', () => {
+    if (isDev) return { status: 'dev' };
+    try {
+      require('electron-updater').autoUpdater.checkForUpdates();
+      return { ok: true };
+    } catch (err) {
+      return { ok: false, error: err.message };
+    }
+  });
+
+  ipcMain.handle('install-update', () => {
+    if (isDev) return;
+    require('electron-updater').autoUpdater.quitAndInstall();
+  });
 }
 
 function registerServerAsyncIPC() {
@@ -476,7 +491,18 @@ if (!isDev) {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
+  const sendUpdateStatus = (status, extra = {}) => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send('update-status', { status, ...extra });
+    }
+  };
+
+  autoUpdater.on('checking-for-update', () => sendUpdateStatus('checking'));
+  autoUpdater.on('update-available', (info) => sendUpdateStatus('available', { version: info.version }));
+  autoUpdater.on('update-not-available', () => sendUpdateStatus('not-available'));
+  autoUpdater.on('download-progress', (p) => sendUpdateStatus('downloading', { percent: Math.round(p.percent) }));
   autoUpdater.on('update-downloaded', (info) => {
+    sendUpdateStatus('downloaded', { version: info.version });
     dialog.showMessageBox({
       type: 'info',
       title: 'Actualización lista',
@@ -489,8 +515,10 @@ if (!isDev) {
       if (response === 0) autoUpdater.quitAndInstall();
     });
   });
-
-  autoUpdater.on('error', (err) => { logError('Auto-updater error:', err.message); });
+  autoUpdater.on('error', (err) => {
+    logError('Auto-updater error:', err.message);
+    sendUpdateStatus('error', { error: err.message });
+  });
 
   app.whenReady().then(() => {
     setTimeout(() => autoUpdater.checkForUpdates(), 10000);
