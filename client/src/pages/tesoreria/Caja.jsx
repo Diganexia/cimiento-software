@@ -154,7 +154,7 @@ export default function Caja() {
         <div className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide">Saldo actual</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${fmt(saldo_calculado)}</p>
+            <p className="text-xl font-bold text-gray-900 dark:text-gray-100">${fmt(saldo_calculado)}</p>
           </div>
           <span className="w-2.5 h-2.5 rounded-full bg-green-500 mt-1 animate-pulse" />
         </div>
@@ -208,13 +208,13 @@ export default function Caja() {
           <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">Últimos movimientos</p>
           <div className="space-y-1.5 max-h-48 overflow-y-auto">
             {movimientos.map((m) => (
-              <div key={m.id} className="flex justify-between items-center text-sm py-1 border-b border-gray-50 last:border-0">
-                <div>
-                  <span className="text-gray-700 dark:text-gray-200">{CONCEPTO_LABEL[m.concepto] || m.concepto}</span>
-                  {m.descripcion && <span className="text-gray-400 dark:text-gray-500 text-xs ml-1">— {m.descripcion.slice(0, 30)}</span>}
-                  <span className="text-gray-400 dark:text-gray-500 text-xs block">{m.medio_pago}</span>
+              <div key={m.id} className="flex justify-between items-center text-xs py-1 border-b border-gray-50 dark:border-gray-700 last:border-0">
+                <div className="flex items-center gap-1 min-w-0 mr-2">
+                  <span className="text-gray-700 dark:text-gray-200 shrink-0">{CONCEPTO_LABEL[m.concepto] || m.concepto}</span>
+                  <span className="text-gray-400 dark:text-gray-500 shrink-0">· {m.medio_pago}</span>
+                  {m.descripcion && <span className="text-gray-400 dark:text-gray-500 truncate">— {m.descripcion.slice(0, 25)}</span>}
                 </div>
-                <span className={`font-semibold ${m.tipo === 'ingreso' ? 'text-green-700' : 'text-red-600'}`}>
+                <span className={`font-semibold shrink-0 ${m.tipo === 'ingreso' ? 'text-green-700' : 'text-red-600'}`}>
                   {m.tipo === 'ingreso' ? '+' : '-'}${fmt(m.monto)}
                 </span>
               </div>
