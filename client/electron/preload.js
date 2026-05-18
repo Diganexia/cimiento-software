@@ -27,6 +27,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.once('boot-error', handler);
   },
 
+  // ── PDF ───────────────────────────────────────────────────────────────────
+  savePdf: (tipo, filename, buffer) => ipcRenderer.invoke('save-pdf', { tipo, filename, buffer }),
+
   // ── Backup ────────────────────────────────────────────────────────────────
   doBackup: () => ipcRenderer.invoke('backup-do'),
   listBackups: () => ipcRenderer.invoke('backup-list'),

@@ -80,7 +80,7 @@ export default function CtaCteProveedor() {
           className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-blue-700 transition-colors">
           Registrar pago
         </button>
-        <button onClick={() => downloadPdfProveedor(proveedorId).catch(console.error)}
+        <button onClick={() => downloadPdfProveedor(proveedorId, proveedor.nombre).catch(console.error)}
           className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
           Descargar PDF
         </button>

@@ -1,4 +1,5 @@
 import api from '../lib/api';
+import { savePdf } from '../lib/pdfUtils';
 
 export const getCajas = () => api.get('/cajas');
 export const crearCaja = (data) => api.post('/cajas', data);
@@ -12,10 +13,6 @@ export const movimientoManual = (data) => api.post('/cajas/movimiento-manual', d
 export const downloadPdfArqueo = async (id) => {
   const url = id === 'actual' ? '/cajas/arqueo-actual/pdf' : `/cajas/arqueos/${id}/pdf`;
   const res = await api.get(url, { responseType: 'blob' });
-  const blobUrl = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
-  const a = document.createElement('a');
-  a.href = blobUrl;
-  a.download = `arqueo-${id}.pdf`;
-  a.click();
-  window.URL.revokeObjectURL(blobUrl);
+  const blob = new Blob([res.data], { type: 'application/pdf' });
+  await savePdf(blob, 'Arqueos', `arqueo-${id}.pdf`);
 };

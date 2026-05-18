@@ -28,14 +28,15 @@ function KPICard({ label, value, sub, color, to }) {
   return to ? <Link to={to}>{inner}</Link> : inner;
 }
 
-function getLast7Days() {
-  const days = [];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    days.push(d.toISOString().split('T')[0]);
-  }
-  return { desde: days[0], hasta: days[6] };
+function getLastNDays(n) {
+  const hoy = new Date();
+  const desde = new Date();
+  desde.setDate(hoy.getDate() - (n - 1));
+  return {
+    desde: desde.toISOString().split('T')[0],
+    hasta: hoy.toISOString().split('T')[0],
+    n
+  };
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -54,6 +55,7 @@ export default function Dashboard() {
   const [kpis, setKpis] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [localIP, setLocalIP] = useState('');
+  const [diasGrafico, setDiasGrafico] = useState(7);
 
   useEffect(() => {
     if (window.electronAPI?.getMode() === 'server') {
@@ -63,15 +65,16 @@ export default function Dashboard() {
 
   useEffect(() => {
     getKPIs().then(({ data }) => setKpis(data)).catch(() => {});
+  }, []);
 
-    const { desde, hasta } = getLast7Days();
+  useEffect(() => {
+    const { desde, hasta, n } = getLastNDays(diasGrafico);
     getVentasPeriodo({ periodo: 'dia', desde, hasta })
       .then(({ data }) => {
         const rowMap = {};
         data.rows.forEach((r) => { rowMap[r.fecha] = r.total; });
-
         const days = [];
-        for (let i = 6; i >= 0; i--) {
+        for (let i = n - 1; i >= 0; i--) {
           const d = new Date();
           d.setDate(d.getDate() - i);
           const key = d.toLocaleDateString('es-AR');
@@ -80,7 +83,7 @@ export default function Dashboard() {
         setChartData(days);
       })
       .catch(() => {});
-  }, []);
+  }, [diasGrafico]);
 
   return (
     <div className="p-6">
@@ -134,7 +137,21 @@ export default function Dashboard() {
 
       {/* Chart */}
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-5 mb-6">
-        <p className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-4">Ventas — últimos 7 días</p>
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Ventas — últimos {diasGrafico} días</p>
+          <div className="flex gap-1">
+            {[7, 14, 30].map((d) => (
+              <button key={d} onClick={() => setDiasGrafico(d)}
+                className={`px-2 py-0.5 rounded text-xs font-medium transition-colors ${
+                  diasGrafico === d
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                }`}>
+                {d}d
+              </button>
+            ))}
+          </div>
+        </div>
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData} barCategoryGap="35%">
