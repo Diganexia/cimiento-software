@@ -1,6 +1,6 @@
 {
   "appId": "com.ferreteria.app",
-  "productName": "Corralon",
+  "productName": "Cimiento",
   "electronVersion": "29.4.6",
   "copyright": "Ferretería Software",
   "directories": {
@@ -18,7 +18,7 @@
       "filter": ["**/*", "!**/.env", "!**/.env.*", "!**/nodemon.json"]
     }
   ],
-  "artifactName": "Corralon-Setup-${version}.${ext}",
+  "artifactName": "Cimiento-Setup-${version}.${ext}",
   "win": {
     "target": [{ "target": "nsis", "arch": ["x64"] }],
     "icon": "assets/icon.ico"
@@ -30,7 +30,7 @@
     "installerHeaderIcon": "assets/icon.ico",
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Corralon"
+    "shortcutName": "Cimiento"
   },
   "asarUnpack": [
     "node_modules/embedded-postgres/**/*",

@@ -132,7 +132,7 @@ export default function Inventario() {
 
       {error && (
         <div className="mb-4">
-          <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>
+          <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{error}</p>
           {inventarioId && step === STEP.INICIO && (
             <button onClick={handleContinuarExistente} disabled={loading}
               className="mt-2 text-sm bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 disabled:opacity-50 transition-colors">
@@ -171,7 +171,7 @@ export default function Inventario() {
             </div>
             <div className="flex gap-2">
               <button onClick={handleCancelar} disabled={loading}
-                className="border border-red-300 text-red-600 px-3 py-2 rounded text-sm hover:bg-red-50 transition-colors">
+                className="border border-red-300 text-red-600 px-3 py-2 rounded text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                 Cancelar inventario
               </button>
               <button onClick={handleGuardarConteos} disabled={loading}
@@ -225,7 +225,7 @@ export default function Inventario() {
             </div>
             <div className="flex gap-2">
               <button onClick={handleCancelar} disabled={loading}
-                className="border border-red-300 text-red-600 px-3 py-2 rounded text-sm hover:bg-red-50 transition-colors">
+                className="border border-red-300 text-red-600 px-3 py-2 rounded text-sm hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                 Cancelar
               </button>
               <button onClick={() => setStep(STEP.CONTEO)} className="border border-gray-300 dark:border-gray-600 px-3 py-2 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
@@ -269,7 +269,7 @@ export default function Inventario() {
 
       {/* Step 4: Confirmado */}
       {step === STEP.CONFIRMADO && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center max-w-sm">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6 text-center max-w-sm">
           <svg className="w-12 h-12 text-green-500 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>

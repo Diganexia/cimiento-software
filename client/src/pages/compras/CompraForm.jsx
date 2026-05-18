@@ -176,7 +176,7 @@ export default function CompraForm() {
                 {resultados.map((p) => (
                   <li key={p.id}>
                     <button type="button" onClick={() => agregarItem(p)}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex justify-between items-center">
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between items-center">
                       <div>
                         <span className="font-medium text-gray-800 dark:text-gray-100">{p.nombre}</span>
                         {p.codigo && <span className="ml-2 text-xs text-gray-400 dark:text-gray-500 font-mono">{p.codigo}</span>}
@@ -249,7 +249,7 @@ export default function CompraForm() {
           )}
         </div>
 
-        {error && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>}
+        {error && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{error}</p>}
 
         {/* Botones */}
         <div className="flex gap-3">

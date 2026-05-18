@@ -206,7 +206,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-gray-900 text-white flex flex-col h-full shrink-0">
       <div className="px-4 py-4 border-b border-gray-700">
-        <h1 className="text-base font-bold leading-tight">Ferretería</h1>
+        <h1 className="text-base font-bold leading-tight">Cimiento</h1>
         <p className="text-xs text-gray-400">Sistema de gestión</p>
       </div>
 

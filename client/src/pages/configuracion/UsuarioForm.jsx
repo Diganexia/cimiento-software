@@ -76,7 +76,7 @@ export default function UsuarioForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
-        {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{err}</p>}
+        {err && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{err}</p>}
 
         <div>
           <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Nombre completo *</label>

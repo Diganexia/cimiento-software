@@ -543,7 +543,7 @@ function TabDeudores() {
       {data && (
         <>
           {data.rows.length > 0 && (
-            <div className="mb-4 p-3 bg-orange-50 border border-orange-200 rounded text-sm text-orange-800">
+            <div className="mb-4 p-3 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded text-sm text-orange-800 dark:text-orange-300">
               Total deuda: <span className="font-bold">${fmt(data.total)}</span> en {data.rows.length} cliente{data.rows.length !== 1 ? 's' : ''}
             </div>
           )}

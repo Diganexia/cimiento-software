@@ -109,12 +109,12 @@ export default function Ajuste() {
       </div>
 
       {exito && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded mb-4 text-sm">
           Ajuste registrado correctamente.
         </div>
       )}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4 text-sm">
+        <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 px-4 py-3 rounded mb-4 text-sm">
           {error}
         </div>
       )}
@@ -159,7 +159,7 @@ export default function Ajuste() {
                       <button
                         type="button"
                         onClick={() => seleccionarProducto(p)}
-                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex justify-between"
+                        className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between"
                       >
                         <span>{p.nombre}</span>
                         <span className="text-gray-400 dark:text-gray-500 text-xs">{p.codigo}</span>

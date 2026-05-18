@@ -72,9 +72,9 @@ export default function VentaDetalle() {
       </div>
 
       {venta.cae && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 text-sm">
-          <p className="font-medium text-blue-800 mb-1">Comprobante ARCA</p>
-          <p className="text-blue-700">CAE: {venta.cae} — Vence: {venta.cae_vencimiento}</p>
+        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 text-sm">
+          <p className="font-medium text-blue-800 dark:text-blue-200 mb-1">Comprobante ARCA</p>
+          <p className="text-blue-700 dark:text-blue-300">CAE: {venta.cae} — Vence: {venta.cae_vencimiento}</p>
         </div>
       )}
 
@@ -127,7 +127,7 @@ export default function VentaDetalle() {
         </button>
         {venta.estado === 'confirmada' && (
           <button onClick={handleAnular}
-            className="bg-red-50 border border-red-300 text-red-600 px-4 py-2 rounded text-sm hover:bg-red-100 transition-colors">
+            className="bg-red-50 dark:bg-red-900/20 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 px-4 py-2 rounded text-sm hover:bg-red-100 transition-colors">
             Anular venta
           </button>
         )}

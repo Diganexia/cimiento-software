@@ -92,10 +92,10 @@ export default function Backup() {
       </div>
 
       {msg && (
-        <div className="mb-4 px-4 py-3 bg-green-50 border border-green-200 text-green-700 rounded text-sm">{msg}</div>
+        <div className="mb-4 px-4 py-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 rounded text-sm">{msg}</div>
       )}
       {err && (
-        <div className="mb-4 px-4 py-3 bg-red-50 border border-red-200 text-red-700 rounded text-sm">{err}</div>
+        <div className="mb-4 px-4 py-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 rounded text-sm">{err}</div>
       )}
 
       <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -146,7 +146,7 @@ export default function Backup() {
         )}
       </div>
 
-      <div className="mt-4 p-4 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
+      <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded text-xs text-amber-800 dark:text-amber-300">
         <strong>Importante:</strong> Los backups se guardan en el equipo servidor. Recomendamos copiarlos periódicamente a un disco externo o unidad de red.
       </div>
     </div>

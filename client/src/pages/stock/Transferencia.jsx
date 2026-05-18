@@ -54,7 +54,7 @@ export default function Transferencia() {
       </div>
 
       {ok && (
-        <div className="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded mb-4 text-sm">
+        <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 text-green-700 dark:text-green-400 px-4 py-3 rounded mb-4 text-sm">
           Transferencia realizada. Redirigiendo...
         </div>
       )}
@@ -74,7 +74,7 @@ export default function Transferencia() {
               {productos.map((p) => (
                 <li key={p.id}>
                   <button type="button" onClick={() => { setForm((f) => ({ ...f, producto_id: p.id })); setBusqueda(p.nombre); setProductos([]); }}
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 flex justify-between">
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between">
                     <span>{p.nombre}</span>
                     <span className="text-gray-400 dark:text-gray-500 text-xs">Stock: {p.stock_total}</span>
                   </button>
@@ -112,7 +112,7 @@ export default function Transferencia() {
           <input type="text" value={form.motivo} onChange={set('motivo')} className={inputCls} />
         </div>
 
-        {error && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>}
+        {error && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{error}</p>}
 
         <div className="flex gap-3 pt-2">
           <button type="submit" disabled={loading || !form.producto_id}

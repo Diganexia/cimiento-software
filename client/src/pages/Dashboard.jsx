@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import AlertasBanner from '../components/AlertasBanner';
 import useAuthStore from '../store/authStore';
+import useThemeStore from '../store/themeStore';
 import { getKPIs, getVentasPeriodo } from '../services/reportesService';
 import { version } from '../../package.json';
 
@@ -49,6 +50,7 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 export default function Dashboard() {
   const usuario = useAuthStore((s) => s.usuario);
+  const dark = useThemeStore((s) => s.dark);
   const [kpis, setKpis] = useState(null);
   const [chartData, setChartData] = useState([]);
   const [localIP, setLocalIP] = useState('');
@@ -104,28 +106,28 @@ export default function Dashboard() {
           label="Ventas hoy"
           value={kpis ? fmtCompact(kpis.ventasHoy.total) : '—'}
           sub={kpis ? `${kpis.ventasHoy.cantidad} operacion${kpis.ventasHoy.cantidad !== 1 ? 'es' : ''}` : null}
-          color="bg-blue-50 border-blue-200 text-blue-700"
+          color="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
           to="/ventas"
         />
         <KPICard
           label="Saldo en caja"
           value={kpis?.cajaActual ? fmtCompact(kpis.cajaActual.saldo) : 'Sin caja'}
           sub={kpis?.cajaActual ? 'Caja abierta' : 'No hay arqueo abierto'}
-          color="bg-green-50 border-green-200 text-green-700"
+          color="bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800 text-green-700 dark:text-green-400"
           to="/tesoreria/caja"
         />
         <KPICard
           label="Deudores"
           value={kpis ? fmtCompact(kpis.deudores.total) : '—'}
           sub={kpis ? `${kpis.deudores.cantidad} cliente${kpis.deudores.cantidad !== 1 ? 's' : ''}` : null}
-          color="bg-orange-50 border-orange-200 text-orange-700"
+          color="bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800 text-orange-700 dark:text-orange-300"
           to="/cta-cte/clientes"
         />
         <KPICard
           label="Stock bajo mínimo"
           value={kpis != null ? String(kpis.stockBajo) : '—'}
           sub="productos"
-          color={kpis?.stockBajo > 0 ? 'bg-red-50 border-red-200 text-red-700' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}
+          color={kpis?.stockBajo > 0 ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400' : 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300'}
           to="/stock/productos"
         />
       </div>
@@ -136,11 +138,11 @@ export default function Dashboard() {
         {chartData.length > 0 ? (
           <ResponsiveContainer width="100%" height={180}>
             <BarChart data={chartData} barCategoryGap="35%">
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-              <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false}
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={dark ? '#374151' : '#f0f0f0'} />
+              <XAxis dataKey="fecha" tick={{ fontSize: 11, fill: dark ? '#9ca3af' : '#6b7280' }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: dark ? '#9ca3af' : '#6b7280' }} axisLine={false} tickLine={false}
                 tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}k` : v} width={45} />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f3f4f6' }} />
+              <Tooltip content={<CustomTooltip />} cursor={{ fill: dark ? '#1f2937' : '#f3f4f6' }} />
               <Bar dataKey="total" fill="#3b82f6" radius={[3, 3, 0, 0]} />
             </BarChart>
           </ResponsiveContainer>
@@ -153,13 +155,13 @@ export default function Dashboard() {
 
       {/* Server IP banner */}
       {localIP && (
-        <div className="mb-4 flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-3">
+        <div className="mb-4 flex items-center gap-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg px-4 py-3">
           <svg className="w-4 h-4 text-blue-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
           </svg>
-          <p className="text-sm text-blue-800">
+          <p className="text-sm text-blue-800 dark:text-blue-200">
             IP del servidor: <span className="font-bold font-mono">{localIP}:3001</span>
-            <span className="text-blue-500 ml-2">— ingresá esta dirección en los equipos cliente</span>
+            <span className="text-blue-500 dark:text-blue-400 ml-2">— ingresá esta dirección en los equipos cliente</span>
           </p>
         </div>
       )}
@@ -167,9 +169,9 @@ export default function Dashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: 'Punto de venta', to: '/ventas/nueva', color: 'bg-indigo-50 border-indigo-200 text-indigo-700' },
-          { label: 'Stock', to: '/stock/vista', color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
-          { label: 'Reportes', to: '/reportes', color: 'bg-purple-50 border-purple-200 text-purple-700' },
+          { label: 'Punto de venta', to: '/ventas/nueva', color: 'bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300' },
+          { label: 'Stock', to: '/stock/vista', color: 'bg-emerald-50 dark:bg-emerald-900/20 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-400' },
+          { label: 'Reportes', to: '/reportes', color: 'bg-purple-50 dark:bg-purple-900/20 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300' },
           { label: 'Configuración', to: '/configuracion', color: 'bg-gray-50 dark:bg-gray-700 border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-200' }
         ].map((c) => (
           <Link key={c.to} to={c.to}

@@ -268,7 +268,7 @@ export default function PuntoVenta() {
               <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-64 overflow-y-auto">
                 {resultados.map((p) => (
                   <button key={p.id} onClick={() => agregarProducto(p)}
-                    className="w-full text-left px-4 py-2.5 hover:bg-blue-50 border-b border-gray-100 dark:border-gray-700 last:border-0">
+                    className="w-full text-left px-4 py-2.5 hover:bg-blue-50 dark:hover:bg-blue-900/20 border-b border-gray-100 dark:border-gray-700 last:border-0">
                     <div className="flex justify-between items-center">
                       <div>
                         <span className="text-sm font-medium text-gray-800 dark:text-gray-100">{p.nombre}</span>
@@ -466,7 +466,7 @@ export default function PuntoVenta() {
             )}
           </div>
 
-          {error && <p className="text-red-600 text-xs bg-red-50 border border-red-200 rounded px-3 py-2">{error}</p>}
+          {error && <p className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{error}</p>}
 
           <button onClick={handleSubmit} disabled={loading || !cart.length || cajaAbierta === false}
             className="w-full bg-green-600 text-white py-3 rounded-lg text-sm font-semibold hover:bg-green-700 disabled:opacity-50 transition-colors">

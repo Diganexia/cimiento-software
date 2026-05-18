@@ -441,12 +441,15 @@ if (!isDev) {
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
-  autoUpdater.on('update-downloaded', () => {
+  autoUpdater.on('update-downloaded', (info) => {
     dialog.showMessageBox({
       type: 'info',
-      title: 'Actualización disponible',
-      message: 'Se descargó una nueva versión. ¿Instalar ahora?',
-      buttons: ['Instalar y reiniciar', 'Más tarde']
+      title: 'Actualización lista',
+      message: `Nueva versión ${info.version} disponible`,
+      detail: 'La actualización ya se descargó. Reiniciá el programa para aplicarla.\n\nPodés hacerlo ahora o más tarde al cerrar el programa.',
+      buttons: ['Reiniciar ahora', 'Más tarde'],
+      defaultId: 0,
+      cancelId: 1
     }).then(({ response }) => {
       if (response === 0) autoUpdater.quitAndInstall();
     });

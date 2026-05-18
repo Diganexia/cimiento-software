@@ -22,6 +22,16 @@ export default function Login() {
     }
   }, [mode, serverUrl, navigate]);
 
+  // Remove dark class while on login page; restore it when leaving
+  useEffect(() => {
+    document.documentElement.classList.remove('dark');
+    return () => {
+      if (localStorage.getItem('theme') === 'dark') {
+        document.documentElement.classList.add('dark');
+      }
+    };
+  }, []);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -40,7 +50,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Ferretería</h1>
+        <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Cimiento</h1>
         <p className="text-sm text-gray-500 text-center mb-1">Sistema de gestión</p>
         <p className="text-xs text-gray-400 text-center mb-6">v{version}</p>
 

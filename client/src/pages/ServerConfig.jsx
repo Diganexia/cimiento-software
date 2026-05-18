@@ -67,7 +67,7 @@ export default function ServerConfig() {
       <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-8 w-full max-w-md">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-gray-800">Configuración</h1>
-          <p className="text-sm text-gray-500 mt-1">Ingresá la dirección IP del servidor Ferretería</p>
+          <p className="text-sm text-gray-500 mt-1">Ingresá la dirección IP del servidor Cimiento</p>
         </div>
 
         <div className="space-y-4">

@@ -28,7 +28,7 @@ export default function Setup() {
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col items-center justify-center p-8 select-none">
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-white mb-1">Corralón</h1>
+        <h1 className="text-3xl font-bold text-white mb-1">Cimiento</h1>
         <p className="text-gray-400 text-sm">Configuración inicial</p>
       </div>
 

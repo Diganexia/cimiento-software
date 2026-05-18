@@ -141,8 +141,8 @@ export default function CtaCteCliente() {
             </div>
 
             {esCheque && (
-              <div className="border border-blue-200 rounded-lg p-3 bg-blue-50 space-y-3">
-                <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide">Datos del cheque</p>
+              <div className="border border-blue-200 dark:border-blue-800 rounded-lg p-3 bg-blue-50 dark:bg-blue-900/20 space-y-3">
+                <p className="text-xs font-semibold text-blue-700 dark:text-blue-300 uppercase tracking-wide">Datos del cheque</p>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1">N° de cheque *</label>

@@ -34,10 +34,16 @@ function RowActions({ onEdit, onDelete, deleteLabel = 'Eliminar' }) {
 }
 
 function InlineForm({ fields, onSave, onCancel, initial = {} }) {
-  const [vals, setVals] = useState(initial);
+  const [vals, setVals] = useState(() => {
+    const v = { ...initial };
+    fields.forEach((f) => {
+      if (f.type === 'select' && v[f.key] != null) v[f.key] = String(v[f.key]);
+    });
+    return v;
+  });
   const set = (k) => (e) => setVals((v) => ({ ...v, [k]: e.target.value }));
   return (
-    <tr className="bg-blue-50">
+    <tr className="bg-blue-50 dark:bg-blue-900/20">
       {fields.map((f) => (
         <td key={f.key} className="px-4 py-2">
           {f.type === 'select' ? (
@@ -132,7 +138,10 @@ function TabARCA() {
 
   const handleUpdate = async (id, vals) => {
     setErr('');
-    try { await updatePuntoVenta(id, vals); reload(); setEditing(null); }
+    try {
+      const payload = { ...vals, activo: vals.activo === 'true' || vals.activo === true };
+      await updatePuntoVenta(id, payload); reload(); setEditing(null);
+    }
     catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
   };
 
@@ -143,10 +152,15 @@ function TabARCA() {
     catch (e) { setErr(e.response?.data?.error || 'Error al eliminar'); }
   };
 
-  const fields = [
+  const createFields = [
     { key: 'numero', label: 'Número', placeholder: '1' },
     { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Punto Venta 1' },
     { key: 'tipo', label: 'Tipo', type: 'select', options: [{ value: 'electronica', label: 'Electrónica' }, { value: 'manual', label: 'Manual' }] }
+  ];
+  const editFields = [
+    { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Punto Venta 1' },
+    { key: 'tipo', label: 'Tipo', type: 'select', options: [{ value: 'electronica', label: 'Electrónica' }, { value: 'manual', label: 'Manual' }] },
+    { key: 'activo', label: 'Activo', type: 'select', options: [{ value: 'true', label: 'Sí' }, { value: 'false', label: 'No' }] }
   ];
 
   return (
@@ -155,7 +169,7 @@ function TabARCA() {
         <p className="text-sm text-gray-600 dark:text-gray-300">Puntos de venta habilitados en ARCA</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
-      {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
+      {err && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2 mb-3">{err}</p>}
       <table className="w-full text-sm">
         <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
           <tr>
@@ -168,10 +182,10 @@ function TabARCA() {
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {adding && (
-            <InlineForm fields={fields} onSave={handleCreate} onCancel={() => setAdding(false)} />
+            <InlineForm fields={createFields} onSave={handleCreate} onCancel={() => setAdding(false)} />
           )}
           {items.map((r) => editing === r.id ? (
-            <InlineForm key={r.id} fields={fields.slice(1)} initial={r}
+            <InlineForm key={r.id} fields={editFields} initial={{ ...r, activo: String(r.activo) }}
               onSave={(v) => handleUpdate(r.id, v)} onCancel={() => setEditing(null)} />
           ) : (
             <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -197,11 +211,13 @@ function TabARCA() {
 
 // ── Generic simple-list tab ───────────────────────────────────────────────────
 
-function SimpleListTab({ loader, creator, updater, deleter, columns, fields, title }) {
+function SimpleListTab({ loader, creator, updater, deleter, columns, fields, editFields = null, booleanFields = [], title }) {
   const { items, reload } = useList(loader);
   const [adding, setAdding] = useState(false);
   const [editing, setEditing] = useState(null);
   const [err, setErr] = useState('');
+
+  const resolveFields = (f) => typeof f === 'function' ? f(items) : f;
 
   const handleCreate = async (vals) => {
     setErr('');
@@ -211,7 +227,13 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
 
   const handleUpdate = async (id, vals) => {
     setErr('');
-    try { await updater(id, vals); reload(); setEditing(null); }
+    try {
+      const payload = { ...vals };
+      booleanFields.forEach((k) => {
+        if (payload[k] !== undefined) payload[k] = payload[k] === 'true' || payload[k] === true;
+      });
+      await updater(id, payload); reload(); setEditing(null);
+    }
     catch (e) { setErr(e.response?.data?.error || 'Error al guardar'); }
   };
 
@@ -224,7 +246,7 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
 
   return (
     <div>
-      {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
+      {err && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2 mb-3">{err}</p>}
       <div className="flex justify-between items-center mb-3">
         <p className="text-sm text-gray-600 dark:text-gray-300">{title}s del sistema</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
@@ -238,10 +260,10 @@ function SimpleListTab({ loader, creator, updater, deleter, columns, fields, tit
         </thead>
         <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
           {adding && (
-            <InlineForm fields={fields} onSave={handleCreate} onCancel={() => setAdding(false)} />
+            <InlineForm fields={resolveFields(fields)} onSave={handleCreate} onCancel={() => setAdding(false)} />
           )}
           {items.map((r) => editing === r.id ? (
-            <InlineForm key={r.id} fields={fields} initial={r}
+            <InlineForm key={r.id} fields={resolveFields(editFields || fields)} initial={r}
               onSave={(v) => handleUpdate(r.id, v)} onCancel={() => setEditing(null)} />
           ) : (
             <tr key={r.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
@@ -304,7 +326,7 @@ function TabCajas() {
         <p className="text-sm text-gray-600 dark:text-gray-300">Cajas del sistema</p>
         <button onClick={() => setAdding(true)} className="text-xs bg-blue-600 text-white px-3 py-1.5 rounded hover:bg-blue-700">+ Agregar</button>
       </div>
-      {err && <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2 mb-3">{err}</p>}
+      {err && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2 mb-3">{err}</p>}
       <table className="w-full text-sm">
         <thead className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide border-b border-gray-200 dark:border-gray-700">
           <tr>
@@ -355,8 +377,12 @@ export default function Configuracion() {
         { key: 'nombre', label: 'Nombre' },
         { key: 'rubro_padre', label: 'Rubro padre', render: (r) => r.rubro_padre || '—' }
       ]}
-      fields={[
-        { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Materiales de construcción' }
+      fields={(items) => [
+        { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Materiales de construcción' },
+        { key: 'rubro_padre_id', label: 'Rubro padre', type: 'select', options: [
+          { value: '', label: '— Sin padre —' },
+          ...items.map((r) => ({ value: String(r.id), label: r.nombre }))
+        ]}
       ]}
     />,
     <SimpleListTab key="unidades"
@@ -373,6 +399,7 @@ export default function Configuracion() {
     />,
     <SimpleListTab key="medios"
       loader={getMediosPago} creator={createMedioPago} updater={updateMedioPago} deleter={deleteMedioPago}
+      booleanFields={['activo']}
       title="Medio de pago"
       columns={[
         { key: 'nombre', label: 'Nombre' },
@@ -385,9 +412,14 @@ export default function Configuracion() {
       fields={[
         { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Transferencia bancaria' }
       ]}
+      editFields={[
+        { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Transferencia bancaria' },
+        { key: 'activo', label: 'Activo', type: 'select', options: [{ value: 'true', label: 'Sí' }, { value: 'false', label: 'No' }] }
+      ]}
     />,
     <SimpleListTab key="depositos"
       loader={getDepositos} creator={createDeposito} updater={updateDeposito} deleter={deleteDeposito}
+      booleanFields={['activo']}
       title="Depósito"
       columns={[
         { key: 'nombre', label: 'Nombre' },
@@ -401,6 +433,11 @@ export default function Configuracion() {
       fields={[
         { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Depósito central' },
         { key: 'descripcion', label: 'Descripción', placeholder: 'Descripción (opcional)' }
+      ]}
+      editFields={[
+        { key: 'nombre', label: 'Nombre', placeholder: 'Ej: Depósito central' },
+        { key: 'descripcion', label: 'Descripción', placeholder: 'Descripción (opcional)' },
+        { key: 'activo', label: 'Activo', type: 'select', options: [{ value: 'true', label: 'Sí' }, { value: 'false', label: 'No' }] }
       ]}
     />,
     <TabCajas key="cajas" />

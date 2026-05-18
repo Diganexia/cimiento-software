@@ -49,13 +49,13 @@ export default function ArqueoDetalle() {
           <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Saldo inicial</p>
           <p className="text-xl font-bold text-gray-800 dark:text-gray-100">${fmt(arqueo.saldo_inicial)}</p>
         </div>
-        <div className="bg-green-50 rounded-lg border border-green-200 p-4">
-          <p className="text-xs text-green-600 uppercase tracking-wide mb-1">Ingresos</p>
-          <p className="text-xl font-bold text-green-700">+${fmt(ingresos)}</p>
+        <div className="bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800 p-4">
+          <p className="text-xs text-green-600 dark:text-green-400 uppercase tracking-wide mb-1">Ingresos</p>
+          <p className="text-xl font-bold text-green-700 dark:text-green-400">+${fmt(ingresos)}</p>
         </div>
-        <div className="bg-red-50 rounded-lg border border-red-200 p-4">
-          <p className="text-xs text-red-500 uppercase tracking-wide mb-1">Egresos</p>
-          <p className="text-xl font-bold text-red-600">-${fmt(egresos)}</p>
+        <div className="bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800 p-4">
+          <p className="text-xs text-red-500 dark:text-red-400 uppercase tracking-wide mb-1">Egresos</p>
+          <p className="text-xl font-bold text-red-600 dark:text-red-400">-${fmt(egresos)}</p>
         </div>
       </div>
 
