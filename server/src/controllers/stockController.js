@@ -3,22 +3,25 @@ const { upsertStock, registrarMovimiento, getStockDeposito } = require('../helpe
 
 const listar = async (req, res) => {
   try {
-    const { deposito_id, q } = req.query;
+    const { deposito_id, q, proveedor_id } = req.query;
     let query = db('stock_por_deposito as spd')
       .join('productos as p', 'spd.producto_id', 'p.id')
       .join('depositos as d', 'spd.deposito_id', 'd.id')
       .leftJoin('unidades_medida as um', 'p.unidad_medida_id', 'um.id')
       .leftJoin('rubros as r', 'p.rubro_id', 'r.id')
+      .leftJoin('proveedores as pv', 'p.proveedor_habitual_id', 'pv.id')
       .select(
         'p.id as producto_id', 'p.nombre as producto', 'p.codigo', 'p.stock_minimo',
         'um.abreviatura as unidad',
         'r.nombre as rubro',
+        'pv.id as proveedor_id', 'pv.nombre as proveedor',
         'd.id as deposito_id', 'd.nombre as deposito',
         'spd.cantidad', 'spd.updated_at'
       )
       .where('p.activo', true);
 
     if (deposito_id) query = query.where('spd.deposito_id', deposito_id);
+    if (proveedor_id) query = query.where('p.proveedor_habitual_id', proveedor_id);
     if (q) query = query.whereRaw('p.nombre ILIKE ?', [`%${q}%`]);
 
     const data = await query.orderBy('p.nombre');

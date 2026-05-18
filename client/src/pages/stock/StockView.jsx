@@ -2,33 +2,39 @@
 import { useNavigate } from 'react-router-dom';
 import { getStock, getDepositos } from '../../services/stockService';
 import StockBadge from '../../components/StockBadge';
+import api from '../../lib/api';
 
 const fmtQty = (n) => parseFloat(parseFloat(n).toFixed(3)).toString();
 
 export default function StockView() {
   const [stock, setStock] = useState([]);
   const [depositos, setDepositos] = useState([]);
+  const [proveedores, setProveedores] = useState([]);
   const [depositoId, setDepositoId] = useState('');
+  const [proveedorId, setProveedorId] = useState('');
   const [busqueda, setBusqueda] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     getDepositos().then((r) => setDepositos(r.data)).catch(() => {});
+    api.get('/proveedores', { params: { limit: 200 } })
+      .then((r) => setProveedores(r.data.data || r.data))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
     setLoading(true);
-    getStock({ deposito_id: depositoId, q: busqueda })
+    getStock({ deposito_id: depositoId, proveedor_id: proveedorId, q: busqueda })
       .then((r) => setStock(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [depositoId, busqueda]);
+  }, [depositoId, proveedorId, busqueda]);
 
   return (
     <div className="p-6">
       <div className="flex items-center justify-between mb-5">
-        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Stock por depósito</h1>
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Stock General</h1>
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/stock/transferencia')}
@@ -60,6 +66,14 @@ export default function StockView() {
         >
           <option value="">Todos los depósitos</option>
           {depositos.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+        </select>
+        <select
+          value={proveedorId}
+          onChange={(e) => setProveedorId(e.target.value)}
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Todos los distribuidores</option>
+          {proveedores.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
         </select>
       </div>
 

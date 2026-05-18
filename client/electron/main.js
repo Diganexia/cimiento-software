@@ -178,7 +178,7 @@ function createSetupWindow() {
 
 function createMainWindow(serverUrl) {
   mainWindow = new BrowserWindow({
-    width: 1280, height: 820, minWidth: 1024, minHeight: 600, show: false,
+    width: 1366, height: 768, minWidth: 1366, minHeight: 768, show: false,
     title: 'Cimiento',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
