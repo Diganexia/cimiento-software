@@ -191,14 +191,15 @@ function generarEstadoCuentaPDF({ entidad, movimientos, saldo, tipo }, res) {
 
   doc.moveTo(50, 158).lineTo(545, 158).strokeColor('#ccc').stroke();
 
-  // Table header
+  // Table header — col layout: Fecha 65 | Desc 160 | Debe 88 | Haber 88 | Saldo 90
+  // x: 50       118       283      375      462
   let y = 172;
   doc.fontSize(11).font('Helvetica-Bold').fillColor('#555');
-  doc.text('Fecha', 50, y, { width: 70 });
-  doc.text('Descripción', 125, y, { width: 235 });
-  doc.text('Debe', 365, y, { width: 55, align: 'right' });
-  doc.text('Haber', 425, y, { width: 55, align: 'right' });
-  doc.text('Saldo', 485, y, { width: 60, align: 'right' });
+  doc.text('Fecha',       50,  y, { width: 65,  lineBreak: false });
+  doc.text('Descripción', 118, y, { width: 160, lineBreak: false });
+  doc.text('Debe',        283, y, { width: 88,  align: 'right', lineBreak: false });
+  doc.text('Haber',       375, y, { width: 88,  align: 'right', lineBreak: false });
+  doc.text('Saldo',       462, y, { width: 83,  align: 'right', lineBreak: false });
   y += 15;
   doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
   y += 8;
@@ -211,11 +212,11 @@ function generarEstadoCuentaPDF({ entidad, movimientos, saldo, tipo }, res) {
     const debe  = mov.tipo === 'debito'  ? `$${fmt(mov.monto)}` : '';
     const haber = mov.tipo === 'credito' ? `$${fmt(mov.monto)}` : '';
 
-    doc.text(fecha, 50, y, { width: 70 });
-    doc.text((mov.descripcion || '').slice(0, 60), 125, y, { width: 235 });
-    doc.fillColor(mov.tipo === 'debito' ? '#b91c1c' : '#555').text(debe,  365, y, { width: 55, align: 'right' });
-    doc.fillColor(mov.tipo === 'credito' ? '#15803d' : '#555').text(haber, 425, y, { width: 55, align: 'right' });
-    doc.fillColor('#000').text(`$${fmt(mov.saldo_posterior)}`, 485, y, { width: 60, align: 'right' });
+    doc.fillColor('#000').text(fecha, 50, y, { width: 65, lineBreak: false });
+    doc.text((mov.descripcion || '').slice(0, 35), 118, y, { width: 160, lineBreak: false });
+    doc.fillColor(mov.tipo === 'debito'  ? '#b91c1c' : '#555').text(debe,  283, y, { width: 88, align: 'right', lineBreak: false });
+    doc.fillColor(mov.tipo === 'credito' ? '#15803d' : '#555').text(haber, 375, y, { width: 88, align: 'right', lineBreak: false });
+    doc.fillColor('#000').text(`$${fmt(mov.saldo_posterior)}`, 462, y, { width: 83, align: 'right', lineBreak: false });
     y += 16;
   }
 
@@ -224,8 +225,8 @@ function generarEstadoCuentaPDF({ entidad, movimientos, saldo, tipo }, res) {
   y += 13;
 
   const saldoColor = parseFloat(saldo) > 0 ? '#b91c1c' : '#15803d';
-  doc.font('Helvetica-Bold').fontSize(13).fillColor('#000').text('Saldo actual:', 380, y);
-  doc.fillColor(saldoColor).text(`$${fmt(saldo)}`, 485, y, { width: 60, align: 'right' });
+  doc.font('Helvetica-Bold').fontSize(13).fillColor('#000').text('Saldo actual:', 350, y, { lineBreak: false });
+  doc.fillColor(saldoColor).text(`$${fmt(saldo)}`, 462, y, { width: 83, align: 'right', lineBreak: false });
 
   const footerYCtaCte = doc.page.height - doc.page.margins.bottom - 14;
   doc.fontSize(10).fillColor('#999')
