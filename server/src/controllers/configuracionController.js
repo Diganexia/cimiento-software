@@ -2,13 +2,22 @@
 const path = require('path');
 const db = require('../config/db');
 
-const EMPRESA_PATH = path.join(__dirname, '../config/empresa.json');
+function getEmpresaPath() {
+  try {
+    const { app } = require('electron');
+    return path.join(app.getPath('userData'), 'empresa.json');
+  } catch {
+    return path.join(__dirname, '../config/empresa.json');
+  }
+}
 
 function leerEmpresa() {
   try {
-    if (fs.existsSync(EMPRESA_PATH)) {
-      return JSON.parse(fs.readFileSync(EMPRESA_PATH, 'utf-8'));
-    }
+    const p = getEmpresaPath();
+    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf-8'));
+    // fallback: archivo en directorio antiguo (migración silenciosa)
+    const old = path.join(__dirname, '../config/empresa.json');
+    if (fs.existsSync(old)) return JSON.parse(fs.readFileSync(old, 'utf-8'));
   } catch (_) {}
   return {
     nombre: process.env.EMPRESA_NOMBRE || '',
@@ -31,7 +40,7 @@ async function getEmpresa(req, res) {
 async function updateEmpresa(req, res) {
   try {
     const datos = { ...leerEmpresa(), ...req.body };
-    fs.writeFileSync(EMPRESA_PATH, JSON.stringify(datos, null, 2), 'utf-8');
+    fs.writeFileSync(getEmpresaPath(), JSON.stringify(datos, null, 2), 'utf-8');
     res.json(datos);
   } catch (err) {
     res.status(500).json({ error: err.message });
