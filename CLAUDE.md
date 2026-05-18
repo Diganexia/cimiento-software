@@ -42,7 +42,14 @@ Después de `npm install` en `client/`, reaplicar el patch en `node_modules/app-
 ### Build y release
 El usuario dice "buildea y subilo" como comando único. Ejecutar:
 1. `npm run electron:build` desde `client/`
-2. `gh release create vX.Y.Z dist/Corralon-Setup-X.Y.Z.exe`
+2. ```
+   gh release create vX.Y.Z \
+     "client/dist-electron/unified/Corralon-Setup-X.Y.Z.exe" \
+     "client/dist-electron/unified/Corralon-Setup-X.Y.Z.exe.blockmap" \
+     "client/dist-electron/unified/latest.yml"
+   ```
+
+**CRÍTICO:** Subir siempre los 3 archivos: `.exe`, `.exe.blockmap` y `latest.yml`. Sin `latest.yml`, el auto-updater no puede detectar nuevas versiones.
 
 No pedir confirmación intermedia.
 
