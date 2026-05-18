@@ -86,14 +86,25 @@ Siempre usar `.returning('*')` en INSERT/UPDATE. Sin esto devuelve objeto no ite
 Calculados con `MAX(numero)+1` dentro de transacción protegida con `pg_advisory_xact_lock(1)`. Constraint UNIQUE en `ventas.numero`. No usar sequences (el rollback debe liberar el número).
 
 ### Dark mode
-`darkMode: 'class'` en `tailwind.config.js`. Toggle en Sidebar. Login/Splash/Setup excluidos. CSS global en `index.css` cubre form elements. Al hacer logout, `Login.jsx` remueve clase `dark` del `<html>` y la restaura en el cleanup al navegar post-login. Cards/banners de color usan `dark:bg-COLOR-900/20`.
+`darkMode: 'class'` en `tailwind.config.js`. Toggle como pill con iconos sol/luna en la página de **Configuración** (no en Sidebar). **Login también aplica dark mode** — tiene `dark:` classes en todos sus elementos; no forzar remoción de la clase `dark` en Login. Splash/Setup excluidos del dark mode. CSS global en `index.css` cubre form elements. Cards/banners de color usan `dark:bg-COLOR-900/20`.
+
+### PDF — guardado en Documents
+PDFs se guardan via IPC en `Documents/Cimiento/{tipo}/{DD-MM-YYYY}/` usando `app.getPath('documents')`. Handler `save-pdf` en `main.js` (dentro de `registerUniversalAsyncIPC`). Helper `client/src/lib/pdfUtils.js` expone `savePdf(blob, tipo, filename)` — en Electron usa `window.electronAPI.savePdf()`, en browser hace download con anchor. `preload.js` expone `savePdf` vía contextBridge. Después de guardar, `shell.openPath()` abre el archivo automáticamente. El buffer se transfiere como `ArrayBuffer` vía IPC; en main.js usar `Buffer.from(buffer)` para escribirlo.
+
+### PDF — convenciones de nombre y tipografía
+- Ventas: `{Cliente}_{DD-MM-YYYY}_Comprobante_{N}.pdf`
+- Estado de cuenta: `Estado_Cuenta_{Nombre}_{DD-MM-YYYY}.pdf`
+- Campo "Impreso:" incluye hora: `${fechaImpresion} ${horaImpresion}` (HH:MM)
+- Fuentes: todas las fontSizes de `pdfService.js` están +3pt respecto al baseline original
+- Footers anclados con `doc.page.height - doc.page.margins.bottom - 14` (NO y fijo como 800/810 — excedería el margen A4 y generaría segunda página)
 
 ### Branding — Cimiento
-- Nombre visible: **Cimiento** (productName, artifactName, UI)
+- Nombre visible: **Cimiento** (productName, artifactName, UI, título barra de Windows)
 - `appId`: sigue siendo `com.ferreteria.app` — NO cambiar o rompe auto-update de installs existentes
 - `name` en package.json: sigue siendo `ferreteria-client` — determina `%APPDATA%\ferreteria-client` (userData path)
 - DB PostgreSQL user/name: sigue siendo `corralon` — NO cambiar o rompe installs existentes
 - Protocolo UDP discovery: sigue usando strings `CORRALON_DISCOVER` / `CORRALON_SERVER` — compatibilidad con clientes en campo
+- Título barra Windows: `title: 'Cimiento'` en BrowserWindow + `mainWindow.on('page-title-updated', e => e.preventDefault())` en main.js. `index.html` tiene el título correcto pero está en .gitignore — el fix de main.js es suficiente en runtime.
 
 ### Configuración — SimpleListTab
 `SimpleListTab` acepta `editFields` (array o función de items) para campos distintos al crear vs editar. `booleanFields` (array de keys) se convierten de string a boolean antes del update. `InlineForm` convierte a string los valores de campos `type:'select'` al inicializar (para que IDs integer matcheen options string).
