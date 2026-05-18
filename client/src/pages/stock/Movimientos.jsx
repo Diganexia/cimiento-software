@@ -2,16 +2,18 @@
 import { getMovimientos } from '../../services/stockService';
 import Pagination from '../../components/Pagination';
 
-const TIPOS = ['ENTRADA_COMPRA','SALIDA_VENTA','TRANSFERENCIA_ENTRADA','TRANSFERENCIA_SALIDA','AJUSTE_POSITIVO','AJUSTE_NEGATIVO','INVENTARIO'];
+const TIPOS = ['ENTRADA_COMPRA','SALIDA_VENTA','TRANSFERENCIA','AJUSTE_POSITIVO','AJUSTE_NEGATIVO','INVENTARIO'];
 
 const TIPO_LABEL = {
-  ENTRADA_COMPRA: { label: 'Entrada compra', cls: 'bg-green-100 text-green-700' },
-  SALIDA_VENTA: { label: 'Salida venta', cls: 'bg-red-100 text-red-700' },
+  ENTRADA_COMPRA:       { label: 'Entrada compra',  cls: 'bg-green-100 text-green-700' },
+  SALIDA_VENTA:         { label: 'Salida venta',    cls: 'bg-red-100 text-red-700' },
+  TRANSFERENCIA:        { label: 'Transferencia',   cls: 'bg-blue-100 text-blue-700' },
+  // compatibilidad con registros viejos
   TRANSFERENCIA_ENTRADA: { label: 'Transf. entrada', cls: 'bg-blue-100 text-blue-700' },
-  TRANSFERENCIA_SALIDA: { label: 'Transf. salida', cls: 'bg-orange-100 text-orange-700' },
-  AJUSTE_POSITIVO: { label: 'Ajuste +', cls: 'bg-teal-100 text-teal-700' },
-  AJUSTE_NEGATIVO: { label: 'Ajuste -', cls: 'bg-yellow-100 text-yellow-700' },
-  INVENTARIO: { label: 'Inventario', cls: 'bg-purple-100 text-purple-700' }
+  TRANSFERENCIA_SALIDA:  { label: 'Transf. salida',  cls: 'bg-blue-100 text-blue-700' },
+  AJUSTE_POSITIVO:      { label: 'Ajuste +',         cls: 'bg-teal-100 text-teal-700' },
+  AJUSTE_NEGATIVO:      { label: 'Ajuste -',         cls: 'bg-yellow-100 text-yellow-700' },
+  INVENTARIO:           { label: 'Inventario',       cls: 'bg-purple-100 text-purple-700' }
 };
 
 export default function Movimientos() {

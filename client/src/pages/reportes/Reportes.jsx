@@ -431,7 +431,7 @@ function TabKardex() {
   const TIPO_COLOR = {
     ENTRADA_COMPRA: 'text-green-700', SALIDA_VENTA: 'text-red-600',
     AJUSTE_POSITIVO: 'text-green-600', AJUSTE_NEGATIVO: 'text-red-500',
-    TRANSFERENCIA_ENTRADA: 'text-blue-600', TRANSFERENCIA_SALIDA: 'text-blue-500',
+    TRANSFERENCIA: 'text-blue-600', TRANSFERENCIA_ENTRADA: 'text-blue-600', TRANSFERENCIA_SALIDA: 'text-blue-600',
     INVENTARIO: 'text-gray-600 dark:text-gray-300'
   };
 

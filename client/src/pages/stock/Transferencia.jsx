@@ -76,7 +76,7 @@ export default function Transferencia() {
                   <button type="button" onClick={() => { setForm((f) => ({ ...f, producto_id: p.id })); setBusqueda(p.nombre); setProductos([]); }}
                     className="w-full text-left px-3 py-2 text-sm hover:bg-blue-50 dark:hover:bg-blue-900/20 flex justify-between">
                     <span>{p.nombre}</span>
-                    <span className="text-gray-400 dark:text-gray-500 text-xs">Stock: {p.stock_total}</span>
+                    <span className="text-gray-400 dark:text-gray-500 text-xs">Stock: {Math.floor(parseFloat(p.stock_total))}</span>
                   </button>
                 </li>
               ))}
@@ -104,7 +104,7 @@ export default function Transferencia() {
 
         <div>
           <Label>Cantidad</Label>
-          <input type="number" min="0.001" step="0.001" value={form.cantidad} onChange={set('cantidad')} className={inputCls} required />
+          <input type="number" min="1" step="1" value={form.cantidad} onChange={set('cantidad')} className={inputCls} required />
         </div>
 
         <div>

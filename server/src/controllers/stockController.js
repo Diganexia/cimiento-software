@@ -99,16 +99,9 @@ const transferencia = async (req, res) => {
     await upsertStock(producto_id, deposito_destino_id, cant, trx);
 
     await registrarMovimiento({
-      producto_id, deposito_origen_id, deposito_destino_id: null,
-      tipo: 'TRANSFERENCIA_SALIDA', cantidad: cant,
+      producto_id, deposito_origen_id, deposito_destino_id,
+      tipo: 'TRANSFERENCIA', cantidad: cant,
       cantidad_anterior: stockOrigen, cantidad_posterior: stockOrigen - cant,
-      motivo: motivo || null, usuario_id: req.user.id
-    }, trx);
-
-    await registrarMovimiento({
-      producto_id, deposito_origen_id: null, deposito_destino_id,
-      tipo: 'TRANSFERENCIA_ENTRADA', cantidad: cant,
-      cantidad_anterior: stockDestino, cantidad_posterior: stockDestino + cant,
       motivo: motivo || null, usuario_id: req.user.id
     }, trx);
 
