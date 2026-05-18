@@ -45,7 +45,7 @@
 
 ---
 
-## Versión actual: v1.2.0
+## Versión actual: v1.2.1
 
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
@@ -74,6 +74,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.1.8 | Fix handler PDF IPC + carpeta configurable en Configuración + toast éxito/error |
 | v1.1.9 | POS: stock por depósito seleccionado + fuente compacta en caja de movimientos |
 | v1.2.0 | Configuración: buscar actualizaciones manualmente con estado en tiempo real |
+| v1.2.1 | Stock General + filtro distribuidor + ventana 1366x768 + fix empresa persiste en AppData |
 
 ---
 
