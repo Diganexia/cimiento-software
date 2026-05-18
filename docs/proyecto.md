@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-16 — v1.0.3: Fase 10, bugs UI, clean install, Kardex fix.
+> Documento vivo. Última actualización: 2026-05-19 — v1.2.3.
 
 ---
 
@@ -466,3 +466,116 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - [x] **Bugs UI corregidos (2026-05-15)**
   - Bug 1 (focus loss): `Field`/`Label` definidos dentro de componentes padre → React los destruía/remontaba en cada render. Movidos a nivel de módulo en `ProductoForm.jsx`, `ClienteForm.jsx`, `CompraForm.jsx`, `ProveedorForm.jsx`, `Transferencia.jsx`.
   - Bug 2 (sidebar múltiple highlight): NavLink sin `end` hacía que rutas como `/ventas` activen también al navegar a `/ventas/nueva`. Se añadió `end: true` a los ítems: Productos, Ventas, Clientes, Compras, Proveedores, Configuración.
+
+---
+
+## Historial de versiones post v1.0.3
+
+### v1.0.4 (2026-05-16)
+- Fix `configuracionController.js`: INSERT sin `.returning()` en PostgreSQL devuelve objeto no iterable → 500. Corregido con `.returning('*')` en `createRubro`, `createDeposito`, `createUnidad`, `createMedioPago`, `createCaja`, `createPuntoVenta`.
+- Fix `Configuracion.jsx`: `alert()` reemplazado por error inline (pérdida de foco en Electron).
+- Fix decimales innecesarios en stock (1000.000 → 1000).
+- Feat: unidad de medida real del producto en delta de Ajuste.
+- Feat: Inventario maneja sesión ya abierta (409 con botón "Continuar" o "Cancelar").
+- Feat: versión visible en Login y Dashboard.
+
+### v1.0.5 (2026-05-16)
+- Fix: `Splash.jsx` tenía `v1.0.0` hardcodeado. Reemplazado por `import { version } from '../../package.json'`.
+
+### v1.0.6 (2026-05-16)
+- Fix DELETE depósito: consultaba tabla `stock` (no existe), corregido a `stock_por_deposito`.
+- Fix decimales en inputs de cantidad (`step="1"` + `parseFloat` al cargar stock_minimo).
+- Feat: checkbox "Redondear" en POS — ajusta descuento para que el total guardado en BD quede redondeado.
+
+### v1.0.7 (2026-05-17)
+- Fix: PDF segunda página innecesaria — footers anclados con `doc.page.height - margins.bottom - 14`.
+- Feat: `redondeo_monto` como campo en BD (migración 014).
+
+### v1.0.8 (2026-05-17)
+- Fixes y mejoras por feedback del cliente (varios bugs menores de UI).
+
+### v1.0.9 (2026-05-17)
+- Instalador unificado: un solo `Cimiento-Setup-X.Y.Z.exe`. Primer arranque pregunta si es Servidor o Cliente, guarda en `app-config.json` en userData.
+- Modo servidor/cliente detectado en runtime leyendo `app-config.json` en vez de `server-mode.flag`.
+- Discovery de servidor vía UDP broadcast puerto 45678.
+
+### v1.1.0 (2026-05-17)
+- Backup sin `pg_dump`: `embedded-postgres` v18 no incluye `pg_dump`. `backupManager.js` reescrito con `pg.Client` directo. Formato `.json`.
+- Dark mode completo en toda la app: `darkMode: 'class'` en Tailwind. Toggle como pill con iconos sol/luna en Configuración. Login también aplica dark mode.
+
+### v1.1.1 – v1.1.2 (2026-05-17)
+- Fixes varios de dark mode, autenticación y configuración.
+
+### v1.1.3 (2026-05-17)
+- Fixes auth/dark mode/configuración + rename a **Cimiento** (productName, título barra Windows).
+- `appId` y `name` de package.json sin cambiar (compatibilidad con installs existentes).
+
+### v1.1.4 (2026-05-17)
+- Login: crédito Diganexia.
+
+### v1.1.5 (2026-05-17)
+- Dark mode en Login + toggle sol/luna en Configuración + título "Cimiento" en barra Windows.
+
+### v1.1.6 (2026-05-18)
+- Validación de stock en POS antes de confirmar.
+- Nombres de PDF dinámicos (incluyen nombre de cliente y fecha).
+- Fuentes PDF +3pt respecto al baseline original.
+- Footer PDF anclado correctamente.
+
+### v1.1.7 (2026-05-18)
+- PDFs guardados en `Documentos/Cimiento/{tipo}/{fecha}/` via IPC.
+- `pdfUtils.js` con helper `savePdf(blob, tipo, filename)` — IPC en Electron, download en browser.
+- Selector de período en dashboard (hoy / esta semana / este mes).
+
+### v1.1.8 (2026-05-18)
+- Fix handler `save-pdf` IPC: estaba dentro de `bootSetup()` (solo primer arranque). Movido a `registerUniversalAsyncIPC()`.
+- Carpeta de PDFs configurable desde Configuración (picker nativo + persistencia en `app-config.json`).
+- Toast de éxito/error al guardar PDF (inyección DOM en `pdfUtils.js`, sin estado React).
+
+### v1.1.9 (2026-05-18)
+- POS: stock mostrado y validado por depósito seleccionado (no total). Backend acepta `deposito_id` en `/api/productos`.
+- Caja — movimientos: fuente reducida a `text-xs`, padding compacto para que entren en un renglón.
+
+### v1.2.0 (2026-05-18)
+- Configuración: botón "Buscar actualizaciones" con estado en tiempo real (checking / available / downloading / downloaded / not-available / error).
+- IPC handlers: `check-for-updates`, `install-update`, `onUpdateStatus`.
+
+### v1.2.1 (2026-05-18)
+- Sidebar: "Stock por depósito" → "Stock General".
+- StockView: título "Stock General" + filtro por distribuidor.
+- Ventana mínima: 1366×768.
+- Fix empresa.json: ahora se guarda en `app.getPath('userData')` en vez de `resources/` (sin permisos de escritura en producción, se borraba en updates).
+
+### v1.2.2 (2026-05-18)
+- Fix PDF estado de cuenta: columnas Debe/Haber/Saldo redimensionadas (55→88px) con `lineBreak: false` para evitar wrap de montos grandes.
+- Transferencias: un solo movimiento tipo `TRANSFERENCIA` (antes TRANSFERENCIA_ENTRADA + TRANSFERENCIA_SALIDA con depósitos incompletos).
+- Cantidades en transferencias: enteras (`Math.floor`, `step="1"`).
+
+### v1.2.3 (2026-05-19)
+- Fix crítico transferencias: `TRANSFERENCIA` no era un valor válido del ENUM `movimientos_stock_tipo` en PostgreSQL. Migración 016 agrega el valor (`ALTER TYPE ... ADD VALUE IF NOT EXISTS`, fuera de transacción).
+- Movimientos: registros viejos `TRANSFERENCIA_ENTRADA`/`TRANSFERENCIA_SALIDA` muestran label "Transferencia".
+- Movimientos: tabla compacta (`text-xs`, `px-3 py-2`, `whitespace-nowrap`) para que cada fila entre en un renglón.
+- Transferencia: muestra stock disponible del depósito de origen al seleccionarlo.
+
+---
+
+## Migraciones BD
+
+| Migración | Descripción |
+|-----------|-------------|
+| 001 | Tablas de soporte: roles, usuarios |
+| 002 | Catálogo: rubros, unidades_medida, proveedores, productos |
+| 003 | Stock: depositos, stock_por_deposito, movimientos_stock |
+| 004 | Ventas: clientes, ventas, ventas_items, medios_pago |
+| 005 | Compras: compras, compras_items |
+| 006 | Tesorería: cajas, arqueos, movimientos_caja |
+| 007 | Cuentas corrientes: cuenta_corriente_clientes/proveedores, cuotas_cliente |
+| 008 | AFIP: puntos_venta_afip, comprobantes_afip |
+| 009 | Inventario: inventarios, inventario_items |
+| 010 | Cheques: tabla cheques, cheque_id en movimientos_caja |
+| 011 | Retenciones: tabla retenciones |
+| 012 | Notas débito/crédito: extiende CHECK constraint en ventas.tipo |
+| 013 | Clientes: agrega pasaporte y tipo_documento |
+| 014 | Ventas: agrega redondeo_monto |
+| 015 | Ventas: UNIQUE constraint en ventas.numero |
+| 016 | movimientos_stock: agrega valor TRANSFERENCIA al enum tipo |
