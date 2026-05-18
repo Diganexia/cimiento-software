@@ -121,7 +121,7 @@ export default function VentaDetalle() {
       </div>
 
       <div className="flex gap-3">
-        <button onClick={() => downloadPdf(id).catch(console.error)}
+        <button onClick={() => downloadPdf(id, venta.cliente, venta.numero).catch(console.error)}
           className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
           Descargar PDF
         </button>

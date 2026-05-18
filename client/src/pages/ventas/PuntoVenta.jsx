@@ -83,29 +83,55 @@ export default function PuntoVenta() {
   const agregarProducto = (prod) => {
     setBusqueda('');
     setResultados([]);
-    setCart((prev) => {
-      const idx = prev.findIndex((i) => i.producto_id === prod.id);
-      if (idx >= 0) {
+    const rawStock = parseFloat(prod.stock_total);
+    const stock = isNaN(rawStock) ? null : rawStock;
+    const idx = cart.findIndex((i) => i.producto_id === prod.id);
+    if (idx >= 0) {
+      const item = cart[idx];
+      if (stock !== null && item.cantidad + 1 > stock) {
+        setError(`Stock insuficiente para "${item.nombre}": disponible ${stock}`);
+        searchRef.current?.focus();
+        return;
+      }
+      setError('');
+      setCart((prev) => {
         const next = [...prev];
         next[idx] = { ...next[idx], cantidad: next[idx].cantidad + 1 };
         return next;
-      }
-      return [...prev, {
+      });
+    } else {
+      setError('');
+      setCart((prev) => [...prev, {
         producto_id: prod.id,
         nombre: prod.nombre,
         codigo: prod.codigo,
         cantidad: 1,
         precio_unitario: parseFloat(prod.precio_venta || 0),
-        descuento_porcentaje: 0
-      }];
-    });
+        descuento_porcentaje: 0,
+        stock_disponible: stock
+      }]);
+    }
     searchRef.current?.focus();
   };
 
   const updateItem = (idx, field, value) => {
+    const parsed = parseFloat(value) || 0;
+    if (field === 'cantidad') {
+      const item = cart[idx];
+      if (item.stock_disponible !== null && parsed > item.stock_disponible) {
+        setError(`Stock insuficiente para "${item.nombre}": disponible ${item.stock_disponible}`);
+        setCart((prev) => {
+          const next = [...prev];
+          next[idx] = { ...next[idx], cantidad: item.stock_disponible };
+          return next;
+        });
+        return;
+      }
+      setError('');
+    }
     setCart((prev) => {
       const next = [...prev];
-      next[idx] = { ...next[idx], [field]: parseFloat(value) || 0 };
+      next[idx] = { ...next[idx], [field]: parsed };
       return next;
     });
   };
@@ -158,6 +184,11 @@ export default function PuntoVenta() {
     setError('');
     if (!depositoId) { setError('Seleccione un depósito'); return; }
     if (!cart.length) { setError('Agregue al menos un producto'); return; }
+    const itemSinStock = cart.find((i) => i.stock_disponible !== null && i.cantidad > i.stock_disponible);
+    if (itemSinStock) {
+      setError(`Stock insuficiente para "${itemSinStock.nombre}": disponible ${itemSinStock.stock_disponible}`);
+      return;
+    }
     if (tipoPago !== 'cuenta_corriente' && Math.abs(totalPagado - totalEfectivo) > 0.01) {
       setError(`El total pagado ($${fmt(totalPagado)}) no coincide con el total ($${fmt(totalEfectivo)})`);
       return;
@@ -223,7 +254,7 @@ export default function PuntoVenta() {
             </div>
           )}
           <div className="flex gap-3 justify-center pt-2">
-            <button onClick={() => downloadPdf(confirmada.id).catch(console.error)}
+            <button onClick={() => downloadPdf(confirmada.id, clientes.find((c) => String(c.id) === String(clienteId))?.nombre, confirmada.numero).catch(console.error)}
               className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
               Descargar PDF
             </button>
@@ -311,8 +342,13 @@ export default function PuntoVenta() {
                     </div>
                     <div className="col-span-2">
                       <input type="number" min="0.001" step="any" value={item.cantidad}
+                        max={item.stock_disponible ?? undefined}
                         onChange={(e) => updateItem(idx, 'cantidad', e.target.value)}
-                        className="w-full border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-400" />
+                        className={`w-full border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-400 ${
+                          item.stock_disponible !== null && item.cantidad >= item.stock_disponible
+                            ? 'border-red-400 dark:border-red-500'
+                            : 'border-gray-200 dark:border-gray-700'
+                        }`} />
                     </div>
                     <div className="col-span-2">
                       <input type="number" min="0" max="100" step="0.1" value={item.descuento_porcentaje}
@@ -459,11 +495,24 @@ export default function PuntoVenta() {
             <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-gray-100 pt-1 border-t border-gray-200 dark:border-gray-700">
               <span>Total:</span><span>${fmt(totalEfectivo)}</span>
             </div>
-            {tipoPago !== 'cuenta_corriente' && (
-              <div className={`flex justify-between text-sm ${Math.abs(totalPagado - totalEfectivo) < 0.01 ? 'text-green-600' : 'text-red-500'}`}>
-                <span>Pagado:</span><span>${fmt(totalPagado)}</span>
-              </div>
-            )}
+            {tipoPago !== 'cuenta_corriente' && (() => {
+              const diff = totalPagado - totalEfectivo;
+              if (Math.abs(diff) < 0.01) return (
+                <div className="flex justify-between text-sm text-green-600">
+                  <span>Falta:</span><span>$0,00</span>
+                </div>
+              );
+              if (diff > 0) return (
+                <div className="flex justify-between text-sm text-amber-500">
+                  <span>Sobra:</span><span>${fmt(diff)}</span>
+                </div>
+              );
+              return (
+                <div className="flex justify-between text-sm text-red-500">
+                  <span>Falta:</span><span>${fmt(-diff)}</span>
+                </div>
+              );
+            })()}
           </div>
 
           {error && <p className="text-red-600 dark:text-red-400 text-xs bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{error}</p>}

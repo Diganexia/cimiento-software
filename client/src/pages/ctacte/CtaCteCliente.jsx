@@ -106,7 +106,7 @@ export default function CtaCteCliente() {
             Imprimir último recibo
           </button>
         )}
-        <button onClick={() => downloadPdfCliente(clienteId).catch(console.error)}
+        <button onClick={() => downloadPdfCliente(clienteId, cliente.nombre).catch(console.error)}
           className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
           Estado de cuenta PDF
         </button>

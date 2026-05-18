@@ -40,7 +40,7 @@ export default function Ventas() {
     load(page);
   };
 
-  const handlePdf = (id) => downloadPdf(id).catch(console.error);
+  const handlePdf = (v) => downloadPdf(v.id, v.cliente, v.numero).catch(console.error);
 
   return (
     <div className="p-6">
@@ -98,7 +98,7 @@ export default function Ventas() {
                 <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{new Date(v.created_at).toLocaleDateString('es-AR')}</td>
                 <td className="px-4 py-3 text-right space-x-2">
                   <button onClick={() => navigate(`/ventas/${v.id}`)} className="text-blue-600 hover:text-blue-800 text-xs">Ver</button>
-                  <button onClick={() => handlePdf(v.id)} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 text-xs">PDF</button>
+                  <button onClick={() => handlePdf(v)} className="text-gray-500 dark:text-gray-400 hover:text-gray-700 text-xs">PDF</button>
                   {v.estado === 'confirmada' && (
                     <button onClick={() => handleAnular(v.id)} className="text-red-500 hover:text-red-700 text-xs">Anular</button>
                   )}

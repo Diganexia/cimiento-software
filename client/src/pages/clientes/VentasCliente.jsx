@@ -147,7 +147,7 @@ export default function VentasCliente() {
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300 text-xs capitalize">{v.tipo_pago}</td>
                 <td className="px-4 py-3 text-right font-semibold text-gray-800 dark:text-gray-100">${fmt(v.total)}</td>
                 <td className="px-4 py-3 text-right">
-                  <button onClick={() => downloadPdf(v.id).catch(console.error)}
+                  <button onClick={() => downloadPdf(v.id, cliente?.nombre, v.numero).catch(console.error)}
                     className="text-blue-600 hover:text-blue-800 text-xs mr-3">PDF</button>
                   <button onClick={() => navigate(`/ventas/${v.id}`)}
                     className="text-gray-500 dark:text-gray-400 hover:text-gray-700 text-xs">Ver</button>
