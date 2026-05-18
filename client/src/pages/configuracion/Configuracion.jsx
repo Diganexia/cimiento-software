@@ -66,6 +66,70 @@ function InlineForm({ fields, onSave, onCancel, initial = {} }) {
   );
 }
 
+// ── Sección: Carpeta de PDFs ──────────────────────────────────────────────────
+
+function PdfPathSection() {
+  const [pdfPath, setPdfPath] = useState('');
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    if (window.electronAPI?.getPdfPath) {
+      window.electronAPI.getPdfPath().then((p) => setPdfPath(p || ''));
+    }
+  }, []);
+
+  if (!window.electronAPI?.getPdfPath) return null;
+
+  const flash = (text) => { setMsg(text); setTimeout(() => setMsg(''), 2500); };
+
+  const handlePick = async () => {
+    const selected = await window.electronAPI.pickPdfFolder();
+    if (selected) {
+      await window.electronAPI.setPdfPath(selected);
+      setPdfPath(selected);
+      flash('Carpeta guardada.');
+    }
+  };
+
+  const handleReset = async () => {
+    await window.electronAPI.setPdfPath('');
+    const def = await window.electronAPI.getPdfPath();
+    setPdfPath(def);
+    flash('Restablecida la carpeta por defecto.');
+  };
+
+  return (
+    <div className="mt-6 pt-5 border-t border-gray-200 dark:border-gray-700">
+      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Carpeta de PDFs</h3>
+      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+        Dónde se guardan los comprobantes, recibos y reportes
+      </p>
+      <div className="flex gap-2 items-center">
+        <input
+          type="text"
+          readOnly
+          value={pdfPath}
+          title={pdfPath}
+          className="flex-1 min-w-0 border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm bg-gray-50 dark:bg-gray-700 text-gray-700 dark:text-gray-200 font-mono truncate"
+        />
+        <button
+          onClick={handlePick}
+          className="shrink-0 bg-blue-600 text-white px-3 py-2 rounded text-sm hover:bg-blue-700 transition-colors"
+        >
+          Cambiar...
+        </button>
+        <button
+          onClick={handleReset}
+          className="shrink-0 border border-gray-300 dark:border-gray-600 text-gray-500 dark:text-gray-400 px-3 py-2 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+        >
+          Restablecer
+        </button>
+      </div>
+      {msg && <p className="text-green-600 dark:text-green-400 text-xs mt-2">{msg}</p>}
+    </div>
+  );
+}
+
 // ── Tab: Empresa ──────────────────────────────────────────────────────────────
 
 function TabEmpresa() {
@@ -104,22 +168,25 @@ function TabEmpresa() {
   );
 
   return (
-    <form onSubmit={handleSave} className="max-w-lg space-y-4">
-      {err && <p className="text-red-600 text-sm">{err}</p>}
-      {ok && <p className="text-green-600 text-sm">Datos guardados correctamente.</p>}
-      {field('Nombre del negocio', 'nombre')}
-      {field('CUIT', 'cuit')}
-      {field('Dirección', 'direccion')}
-      {field('Teléfono', 'telefono')}
-      {field('Email', 'email', 'email')}
-      {field('Condición IVA', 'condicionIva')}
-      {field('Ingresos Brutos', 'ingresosBrutos')}
-      {field('Inicio de actividades', 'inicioActividades')}
-      <button type="submit" disabled={saving}
-        className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors">
-        {saving ? 'Guardando...' : 'Guardar datos'}
-      </button>
-    </form>
+    <div className="max-w-lg">
+      <form onSubmit={handleSave} className="space-y-4">
+        {err && <p className="text-red-600 text-sm">{err}</p>}
+        {ok && <p className="text-green-600 text-sm">Datos guardados correctamente.</p>}
+        {field('Nombre del negocio', 'nombre')}
+        {field('CUIT', 'cuit')}
+        {field('Dirección', 'direccion')}
+        {field('Teléfono', 'telefono')}
+        {field('Email', 'email', 'email')}
+        {field('Condición IVA', 'condicionIva')}
+        {field('Ingresos Brutos', 'ingresosBrutos')}
+        {field('Inicio de actividades', 'inicioActividades')}
+        <button type="submit" disabled={saving}
+          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors">
+          {saving ? 'Guardando...' : 'Guardar datos'}
+        </button>
+      </form>
+      <PdfPathSection />
+    </div>
   );
 }
 

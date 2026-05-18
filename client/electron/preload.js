@@ -29,6 +29,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ── PDF ───────────────────────────────────────────────────────────────────
   savePdf: (tipo, filename, buffer) => ipcRenderer.invoke('save-pdf', { tipo, filename, buffer }),
+  getPdfPath: () => ipcRenderer.invoke('get-pdf-path'),
+  setPdfPath: (newPath) => ipcRenderer.invoke('set-pdf-path', newPath),
+  pickPdfFolder: () => ipcRenderer.invoke('pick-pdf-folder'),
 
   // ── Backup ────────────────────────────────────────────────────────────────
   doBackup: () => ipcRenderer.invoke('backup-do'),

@@ -247,15 +247,36 @@ function registerUniversalAsyncIPC() {
   });
 
   ipcMain.handle('save-pdf', async (_e, { tipo, filename, buffer }) => {
-    const documentsPath = app.getPath('documents');
+    const cfg = loadConfig();
+    const basePath = cfg.pdfPath || path.join(app.getPath('documents'), 'Cimiento');
     const hoy = new Date();
     const fecha = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${hoy.getFullYear()}`;
-    const dir = path.join(documentsPath, 'Cimiento', tipo, fecha);
+    const dir = path.join(basePath, tipo, fecha);
     fs.mkdirSync(dir, { recursive: true });
     const filePath = path.join(dir, filename);
     fs.writeFileSync(filePath, Buffer.from(buffer));
     shell.openPath(filePath);
     return filePath;
+  });
+
+  ipcMain.handle('get-pdf-path', () => {
+    const cfg = loadConfig();
+    return cfg.pdfPath || path.join(app.getPath('documents'), 'Cimiento');
+  });
+
+  ipcMain.handle('set-pdf-path', (_e, newPath) => {
+    saveConfig({ pdfPath: newPath || '' });
+    return true;
+  });
+
+  ipcMain.handle('pick-pdf-folder', async () => {
+    const win = BrowserWindow.getFocusedWindow();
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      properties: ['openDirectory', 'createDirectory'],
+      title: 'Seleccionar carpeta de PDFs'
+    });
+    if (canceled || !filePaths.length) return null;
+    return filePaths[0];
   });
 }
 
