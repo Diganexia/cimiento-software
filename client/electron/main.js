@@ -179,8 +179,10 @@ function createSetupWindow() {
 function createMainWindow(serverUrl) {
   mainWindow = new BrowserWindow({
     width: 1280, height: 820, minWidth: 1024, minHeight: 600, show: false,
+    title: 'Cimiento',
     webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false }
   });
+  mainWindow.on('page-title-updated', (e) => e.preventDefault());
 
   if (isDev) mainWindow.loadURL('http://localhost:5173');
   else mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));

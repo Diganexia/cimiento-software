@@ -22,16 +22,6 @@ export default function Login() {
     }
   }, [mode, serverUrl, navigate]);
 
-  // Remove dark class while on login page; restore it when leaving
-  useEffect(() => {
-    document.documentElement.classList.remove('dark');
-    return () => {
-      if (localStorage.getItem('theme') === 'dark') {
-        document.documentElement.classList.add('dark');
-      }
-    };
-  }, []);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -48,47 +38,47 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mb-2 text-center">Cimiento</h1>
-        <p className="text-sm text-gray-500 text-center mb-1">Sistema de gestión</p>
-        <p className="text-xs text-gray-400 text-center mb-4">v{version}</p>
-        <p className="text-xs text-gray-400 text-center mb-6">Un producto de <span className="font-medium text-gray-500">Diganexia</span></p>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 flex items-center justify-center">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2 text-center">Cimiento</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400 text-center mb-1">Sistema de gestión</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-4">v{version}</p>
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center mb-6">Un producto de <span className="font-medium text-gray-500 dark:text-gray-400">Diganexia</span></p>
 
         {mode === 'client' && serverUrl && (
-          <div className="mb-4 px-3 py-2 bg-gray-50 border border-gray-200 rounded text-xs text-gray-500 flex items-center justify-between">
-            <span>Servidor: <span className="font-mono text-gray-700">{serverUrl}</span></span>
+          <div className="mb-4 px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs text-gray-500 dark:text-gray-400 flex items-center justify-between">
+            <span>Servidor: <span className="font-mono text-gray-700 dark:text-gray-300">{serverUrl}</span></span>
             <button onClick={() => navigate('/server-config')} className="text-blue-600 hover:underline ml-2">Cambiar</button>
           </div>
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Usuario</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Usuario</label>
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoFocus
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña</label>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Contraseña</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300"
                 tabIndex={-1}
               >
                 {showPassword ? (
@@ -106,7 +96,7 @@ export default function Login() {
           </div>
 
           {error && (
-            <p className="text-red-600 text-sm bg-red-50 border border-red-200 rounded px-3 py-2">
+            <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">
               {error}
             </p>
           )}
