@@ -14,12 +14,21 @@ const applyFilters = (builder, { activo, rubro_id, busqueda }) => {
 
 const listar = async (req, res) => {
   try {
-    const { rubro_id, activo = 'true', q: busqueda, page = 1, limit = 50 } = req.query;
+    const { rubro_id, activo = 'true', q: busqueda, page = 1, limit = 50, deposito_id, ids } = req.query;
     const pageNum = parseInt(page);
     const limitNum = Math.min(parseInt(limit), 200);
     const filters = { activo, rubro_id, busqueda };
 
-    const [{ total }] = await db('productos as p').modify(applyFilters, filters).count('p.id as total');
+    const idList = ids ? ids.split(',').map(Number).filter(Boolean) : null;
+
+    const stockSubquery = deposito_id
+      ? db.raw('COALESCE((SELECT spd.cantidad FROM stock_por_deposito spd WHERE spd.producto_id = p.id AND spd.deposito_id = ?), 0) as stock_total', [parseInt(deposito_id)])
+      : db.raw('COALESCE((SELECT SUM(spd.cantidad) FROM stock_por_deposito spd WHERE spd.producto_id = p.id), 0) as stock_total');
+
+    const [{ total }] = await db('productos as p')
+      .modify(applyFilters, filters)
+      .modify((b) => { if (idList) b.whereIn('p.id', idList); })
+      .count('p.id as total');
 
     const data = await db('productos as p')
       .leftJoin('rubros as r', 'p.rubro_id', 'r.id')
@@ -31,9 +40,10 @@ const listar = async (req, res) => {
         'r.id as rubro_id', 'r.nombre as rubro',
         'um.id as unidad_medida_id', 'um.nombre as unidad', 'um.abreviatura as unidad_abreviatura',
         'pv.nombre as proveedor',
-        db.raw('COALESCE((SELECT SUM(spd.cantidad) FROM stock_por_deposito spd WHERE spd.producto_id = p.id), 0) as stock_total')
+        stockSubquery
       )
       .modify(applyFilters, filters)
+      .modify((b) => { if (idList) b.whereIn('p.id', idList); })
       .orderBy('p.nombre')
       .limit(limitNum)
       .offset((pageNum - 1) * limitNum);

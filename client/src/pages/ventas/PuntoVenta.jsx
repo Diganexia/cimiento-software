@@ -68,21 +68,41 @@ export default function PuntoVenta() {
     });
   }, []);
 
-  // Debounce product search
+  // Debounce product search — incluye deposito_id para stock correcto
   useEffect(() => {
     if (!busqueda.trim()) { setResultados([]); return; }
     const t = setTimeout(async () => {
       setBuscando(true);
-      const { data } = await api.get('/productos', { params: { q: busqueda, activo: 'true', limit: 10 } });
+      const params = { q: busqueda, activo: 'true', limit: 10 };
+      if (depositoId) params.deposito_id = depositoId;
+      const { data } = await api.get('/productos', { params });
       setResultados(data.data || []);
       setBuscando(false);
     }, 300);
     return () => clearTimeout(t);
-  }, [busqueda]);
+  }, [busqueda, depositoId]);
+
+  // Cuando cambia el depósito, actualizar stock_disponible de los items en carrito
+  useEffect(() => {
+    if (!depositoId || !cart.length) return;
+    const ids = cart.map((i) => i.producto_id).join(',');
+    api.get('/productos', { params: { ids, deposito_id: depositoId, activo: 'all', limit: cart.length + 5 } })
+      .then(({ data }) => {
+        const stockMap = {};
+        (data.data || []).forEach((p) => { stockMap[p.id] = parseFloat(p.stock_total); });
+        setCart((prev) => prev.map((item) => ({
+          ...item,
+          stock_disponible: stockMap[item.producto_id] ?? item.stock_disponible
+        })));
+      })
+      .catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [depositoId]);
 
   const agregarProducto = (prod) => {
     setBusqueda('');
     setResultados([]);
+    // stock_total ya viene filtrado por deposito_id desde el search
     const rawStock = parseFloat(prod.stock_total);
     const stock = isNaN(rawStock) ? null : rawStock;
     const idx = cart.findIndex((i) => i.producto_id === prod.id);
