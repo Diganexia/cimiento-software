@@ -45,7 +45,7 @@
 
 ---
 
-## Versión actual: v1.1.8
+## Versión actual: v1.1.9
 
 Auto-updater activo — distribuye automáticamente a quienes tengan la app abierta.
 
@@ -72,6 +72,7 @@ Auto-updater activo — distribuye automáticamente a quienes tengan la app abie
 | v1.1.6 | Validación stock en POS + nombres PDF dinámicos + fuentes PDF +3pt + footer PDF fix |
 | v1.1.7 | PDFs guardados en Documentos/Cimiento/{tipo}/{fecha}/ + selector período dashboard |
 | v1.1.8 | Fix handler PDF IPC + carpeta configurable en Configuración + toast éxito/error |
+| v1.1.9 | POS: stock por depósito seleccionado + fuente compacta en caja de movimientos |
 
 ---
 
