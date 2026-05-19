@@ -16,6 +16,8 @@ export default function Productos() {
   const [rubroId, setRubroId] = useState('');
   const [activo, setActivo] = useState('true');
 
+  const [confirmId, setConfirmId] = useState(null);
+
   const canCreate  = usePermission('productos', 'crear');
   const canEdit    = usePermission('productos', 'editar');
   const canDelete  = usePermission('productos', 'eliminar');
@@ -49,8 +51,8 @@ export default function Productos() {
   };
 
   const handleBaja = async (id) => {
-    if (!confirm('¿Dar de baja este producto?')) return;
     await deleteProducto(id);
+    setConfirmId(null);
     cargar();
   };
 
@@ -140,9 +142,17 @@ export default function Productos() {
                           </button>
                         )}
                         {canDelete && p.activo && (
-                          <button onClick={() => handleBaja(p.id)} className="text-xs text-red-500 hover:underline">
-                            Baja
-                          </button>
+                          confirmId === p.id ? (
+                            <span className="flex gap-1 items-center">
+                              <button onClick={() => handleBaja(p.id)} className="text-xs text-red-600 font-medium hover:underline">Sí</button>
+                              <span className="text-gray-300 dark:text-gray-600">|</span>
+                              <button onClick={() => setConfirmId(null)} className="text-xs text-gray-500 dark:text-gray-400 hover:underline">No</button>
+                            </span>
+                          ) : (
+                            <button onClick={() => setConfirmId(p.id)} className="text-xs text-red-500 hover:underline">
+                              Baja
+                            </button>
+                          )
                         )}
                       </div>
                     </td>

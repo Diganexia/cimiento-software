@@ -67,7 +67,7 @@ export default function VentaDetalle() {
                 {venta.cliente_dni && <p className="text-gray-600 dark:text-gray-300">DNI: {venta.cliente_dni}</p>}
                 {venta.cliente_direccion && <p className="text-gray-600 dark:text-gray-300">{venta.cliente_direccion}</p>}
               </>
-            : <p className="text-gray-400 dark:text-gray-500">Consumidor final</p>}
+            : <p className="text-gray-400 dark:text-gray-500">Ocasional</p>}
         </div>
       </div>
 

@@ -135,7 +135,7 @@ export default function PuntoVenta() {
   };
 
   const updateItem = (idx, field, value) => {
-    const parsed = parseFloat(value) || 0;
+    const parsed = field === 'cantidad' ? Math.round(parseFloat(value) || 0) : parseFloat(value) || 0;
     if (field === 'cantidad') {
       const item = cart[idx];
       if (item.stock_disponible !== null && parsed > item.stock_disponible) {
@@ -168,6 +168,11 @@ export default function PuntoVenta() {
 
   // Resetear redondeo si cambia el total
   useEffect(() => { setRedondeo(false); }, [total]);
+
+  // Cuenta corriente solo disponible con cliente registrado
+  useEffect(() => {
+    if (!clienteId && tipoPago === 'cuenta_corriente') setTipoPago('contado');
+  }, [clienteId]);
 
   const handleRedondeo = (checked) => {
     setRedondeo(checked);
@@ -211,6 +216,10 @@ export default function PuntoVenta() {
     }
     if (tipoPago !== 'cuenta_corriente' && Math.abs(totalPagado - totalEfectivo) > 0.01) {
       setError(`El total pagado ($${fmt(totalPagado)}) no coincide con el total ($${fmt(totalEfectivo)})`);
+      return;
+    }
+    if (tipoPago === 'cuenta_corriente' && !clienteId) {
+      setError('La cuenta corriente requiere un cliente registrado. Para ventas sin cliente seleccioná "Ocasional".');
       return;
     }
     if (REQUIERE_AFIP.has(tipoComprobante) && !puntoVentaId) {
@@ -361,7 +370,7 @@ export default function PuntoVenta() {
                         className="w-full border border-gray-200 dark:border-gray-700 rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-400" />
                     </div>
                     <div className="col-span-2">
-                      <input type="number" min="0.001" step="any" value={item.cantidad}
+                      <input type="number" min="1" step="1" value={item.cantidad}
                         max={item.stock_disponible ?? undefined}
                         onChange={(e) => updateItem(idx, 'cantidad', e.target.value)}
                         className={`w-full border rounded px-2 py-1 text-xs text-right focus:outline-none focus:ring-1 focus:ring-blue-400 ${
@@ -410,7 +419,7 @@ export default function PuntoVenta() {
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Cliente</label>
               <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Consumidor final</option>
+                <option value="">Ocasional</option>
                 {clientes.map((c) => <option key={c.id} value={c.id}>{c.nombre}</option>)}
               </select>
             </div>
@@ -436,7 +445,7 @@ export default function PuntoVenta() {
               <select value={tipoPago} onChange={(e) => setTipoPago(e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
                 <option value="contado">Contado</option>
-                <option value="cuenta_corriente">Cuenta corriente</option>
+                {clienteId && <option value="cuenta_corriente">Cuenta corriente</option>}
                 <option value="mixto">Mixto</option>
               </select>
             </div>

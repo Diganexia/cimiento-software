@@ -481,7 +481,7 @@ async function comprobantesAfip(req, res) {
         'ca.estado', 'ca.created_at',
         'pv.nombre as punto_venta',
         'v.total',
-        db.raw("COALESCE(c.nombre, c.razon_social, 'Consumidor Final') as cliente")
+        db.raw("COALESCE(c.nombre, c.razon_social, 'Ocasional') as cliente")
       )
       .orderBy('ca.created_at', 'desc');
 

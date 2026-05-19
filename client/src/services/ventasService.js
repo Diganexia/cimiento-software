@@ -11,7 +11,7 @@ export const downloadPdf = async (id, cliente, numero) => {
   const blob = new Blob([res.data], { type: 'application/pdf' });
   const hoy = new Date();
   const fecha = `${String(hoy.getDate()).padStart(2, '0')}-${String(hoy.getMonth() + 1).padStart(2, '0')}-${hoy.getFullYear()}`;
-  const nombreCliente = (cliente || 'Consumidor_Final').replace(/\s+/g, '_');
+  const nombreCliente = (cliente || 'Ocasional').replace(/\s+/g, '_');
   const nro = numero != null ? numero : id;
   const filename = `${nombreCliente}_${fecha}_Comprobante_${nro}.pdf`;
   await savePdf(blob, 'Ventas', filename);

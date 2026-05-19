@@ -89,7 +89,7 @@ export default function Ventas() {
               <tr key={v.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td className="px-4 py-3 font-mono text-gray-700 dark:text-gray-200">{String(v.numero).padStart(8, '0')}</td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{TIPO_LABEL[v.tipo_comprobante] || v.tipo_comprobante}</td>
-                <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{v.cliente || <span className="text-gray-400 dark:text-gray-500">Consumidor final</span>}</td>
+                <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{v.cliente || <span className="text-gray-400 dark:text-gray-500">Ocasional</span>}</td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{v.deposito}</td>
                 <td className="px-4 py-3 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(v.total)}</td>
                 <td className="px-4 py-3">

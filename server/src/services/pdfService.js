@@ -76,7 +76,7 @@ function generarVentaPDF(venta, items, cliente, comprobante, res) {
     if (cliente.cuit) doc.text(`CUIT: ${cliente.cuit}`, 50, y + 30);
     if (cliente.direccion) doc.text(cliente.direccion, 50, y + 45);
   } else {
-    doc.text('Consumidor final', 50, y + 15);
+    doc.text('Ocasional', 50, y + 15);
   }
 
   doc.text(`Condición IVA: ${venta.tipo_comprobante === 'factura_a' ? 'Responsable Inscripto' : 'Consumidor Final'}`, 350, y + 15, { width: 200, align: 'right' });

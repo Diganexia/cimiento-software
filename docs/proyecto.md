@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-19 — v1.2.3.
+> Documento vivo. Última actualización: 2026-05-19 — v1.2.5.
 
 ---
 
@@ -556,6 +556,16 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - Movimientos: registros viejos `TRANSFERENCIA_ENTRADA`/`TRANSFERENCIA_SALIDA` muestran label "Transferencia".
 - Movimientos: tabla compacta (`text-xs`, `px-3 py-2`, `whitespace-nowrap`) para que cada fila entre en un renglón.
 - Transferencia: muestra stock disponible del depósito de origen al seleccionarlo.
+
+### v1.2.4 (2026-05-19)
+- Fix migración 016: Knex no soporta `ALTER TYPE ... ADD VALUE` nativo. Reescrita usando `DO $$ BEGIN ... EXCEPTION ... END $$` con `config = { transaction: false }`.
+
+### v1.2.5 (2026-05-19)
+- Fix Productos: baja con `window.confirm()` (diálogo nativo OS) causaba pérdida de foco en Electron — inputs del formulario de edición siguiente no mostraban cursor. Reemplazado por confirmación inline (Sí/No en la fila).
+- Fix POS cantidad: input con `min="0.001" step="any"` hacía que la flecha del spinner nativo fuera de 0 a 0,001. Corregido a `min="1" step="1"` + parseo `Math.round()` en `updateItem`.
+- POS cliente: renombrado "Consumidor final" → "Ocasional" en el selector. El concepto "Consumidor Final" es fiscal (ARCA) y ya queda representado en el tipo de comprobante (Factura B).
+- POS tipo de pago: "Cuenta corriente" solo disponible cuando hay cliente registrado seleccionado. Si se selecciona "Ocasional" estando en cuenta corriente, se resetea automáticamente a "Contado". Validación también en `handleSubmit`.
+- "Ocasional" propagado a: PDF de comprobante, lista de ventas, detalle de venta, reporte de arqueos, nombre de archivo PDF generado.
 
 ---
 
