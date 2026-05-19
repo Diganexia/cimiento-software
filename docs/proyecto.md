@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-19 — v1.2.5.
+> Documento vivo. Última actualización: 2026-05-19 — v1.2.6.
 
 ---
 
@@ -559,6 +559,9 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 
 ### v1.2.4 (2026-05-19)
 - Fix migración 016: Knex no soporta `ALTER TYPE ... ADD VALUE` nativo. Reescrita usando `DO $$ BEGIN ... EXCEPTION ... END $$` con `config = { transaction: false }`.
+
+### v1.2.6 (2026-05-19)
+- Nuevo ícono de aplicación: logo Cimiento (casa + ladrillos + perfiles) con fondo transparente, formato ICO con 6 tamaños embebidos (16, 32, 48, 64, 128, 256px). Se aplica en barra de tareas, instalador NSIS y accesos directos.
 
 ### v1.2.5 (2026-05-19)
 - Fix Productos: baja con `window.confirm()` (diálogo nativo OS) causaba pérdida de foco en Electron — inputs del formulario de edición siguiente no mostraban cursor. Reemplazado por confirmación inline (Sí/No en la fila).
