@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
+import useLicenciaStore from '../store/licenciaStore';
 import api from '../lib/api';
 import { version } from '../../package.json';
+import { getLicenseKey, registerSession } from '../services/licenciaService';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -14,6 +16,7 @@ export default function Login() {
   const [mode] = useState(() => window.electronAPI?.getMode?.() ?? null);
   const [serverUrl] = useState(() => window.electronAPI?.getServerUrl?.() ?? null);
   const setAuth = useAuthStore((s) => s.setAuth);
+  const startHeartbeat = useLicenciaStore((s) => s.startHeartbeat);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -32,6 +35,17 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', { username, password });
+      if (window.electronAPI) {
+        const key = getLicenseKey();
+        if (key) {
+          const r = await registerSession(key);
+          if (!r.ok && r.error === 'limite_usuarios') {
+            setError(`Límite de usuarios simultáneos alcanzado (${r.activos}/${r.max}). Cerrá sesión en otro equipo e intentá de nuevo.`);
+            return;
+          }
+          if (r.ok) startHeartbeat(key);
+        }
+      }
       setAuth(data.token, data.usuario);
       navigate('/');
     } catch (err) {

@@ -1,7 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
-
+import useLicenciaStore from '../store/licenciaStore';
 import api from '../lib/api';
+import { getLicenseKey, unregisterSession } from '../services/licenciaService';
 
 const NAV = [
   {
@@ -194,10 +195,16 @@ const NAV = [
 export default function Sidebar() {
   const usuario = useAuthStore((s) => s.usuario);
   const clearAuth = useAuthStore((s) => s.clearAuth);
+  const stopHeartbeat = useLicenciaStore((s) => s.stopHeartbeat);
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await api.post('/auth/logout').catch(() => {});
+    if (window.electronAPI) {
+      const key = getLicenseKey();
+      if (key) await unregisterSession(key);
+      stopHeartbeat();
+    }
     clearAuth();
     navigate('/login');
   };
