@@ -24,6 +24,8 @@ export default function CompraForm() {
   const [depositos, setDepositos] = useState([]);
   const [busquedaProd, setBusquedaProd] = useState('');
   const [resultados, setResultados] = useState([]);
+  const [soloProveedor, setSoloProveedor] = useState(false);
+  const [mostrarDropdown, setMostrarDropdown] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -51,10 +53,14 @@ export default function CompraForm() {
   }, [id, isEdit]);
 
   useEffect(() => {
-    if (busquedaProd.length < 2) { setResultados([]); return; }
-    getProductos({ q: busquedaProd, activo: 'true', limit: 8 })
-      .then((r) => setResultados(r.data.data));
-  }, [busquedaProd]);
+    const porTexto = busquedaProd.length >= 2;
+    const porDropdown = mostrarDropdown && !porTexto;
+    if (!porTexto && !porDropdown) { setResultados([]); return; }
+    const params = { activo: 'true', limit: porDropdown ? 50 : 8 };
+    if (porTexto) params.q = busquedaProd;
+    if (soloProveedor && header.proveedor_id) params.proveedor_habitual_id = header.proveedor_id;
+    getProductos(params).then((r) => setResultados(r.data.data));
+  }, [busquedaProd, mostrarDropdown, soloProveedor, header.proveedor_id]);
 
   const agregarItem = (producto) => {
     if (items.find((i) => i.producto_id === producto.id)) return;
@@ -66,6 +72,7 @@ export default function CompraForm() {
       precio_unitario: parseFloat(producto.precio_costo) || 0
     }]);
     setBusquedaProd('');
+    setMostrarDropdown(false);
     setResultados([]);
   };
 
@@ -90,7 +97,7 @@ export default function CompraForm() {
         ...header,
         items: items.map((i) => ({
           producto_id: i.producto_id,
-          cantidad: parseFloat(i.cantidad),
+          cantidad: parseInt(i.cantidad) || 1,
           precio_unitario: parseFloat(i.precio_unitario),
           subtotal: parseFloat(i.cantidad) * parseFloat(i.precio_unitario)
         })),
@@ -164,13 +171,44 @@ export default function CompraForm() {
 
           {/* Buscador de productos */}
           <div className="px-5 py-3 border-b border-gray-100 dark:border-gray-700 relative">
-            <input
-              type="text"
-              value={busquedaProd}
-              onChange={(e) => setBusquedaProd(e.target.value)}
-              placeholder="Buscar producto por nombre o código para agregar..."
-              className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="checkbox"
+                id="soloProveedor"
+                checked={soloProveedor}
+                disabled={!header.proveedor_id}
+                onChange={(e) => setSoloProveedor(e.target.checked)}
+                className="rounded border-gray-300 dark:border-gray-600 text-blue-600 cursor-pointer"
+              />
+              <label
+                htmlFor="soloProveedor"
+                className={`text-xs select-none ${header.proveedor_id ? 'text-gray-600 dark:text-gray-300 cursor-pointer' : 'text-gray-400 dark:text-gray-500 cursor-not-allowed'}`}
+              >
+                Solo productos del proveedor
+              </label>
+            </div>
+            <div className="relative">
+              <input
+                type="text"
+                value={busquedaProd}
+                onChange={(e) => { setBusquedaProd(e.target.value); setMostrarDropdown(false); }}
+                placeholder="Buscar producto por nombre o código para agregar..."
+                className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 pr-9 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <button
+                type="button"
+                onClick={() => { setMostrarDropdown((d) => !d); setBusquedaProd(''); }}
+                title="Ver todos los productos"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 transition-colors"
+              >
+                <svg className={`w-4 h-4 transition-transform ${mostrarDropdown ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+            {resultados.length > 0 && (
+              <div className="fixed inset-0 z-[5]" onClick={() => { setResultados([]); setMostrarDropdown(false); }} />
+            )}
             {resultados.length > 0 && (
               <ul className="absolute left-5 right-5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded shadow-lg mt-1 z-10 divide-y divide-gray-100 dark:divide-gray-700 max-h-52 overflow-auto">
                 {resultados.map((p) => (
@@ -211,7 +249,7 @@ export default function CompraForm() {
                         {item.unidad && <p className="text-xs text-gray-400 dark:text-gray-500">{item.unidad}</p>}
                       </td>
                       <td className="px-4 py-2 text-center">
-                        <input type="number" min="0.001" step="0.001" value={item.cantidad}
+                        <input type="number" min="1" step="1" value={item.cantidad}
                           onChange={(e) => updateItem(idx, 'cantidad', e.target.value)}
                           className="w-24 border border-gray-300 dark:border-gray-600 rounded px-2 py-1 text-sm text-center focus:outline-none focus:ring-2 focus:ring-blue-500" />
                       </td>

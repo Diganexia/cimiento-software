@@ -5,7 +5,7 @@ import { getProducto, createProducto, updateProducto, getRubros, getUnidades, ge
 const EMPTY = {
   nombre: '', codigo: '', codigo_barra: '', descripcion: '',
   rubro_id: '', unidad_medida_id: '', proveedor_habitual_id: '',
-  precio_costo: '', precio_venta: '', stock_minimo: ''
+  precio_costo: '', precio_venta: '', stock_minimo: '', activo: 'true'
 };
 
 const inputCls = 'w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
@@ -59,7 +59,8 @@ export default function ProductoForm() {
           proveedor_habitual_id: data.proveedor_habitual_id || '',
           precio_costo: data.precio_costo ?? '',
           precio_venta: data.precio_venta ?? '',
-          stock_minimo: data.stock_minimo != null ? parseFloat(data.stock_minimo) : ''
+          stock_minimo: data.stock_minimo != null ? parseFloat(data.stock_minimo) : '',
+          activo: data.activo !== false ? 'true' : 'false'
         });
       });
     }
@@ -78,7 +79,8 @@ export default function ProductoForm() {
         proveedor_habitual_id: form.proveedor_habitual_id || null,
         precio_costo: parseFloat(form.precio_costo) || 0,
         precio_venta: parseFloat(form.precio_venta) || 0,
-        stock_minimo: parseFloat(form.stock_minimo) || 0
+        stock_minimo: parseFloat(form.stock_minimo) || 0,
+        activo: form.activo !== 'false'
       };
       if (isEdit) {
         await updateProducto(id, payload);
@@ -145,6 +147,12 @@ export default function ProductoForm() {
           </Field>
           <Field label="Stock mínimo">
             <input type="number" min="0" step="1" value={form.stock_minimo} onChange={set('stock_minimo')} className={inputCls} />
+          </Field>
+          <Field label="Estado">
+            <select value={form.activo} onChange={set('activo')} className={inputCls}>
+              <option value="true">Activo</option>
+              <option value="false">Inactivo</option>
+            </select>
           </Field>
           <div className="col-span-2">
             <Field label="Descripción">

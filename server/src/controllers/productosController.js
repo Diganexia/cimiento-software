@@ -1,8 +1,9 @@
 const db = require('../config/db');
 
-const applyFilters = (builder, { activo, rubro_id, busqueda }) => {
+const applyFilters = (builder, { activo, rubro_id, busqueda, proveedor_habitual_id }) => {
   if (activo !== 'all') builder.where('p.activo', activo !== 'false');
   if (rubro_id) builder.where('p.rubro_id', rubro_id);
+  if (proveedor_habitual_id) builder.where('p.proveedor_habitual_id', proveedor_habitual_id);
   if (busqueda) {
     builder.where((b) => {
       b.whereRaw('p.nombre ILIKE ?', [`%${busqueda}%`])
@@ -14,10 +15,10 @@ const applyFilters = (builder, { activo, rubro_id, busqueda }) => {
 
 const listar = async (req, res) => {
   try {
-    const { rubro_id, activo = 'true', q: busqueda, page = 1, limit = 50, deposito_id, ids } = req.query;
+    const { rubro_id, activo = 'true', q: busqueda, page = 1, limit = 50, deposito_id, ids, proveedor_habitual_id } = req.query;
     const pageNum = parseInt(page);
     const limitNum = Math.min(parseInt(limit), 200);
-    const filters = { activo, rubro_id, busqueda };
+    const filters = { activo, rubro_id, busqueda, proveedor_habitual_id };
 
     const idList = ids ? ids.split(',').map(Number).filter(Boolean) : null;
 
