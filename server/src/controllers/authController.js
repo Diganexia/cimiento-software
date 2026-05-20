@@ -50,6 +50,7 @@ const login = async (req, res) => {
     const valid = await bcrypt.compare(password, usuario.password_hash);
     if (!valid) return res.status(401).json({ error: 'Credenciales inválidas' });
 
+    let sesiones = null;
     if (session_id) {
       const r = await _workerSession('register', session_id);
       if (!r.ok && r.error === 'limite_usuarios') {
@@ -57,6 +58,7 @@ const login = async (req, res) => {
           error: `Límite de usuarios simultáneos alcanzado (${r.activos}/${r.max}). Cerrá sesión en otro equipo e intentá de nuevo.`
         });
       }
+      if (r.ok) sesiones = { activos: r.activos, max: r.max };
     }
 
     const permisos =
@@ -74,7 +76,7 @@ const login = async (req, res) => {
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '8h' });
-    res.json({ token, usuario: payload });
+    res.json({ token, usuario: payload, sesiones });
   } catch (err) {
     console.error('Error en login:', err);
     res.status(500).json({ error: 'Error interno del servidor' });
@@ -89,8 +91,12 @@ const logout = async (req, res) => {
 
 const heartbeat = async (req, res) => {
   const { session_id } = req.body || {};
-  if (session_id) await _workerSession('register', session_id);
-  res.json({ ok: true });
+  let sesiones = null;
+  if (session_id) {
+    const r = await _workerSession('register', session_id);
+    if (r.ok) sesiones = { activos: r.activos, max: r.max };
+  }
+  res.json({ ok: true, sesiones });
 };
 
 const me = (req, res) => {

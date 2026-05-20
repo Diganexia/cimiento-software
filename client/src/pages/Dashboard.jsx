@@ -109,7 +109,8 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [localIP, setLocalIP] = useState('');
   const [diasGrafico, setDiasGrafico] = useState(7);
-  const { checking, resultado } = useLicenciaStore();
+  const { checking, resultado, sesiones } = useLicenciaStore();
+  const [mode] = useState(() => window.electronAPI?.getMode?.() ?? null);
 
   useEffect(() => {
     if (window.electronAPI?.getMode() === 'server') {
@@ -151,6 +152,12 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {mode === 'server' && sesiones && (
+            <span title={`${sesiones.activos} de ${sesiones.max} usuarios conectados`}
+              className="text-xs px-2 py-1 rounded font-medium bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700">
+              {sesiones.activos}/{sesiones.max} usuarios
+            </span>
+          )}
           <LicenciaBadge resultado={resultado} checking={checking} />
           <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">v{version}</span>
         </div>

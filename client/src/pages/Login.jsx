@@ -17,6 +17,7 @@ export default function Login() {
   const [serverUrl] = useState(() => window.electronAPI?.getServerUrl?.() ?? null);
   const setAuth = useAuthStore((s) => s.setAuth);
   const startHeartbeat = useLicenciaStore((s) => s.startHeartbeat);
+  const setSesiones = useLicenciaStore((s) => s.setSesiones);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,6 +37,7 @@ export default function Login() {
     try {
       const session_id = window.electronAPI ? getSessionId() : undefined;
       const { data } = await api.post('/auth/login', { username, password, session_id });
+      if (data.sesiones) setSesiones(data.sesiones);
       startHeartbeat();
       setAuth(data.token, data.usuario);
       navigate('/');
