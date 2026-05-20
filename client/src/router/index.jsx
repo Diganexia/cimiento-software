@@ -37,12 +37,14 @@ import Splash from '../pages/Splash';
 import ServerConfig from '../pages/ServerConfig';
 import Setup from '../pages/Setup';
 import Backup from '../pages/configuracion/Backup';
+import Activacion from '../pages/Activacion';
 
 const router = createHashRouter([
   { path: '/setup', element: <Setup /> },
   { path: '/splash', element: <Splash /> },
   { path: '/server-config', element: <ServerConfig /> },
   { path: '/login', element: <Login /> },
+  { path: '/activacion', element: <Activacion /> },
   {
     path: '/',
     element: <ProtectedRoute />,

@@ -8,6 +8,8 @@ import useAuthStore from '../store/authStore';
 import useThemeStore from '../store/themeStore';
 import { getKPIs, getVentasPeriodo } from '../services/reportesService';
 import { version } from '../../package.json';
+import useLicenciaStore from '../store/licenciaStore';
+import { checkLicencia, getLicenseKey } from '../services/licenciaService';
 
 const fmt = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCompact = (n) => {
@@ -49,6 +51,58 @@ const CustomTooltip = ({ active, payload, label }) => {
   );
 };
 
+function LicenciaBadge({ resultado, checking }) {
+  if (checking || !resultado) return null;
+
+  const { estado, vence, mensaje } = resultado;
+
+  if (estado === 'activa') {
+    if (!vence) return null;
+    const diasRestantes = Math.floor((new Date(vence) - new Date()) / 86400000);
+    if (diasRestantes > 30) return null;
+    const fechaStr = new Date(vence).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    return (
+      <span title={mensaje || `Vence el ${fechaStr}`}
+        className="text-xs px-2 py-1 rounded font-medium bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700">
+        Vence {fechaStr}
+      </span>
+    );
+  }
+  if (estado === 'vencida') {
+    return (
+      <span title={mensaje || 'Licencia vencida'}
+        className="text-xs px-2 py-1 rounded font-medium bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-300 dark:border-orange-700">
+        Licencia vencida
+      </span>
+    );
+  }
+  if (estado === 'suspendida') {
+    return (
+      <span title={mensaje || 'Licencia suspendida'}
+        className="text-xs px-2 py-1 rounded font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700">
+        Licencia suspendida
+      </span>
+    );
+  }
+  if (estado === 'offline') {
+    return (
+      <span title="Sin conexión al servidor de licencias"
+        className="text-xs px-2 py-1 rounded font-medium bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 border border-gray-300 dark:border-gray-600">
+        Sin conexión
+      </span>
+    );
+  }
+  if (estado === 'offline_expirado') {
+    return (
+      <span title={mensaje}
+        className="text-xs px-2 py-1 rounded font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 border border-red-300 dark:border-red-700">
+        Licencia — contactar proveedor
+      </span>
+    );
+  }
+  return null;
+}
+
 export default function Dashboard() {
   const usuario = useAuthStore((s) => s.usuario);
   const dark = useThemeStore((s) => s.dark);
@@ -56,12 +110,21 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [localIP, setLocalIP] = useState('');
   const [diasGrafico, setDiasGrafico] = useState(7);
+  const { checking, resultado, setChecking, setResultado } = useLicenciaStore();
 
   useEffect(() => {
     if (window.electronAPI?.getMode() === 'server') {
       setLocalIP(window.electronAPI.getLocalIP());
     }
   }, []);
+
+  useEffect(() => {
+    if (!window.electronAPI) return;
+    const key = getLicenseKey();
+    if (!key) return;
+    setChecking(true);
+    checkLicencia(key).then(setResultado).catch(() => setChecking(false));
+  }, [setChecking, setResultado]);
 
   useEffect(() => {
     getKPIs().then(({ data }) => setKpis(data)).catch(() => {});
@@ -96,7 +159,10 @@ export default function Dashboard() {
             {new Date().toLocaleDateString('es-AR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">v{version}</span>
+        <div className="flex items-center gap-2">
+          <LicenciaBadge resultado={resultado} checking={checking} />
+          <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">v{version}</span>
+        </div>
       </div>
 
       <div className="mb-5">

@@ -217,6 +217,10 @@ function registerSyncIPC() {
   });
   ipcMain.on('get-local-ip', (e) => { e.returnValue = getLocalIP(); });
   ipcMain.on('backup-get-dir', (e) => { e.returnValue = backupDir; });
+  ipcMain.on('get-license-key', (e) => {
+    const cfg = loadConfig();
+    e.returnValue = cfg.licenseKey || null;
+  });
 }
 
 function registerUniversalAsyncIPC() {
@@ -292,6 +296,11 @@ function registerUniversalAsyncIPC() {
   ipcMain.handle('install-update', () => {
     if (isDev) return;
     require('electron-updater').autoUpdater.quitAndInstall();
+  });
+
+  ipcMain.handle('save-license-key', (_e, key) => {
+    saveConfig({ licenseKey: key });
+    return true;
   });
 }
 

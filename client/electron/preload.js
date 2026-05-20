@@ -42,6 +42,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
     return () => ipcRenderer.removeListener('update-status', handler);
   },
 
+  // ── Licencia ──────────────────────────────────────────────────────────────
+  getLicenseKey: () => ipcRenderer.sendSync('get-license-key'),
+  saveLicenseKey: (key) => ipcRenderer.invoke('save-license-key', key),
+
   // ── Backup ────────────────────────────────────────────────────────────────
   doBackup: () => ipcRenderer.invoke('backup-do'),
   listBackups: () => ipcRenderer.invoke('backup-list'),

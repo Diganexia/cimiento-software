@@ -17,6 +17,10 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (window.electronAPI && !window.electronAPI.getLicenseKey?.()) {
+      navigate('/activacion', { replace: true });
+      return;
+    }
     if (mode === 'client' && !serverUrl) {
       navigate('/server-config', { replace: true });
     }
