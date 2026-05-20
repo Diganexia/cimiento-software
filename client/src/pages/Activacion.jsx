@@ -17,12 +17,14 @@ export default function Activacion() {
     setError('');
     try {
       const resultado = await checkLicencia(k);
-      if (resultado.estado === 'suspendida') {
-        setError('Esta licencia está suspendida. Contacte a su proveedor.');
-      } else if (resultado.estado === 'invalida' || resultado.source === 'offline_no_cache') {
-        setError(resultado.source === 'offline_no_cache'
-          ? 'No se pudo verificar la clave. Necesitás conexión a internet para activar.'
-          : 'Clave de licencia inválida. Verificá que esté escrita correctamente.');
+      if (!resultado.valida) {
+        const msgs = {
+          suspendida:       'Esta licencia está suspendida. Contacte a su proveedor.',
+          vencida:          'Esta licencia está vencida. Contacte a su proveedor para renovarla.',
+          invalida:         'Clave de licencia inválida. Verificá que esté escrita correctamente.',
+          offline_no_cache: 'No se pudo verificar la clave. Necesitás conexión a internet para activar.',
+        };
+        setError(msgs[resultado.source === 'offline_no_cache' ? 'offline_no_cache' : resultado.estado] || resultado.mensaje || 'Licencia inválida.');
       } else {
         await saveLicenseKey(k);
         navigate('/login', { replace: true });
