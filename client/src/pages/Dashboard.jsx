@@ -9,7 +9,6 @@ import useThemeStore from '../store/themeStore';
 import { getKPIs, getVentasPeriodo } from '../services/reportesService';
 import { version } from '../../package.json';
 import useLicenciaStore from '../store/licenciaStore';
-import { checkLicencia, getLicenseKey } from '../services/licenciaService';
 
 const fmt = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmtCompact = (n) => {
@@ -110,21 +109,13 @@ export default function Dashboard() {
   const [chartData, setChartData] = useState([]);
   const [localIP, setLocalIP] = useState('');
   const [diasGrafico, setDiasGrafico] = useState(7);
-  const { checking, resultado, setChecking, setResultado } = useLicenciaStore();
+  const { checking, resultado } = useLicenciaStore();
 
   useEffect(() => {
     if (window.electronAPI?.getMode() === 'server') {
       setLocalIP(window.electronAPI.getLocalIP());
     }
   }, []);
-
-  useEffect(() => {
-    if (!window.electronAPI) return;
-    const key = getLicenseKey();
-    if (!key) return;
-    setChecking(true);
-    checkLicencia(key).then(setResultado).catch(() => setChecking(false));
-  }, [setChecking, setResultado]);
 
   useEffect(() => {
     getKPIs().then(({ data }) => setKpis(data)).catch(() => {});
