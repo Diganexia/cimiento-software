@@ -12,6 +12,10 @@ const TIPO_LABEL = {
   remito: 'Remito', factura_interna: 'Comp. Interno',
   factura_a: 'Factura A', factura_b: 'Factura B'
 };
+const PAGO_LABEL = {
+  contado: 'Contado',
+  cuenta_corriente: 'Cta. Cte.',
+};
 
 const fmt = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -78,6 +82,7 @@ export default function Ventas() {
               <th className="px-4 py-3 text-left">Tipo</th>
               <th className="px-4 py-3 text-left">Cliente</th>
               <th className="px-4 py-3 text-left">Depósito</th>
+              <th className="px-4 py-3 text-left">Pago</th>
               <th className="px-4 py-3 text-right">Total</th>
               <th className="px-4 py-3 text-left">Estado</th>
               <th className="px-4 py-3 text-left">Fecha</th>
@@ -91,6 +96,7 @@ export default function Ventas() {
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{TIPO_LABEL[v.tipo_comprobante] || v.tipo_comprobante}</td>
                 <td className="px-4 py-3 text-gray-700 dark:text-gray-200">{v.cliente || <span className="text-gray-400 dark:text-gray-500">Ocasional</span>}</td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{v.deposito}</td>
+                <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{PAGO_LABEL[v.tipo_pago] || v.tipo_pago}</td>
                 <td className="px-4 py-3 text-right font-medium text-gray-800 dark:text-gray-100">${fmt(v.total)}</td>
                 <td className="px-4 py-3">
                   <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${ESTADO_BADGE[v.estado]}`}>{v.estado}</span>
@@ -106,7 +112,7 @@ export default function Ventas() {
               </tr>
             ))}
             {!data.length && (
-              <tr><td colSpan={8} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500">Sin ventas</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400 dark:text-gray-500">Sin ventas</td></tr>
             )}
           </tbody>
         </table>

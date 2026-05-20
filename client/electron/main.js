@@ -188,6 +188,12 @@ function createMainWindow(serverUrl) {
   else mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
 
   mainWindow.once('ready-to-show', () => {
+    const windowMode = loadConfig().windowMode || 'normal';
+    if (windowMode === 'pantalla_completa') {
+      mainWindow.setFullScreen(true);
+    } else if (windowMode === 'maximizada') {
+      mainWindow.maximize();
+    }
     mainWindow.show();
     if (splashWindow && !splashWindow.isDestroyed()) {
       splashWindow.destroy();
@@ -300,6 +306,27 @@ function registerUniversalAsyncIPC() {
 
   ipcMain.handle('save-license-key', (_e, key) => {
     saveConfig({ licenseKey: key });
+    return true;
+  });
+
+  ipcMain.handle('get-window-mode', () => {
+    return loadConfig().windowMode || 'normal';
+  });
+
+  ipcMain.handle('set-window-mode', (_e, mode) => {
+    saveConfig({ windowMode: mode });
+    if (!mainWindow) return;
+    if (mainWindow.isFullScreen()) mainWindow.setFullScreen(false);
+    if (mode === 'pantalla_completa') {
+      mainWindow.setFullScreen(true);
+    } else if (mode === 'maximizada') {
+      mainWindow.unmaximize();
+      mainWindow.maximize();
+    } else {
+      mainWindow.unmaximize();
+      mainWindow.setSize(1366, 768);
+      mainWindow.center();
+    }
     return true;
   });
 }

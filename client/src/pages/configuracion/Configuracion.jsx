@@ -10,7 +10,7 @@ import {
   getCajas, createCaja, updateCaja, deleteCaja
 } from '../../services/configuracionService';
 
-const TABS = ['Empresa', 'ARCA', 'Rubros', 'Unidades', 'Medios de pago', 'Depósitos', 'Cajas'];
+const TABS = ['Empresa', 'ARCA', 'Rubros', 'Unidades', 'Medios de pago', 'Depósitos', 'Cajas', 'Apariencia'];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -498,11 +498,82 @@ function UpdateChecker() {
   );
 }
 
+// ── Tab: Apariencia ───────────────────────────────────────────────────────────
+
+const WINDOW_MODES = [
+  { value: 'normal',           label: 'Ventana',          desc: 'Tamaño estándar (1366×768)' },
+  { value: 'maximizada',       label: 'Maximizada',       desc: 'Ocupa toda la pantalla manteniendo la barra de tareas' },
+  { value: 'pantalla_completa', label: 'Pantalla completa', desc: 'Sin bordes ni barra de tareas' },
+];
+
+function TabApariencia() {
+  const { dark, toggle } = useThemeStore();
+  const [windowMode, setWindowModeLocal] = useState('normal');
+  const [msg, setMsg] = useState('');
+
+  useEffect(() => {
+    if (window.electronAPI?.getWindowMode) {
+      window.electronAPI.getWindowMode().then((m) => setWindowModeLocal(m || 'normal'));
+    }
+  }, []);
+
+  const handleWindowMode = async (mode) => {
+    setWindowModeLocal(mode);
+    if (window.electronAPI?.setWindowMode) {
+      await window.electronAPI.setWindowMode(mode);
+      setMsg('Modo de ventana aplicado.');
+      setTimeout(() => setMsg(''), 2500);
+    }
+  };
+
+  return (
+    <div className="max-w-lg space-y-8">
+      <div>
+        <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Tema</h3>
+        <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Apariencia visual de la aplicación</p>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-gray-600 dark:text-gray-300">Claro</span>
+          <button
+            onClick={toggle}
+            className={`relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none ${dark ? 'bg-indigo-600' : 'bg-amber-400'}`}
+          >
+            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${dark ? 'translate-x-5' : 'translate-x-0'}`} />
+          </button>
+          <span className="text-sm text-gray-600 dark:text-gray-300">Oscuro</span>
+        </div>
+      </div>
+
+      {window.electronAPI?.getWindowMode && (
+        <div>
+          <h3 className="text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Modo de ventana</h3>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Se aplica inmediatamente y se recuerda al reiniciar</p>
+          <div className="space-y-2">
+            {WINDOW_MODES.map((m) => (
+              <button
+                key={m.value}
+                onClick={() => handleWindowMode(m.value)}
+                className={`w-full text-left px-4 py-3 rounded-lg border transition-colors ${
+                  windowMode === m.value
+                    ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
+                    : 'border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700'
+                }`}
+              >
+                <p className={`text-sm font-medium ${windowMode === m.value ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-200'}`}>{m.label}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{m.desc}</p>
+              </button>
+            ))}
+          </div>
+          {msg && <p className="text-green-600 dark:text-green-400 text-xs mt-2">{msg}</p>}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Main component ────────────────────────────────────────────────────────────
 
 export default function Configuracion() {
   const [tab, setTab] = useState(0);
-  const { dark, toggle } = useThemeStore();
 
   const tabContent = [
     <TabEmpresa key="empresa" />,
@@ -577,30 +648,15 @@ export default function Configuracion() {
         { key: 'activo', label: 'Activo', type: 'select', options: [{ value: 'true', label: 'Sí' }, { value: 'false', label: 'No' }] }
       ]}
     />,
-    <TabCajas key="cajas" />
+    <TabCajas key="cajas" />,
+    <TabApariencia key="apariencia" />,
   ];
 
   return (
     <div className="p-6 max-w-4xl">
-      <div className="mb-6 flex items-start justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Configuración</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Parámetros generales del sistema</p>
-        </div>
-        <div className="flex items-center gap-2 mt-1">
-          <svg className={`w-4 h-4 transition-colors ${!dark ? 'text-amber-500' : 'text-gray-500'}`} fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd" />
-          </svg>
-          <button
-            onClick={toggle}
-            className={`relative w-11 h-6 rounded-full transition-colors duration-300 focus:outline-none ${dark ? 'bg-indigo-600' : 'bg-amber-400'}`}
-          >
-            <span className={`absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-300 ${dark ? 'translate-x-5' : 'translate-x-0'}`} />
-          </button>
-          <svg className={`w-4 h-4 transition-colors ${dark ? 'text-indigo-400' : 'text-gray-400'}`} fill="currentColor" viewBox="0 0 20 20">
-            <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
-          </svg>
-        </div>
+      <div className="mb-6">
+        <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Configuración</h1>
+        <p className="text-sm text-gray-500 dark:text-gray-400">Parámetros generales del sistema</p>
       </div>
 
       <div className="flex gap-1 border-b border-gray-200 dark:border-gray-700 mb-6">

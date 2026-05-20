@@ -46,6 +46,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getLicenseKey: () => ipcRenderer.sendSync('get-license-key'),
   saveLicenseKey: (key) => ipcRenderer.invoke('save-license-key', key),
 
+  // ── Ventana ───────────────────────────────────────────────────────────────
+  getWindowMode: () => ipcRenderer.invoke('get-window-mode'),
+  setWindowMode: (mode) => ipcRenderer.invoke('set-window-mode', mode),
+
   // ── Backup ────────────────────────────────────────────────────────────────
   doBackup: () => ipcRenderer.invoke('backup-do'),
   listBackups: () => ipcRenderer.invoke('backup-list'),
