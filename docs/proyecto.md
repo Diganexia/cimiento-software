@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-19 — v1.2.6.
+> Documento vivo. Última actualización: 2026-05-20 — v1.2.12.
 
 ---
 
@@ -24,6 +24,7 @@
 | Hash de contraseñas | bcryptjs | 2.4 |
 | PDF | pdfkit | 0.15 |
 | Facturación electrónica | node-afip | 1.0 |
+| Licencias | Cloudflare Workers + KV | — |
 
 ---
 
@@ -67,7 +68,8 @@ ferreteria-software/          ← monorepo raíz (npm workspaces)
 │       ├── pages/
 │       │   ├── Splash.jsx           ← pantalla de arranque (servidor)
 │       │   ├── ServerConfig.jsx     ← configuración IP (cliente)
-│       │   ├── Dashboard.jsx        ← KPIs + gráfico 7 días
+│       │   ├── Activacion.jsx       ← activación de licencia (primera vez)
+│       │   ├── Dashboard.jsx        ← KPIs + gráfico 7 días + badge licencia
 │       │   ├── Login.jsx
 │       │   ├── stock/
 │       │   ├── compras/
@@ -92,7 +94,7 @@ ferreteria-software/          ← monorepo raíz (npm workspaces)
     │   ├── routes/
     │   ├── services/
     │   │   ├── afipService.js
-    │   │   └── pdfService.js ← venta, estado de cuenta, arqueo, reporte tabla
+    │   │   └── pdfService.js ← venta, compra, estado de cuenta, arqueo, reporte tabla, recibo
     │   ├── helpers/stockHelper.js
     │   └── index.js
     ├── database/
@@ -214,9 +216,10 @@ Los permisos se almacenan como JSON en `roles.permisos`. El middleware `authoriz
 |--------|------|-------------|
 | `GET` | `/` | Listado con filtros |
 | `GET` | `/:id` | Detalle + ítems |
+| `GET` | `/:id/pdf` | PDF del comprobante de compra |
 | `POST` | `/` | Crear borrador |
 | `PUT` | `/:id` | Editar borrador |
-| `POST` | `/:id/confirmar` | Confirmar → ingresa stock + cta cte proveedor |
+| `PUT` | `/:id/confirmar` | Confirmar → ingresa stock + cta cte proveedor |
 
 ### Ventas — `/api/ventas`
 | Método | Ruta | Descripción |
@@ -560,6 +563,18 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 ### v1.2.4 (2026-05-19)
 - Fix migración 016: Knex no soporta `ALTER TYPE ... ADD VALUE` nativo. Reescrita usando `DO $$ BEGIN ... EXCEPTION ... END $$` con `config = { transaction: false }`.
 
+### v1.2.5 – v1.2.10 (2026-05-19)
+- Mejoras de ícono de aplicación iterativas (logo Cimiento con fondo transparente, variantes de padding y forma circular).
+
+### v1.2.11 (2026-05-20)
+- Compras: cantidad entera (`step=1`), filtro "solo productos del proveedor" + dropdown con flecha en buscador de productos.
+- Productos: campo Estado (Activo/Inactivo) en formulario de edición/creación.
+
+### v1.2.12 (2026-05-20)
+- **Sistema de licencias**: Cloudflare Workers + KV. Pantalla de activación en primer arranque. Badge en Dashboard. Gracia offline 7 días. Anti-manipulación de reloj.
+- **PDF de compras**: botón en `CompraDetalle` que genera y descarga `Compra_{Proveedor}_{fecha}.pdf` vía `generarCompraPDF()` en `pdfService.js`. Guarda en `Documents/Cimiento/Compras/`.
+- **Fix cursor en edición de productos**: `ProductoForm` ahora espera a que los datos del producto carguen antes de renderizar los inputs (estado `ready`), evitando re-render que causaba pérdida de foco.
+
 ### v1.2.6 (2026-05-19)
 - Nuevo ícono de aplicación: logo Cimiento (casa + ladrillos + perfiles) con fondo transparente, formato ICO con 6 tamaños embebidos (16, 32, 48, 64, 128, 256px). Se aplica en barra de tareas, instalador NSIS y accesos directos.
 
@@ -569,6 +584,27 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - POS cliente: renombrado "Consumidor final" → "Ocasional" en el selector. El concepto "Consumidor Final" es fiscal (ARCA) y ya queda representado en el tipo de comprobante (Factura B).
 - POS tipo de pago: "Cuenta corriente" solo disponible cuando hay cliente registrado seleccionado. Si se selecciona "Ocasional" estando en cuenta corriente, se resetea automáticamente a "Contado". Validación también en `handleSubmit`.
 - "Ocasional" propagado a: PDF de comprobante, lista de ventas, detalle de venta, reporte de arqueos, nombre de archivo PDF generado.
+
+---
+
+### Licencias — Cloudflare Workers KV (externo)
+
+El sistema de licencias corre fuera del servidor Express, en un **Cloudflare Worker**.
+
+| Método | URL | Descripción |
+|--------|-----|-------------|
+| `GET` | `https://cimiento-licencias.cliford00001.workers.dev/?key=KEY` | Valida la licencia. Retorna `{valida, estado, vence, razon_social, mensaje, serverTime}` |
+
+**Estados posibles:** `activa`, `vencida`, `suspendida`, `invalida`
+
+**Gestión:** Ingresar al KV namespace `cimiento-licencias` en el dashboard de Cloudflare (cuenta Diganexia). Agregar/modificar entradas con key = código de licencia, value = JSON con los campos arriba.
+
+**Flujo en el cliente:**
+1. Primera vez → pantalla `/activacion` para ingresar la clave (requiere internet)
+2. Clave válida → se guarda en `app-config.json` (`licenseKey`)
+3. Cada vez que el Dashboard carga → check asíncrono en background
+4. Gracia offline: 7 días desde el último check exitoso (caché en `localStorage`)
+5. Badge en Dashboard si la licencia está por vencer, vencida o suspendida
 
 ---
 

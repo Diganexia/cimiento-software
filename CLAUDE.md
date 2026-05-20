@@ -106,6 +106,19 @@ PDFs se guardan via IPC en `Documents/Cimiento/{tipo}/{DD-MM-YYYY}/` usando `app
 - Protocolo UDP discovery: sigue usando strings `CORRALON_DISCOVER` / `CORRALON_SERVER` — compatibilidad con clientes en campo
 - Título barra Windows: `title: 'Cimiento'` en BrowserWindow + `mainWindow.on('page-title-updated', e => e.preventDefault())` en main.js. `index.html` tiene el título correcto pero está en .gitignore — el fix de main.js es suficiente en runtime.
 
+### Sistema de licencias — Cloudflare KV
+- Worker: `https://cimiento-licencias.cliford00001.workers.dev/?key=KEY`
+- KV namespace: `cimiento-licencias` (cuenta Cloudflare de Diganexia). Cada entrada: key=`CIMIENTO-XXXX-XXXX`, value=`{"estado":"activa","vence":"YYYY-MM-DD","razon_social":"...","mensaje":""}`
+- `estado` válidos: `activa`, `vencida`, `suspendida`
+- License key guardada en `app-config.json` como `licenseKey`
+- IPC sync: `get-license-key` → `window.electronAPI.getLicenseKey()`
+- IPC async: `save-license-key` → `window.electronAPI.saveLicenseKey(key)`
+- Sin key → redirige a `/activacion` (desde `Login.jsx` en `useEffect`)
+- Gracia offline: 7 días desde el último check exitoso (caché en `localStorage`)
+- Anti-clockmanip: si diferencia local vs serverTime > 12h → usar caché (no actualizar)
+- Badge en Dashboard (a la izquierda de la versión): solo visible si vence <30d, vencida, suspendida u offline prolongado
+- Archivos clave: `client/src/services/licenciaService.js`, `client/src/store/licenciaStore.js`, `client/src/pages/Activacion.jsx`
+
 ### Configuración — SimpleListTab
 `SimpleListTab` acepta `editFields` (array o función de items) para campos distintos al crear vs editar. `booleanFields` (array de keys) se convierten de string a boolean antes del update. `InlineForm` convierte a string los valores de campos `type:'select'` al inicializar (para que IDs integer matcheen options string).
 
