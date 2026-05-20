@@ -4,7 +4,7 @@ import useAuthStore from '../store/authStore';
 import useLicenciaStore from '../store/licenciaStore';
 import api from '../lib/api';
 import { version } from '../../package.json';
-import { getLicenseKey, registerSession } from '../services/licenciaService';
+import { getSessionId } from '../services/licenciaService';
 
 export default function Login() {
   const [username, setUsername] = useState('');
@@ -34,18 +34,9 @@ export default function Login() {
     setError('');
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/login', { username, password });
-      if (window.electronAPI && mode !== 'client') {
-        const key = getLicenseKey();
-        if (key) {
-          const r = await registerSession(key);
-          if (!r.ok && r.error === 'limite_usuarios') {
-            setError(`Límite de usuarios simultáneos alcanzado (${r.activos}/${r.max}). Cerrá sesión en otro equipo e intentá de nuevo.`);
-            return;
-          }
-          if (r.ok) startHeartbeat(key);
-        }
-      }
+      const session_id = window.electronAPI ? getSessionId() : undefined;
+      const { data } = await api.post('/auth/login', { username, password, session_id });
+      startHeartbeat();
       setAuth(data.token, data.usuario);
       navigate('/');
     } catch (err) {

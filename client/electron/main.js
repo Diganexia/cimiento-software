@@ -393,6 +393,7 @@ async function bootServerMode() {
     process.env.PORT = '3001';
     process.env.JWT_SECRET = getOrCreateJwtSecret();
     process.env.ALLOWED_ORIGINS = '*';
+    process.env.CIMIENTO_LICENSE_KEY = loadConfig().licenseKey || '';
     require(serverEntry);
 
     sendStatus('Verificando conexión...');

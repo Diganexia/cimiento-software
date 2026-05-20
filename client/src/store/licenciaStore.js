@@ -1,5 +1,6 @@
 import { create } from 'zustand';
-import { registerSession } from '../services/licenciaService';
+import api from '../lib/api';
+import { getSessionId } from '../services/licenciaService';
 
 let _heartbeatTimer = null;
 
@@ -8,9 +9,11 @@ const useLicenciaStore = create((set) => ({
   resultado: null,
   setChecking: (v) => set({ checking: v }),
   setResultado: (r) => set({ resultado: r, checking: false }),
-  startHeartbeat: (key) => {
+  startHeartbeat: () => {
     if (_heartbeatTimer) clearInterval(_heartbeatTimer);
-    _heartbeatTimer = setInterval(() => { registerSession(key); }, 9 * 60 * 1000);
+    const beat = () => api.post('/auth/heartbeat', { session_id: getSessionId() }).catch(() => {});
+    beat();
+    _heartbeatTimer = setInterval(beat, 9 * 60 * 1000);
   },
   stopHeartbeat: () => {
     if (_heartbeatTimer) { clearInterval(_heartbeatTimer); _heartbeatTimer = null; }

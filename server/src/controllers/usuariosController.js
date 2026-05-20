@@ -37,11 +37,11 @@ async function crear(req, res) {
     if (existe) return res.status(409).json({ error: 'El username ya existe' });
 
     const password_hash = await bcrypt.hash(password, 10);
-    const [id] = await db('usuarios').insert({ nombre, email, username, password_hash, rol_id, activo: true });
+    const [row] = await db('usuarios').insert({ nombre, email, username, password_hash, rol_id, activo: true }).returning('id');
     const nuevo = await db('usuarios as u')
       .join('roles as r', 'u.rol_id', 'r.id')
       .select('u.id', 'u.nombre', 'u.email', 'u.username', 'u.activo', 'u.rol_id', 'r.nombre as rol')
-      .where('u.id', id)
+      .where('u.id', row.id)
       .first();
     res.status(201).json(nuevo);
   } catch (err) {
@@ -108,5 +108,57 @@ async function listarRoles(req, res) {
   }
 }
 
-module.exports = { listar, detalle, crear, editar, cambiarPassword, listarRoles };
+async function detalleRol(req, res) {
+  try {
+    const rol = await db('roles').where('id', req.params.id).first();
+    if (!rol) return res.status(404).json({ error: 'Rol no encontrado' });
+    res.json(rol);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function crearRol(req, res) {
+  const { nombre, permisos = {} } = req.body;
+  if (!nombre) return res.status(400).json({ error: 'nombre es requerido' });
+  try {
+    const existe = await db('roles').where('nombre', nombre).first();
+    if (existe) return res.status(409).json({ error: 'Ya existe un rol con ese nombre' });
+    const [row] = await db('roles').insert({ nombre, permisos: JSON.stringify(permisos) }).returning('id');
+    const rol = await db('roles').where('id', row.id).first();
+    res.status(201).json(rol);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function editarRol(req, res) {
+  const { nombre, permisos } = req.body;
+  try {
+    const rol = await db('roles').where('id', req.params.id).first();
+    if (!rol) return res.status(404).json({ error: 'Rol no encontrado' });
+    const updates = {};
+    if (nombre !== undefined) updates.nombre = nombre;
+    if (permisos !== undefined) updates.permisos = JSON.stringify(permisos);
+    await db('roles').where('id', req.params.id).update(updates);
+    const actualizado = await db('roles').where('id', req.params.id).first();
+    res.json(actualizado);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+async function eliminarRol(req, res) {
+  try {
+    const en_uso = await db('usuarios').where('rol_id', req.params.id).count('id as n').first();
+    if (parseInt(en_uso.n) > 0)
+      return res.status(409).json({ error: `No se puede eliminar: ${en_uso.n} usuario(s) tienen este rol` });
+    await db('roles').where('id', req.params.id).delete();
+    res.json({ ok: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+}
+
+module.exports = { listar, detalle, crear, editar, cambiarPassword, listarRoles, detalleRol, crearRol, editarRol, eliminarRol };
 

@@ -31,6 +31,8 @@ import CtaCteProveedor from '../pages/ctacte/CtaCteProveedor';
 import Cuotas from '../pages/ctacte/Cuotas';
 import Usuarios from '../pages/configuracion/Usuarios';
 import UsuarioForm from '../pages/configuracion/UsuarioForm';
+import Roles from '../pages/configuracion/Roles';
+import RolForm from '../pages/configuracion/RolForm';
 import Configuracion from '../pages/configuracion/Configuracion';
 import Reportes from '../pages/reportes/Reportes';
 import Splash from '../pages/Splash';
@@ -85,10 +87,13 @@ const router = createHashRouter([
           { path: 'cta-cte/cuotas',                 element: <Cuotas /> },
           { path: 'reportes',                      element: <Reportes /> },
           { path: 'configuracion',                 element: <Configuracion /> },
-          { path: 'configuracion/usuarios',        element: <Usuarios /> },
-          { path: 'configuracion/usuarios/nuevo',  element: <UsuarioForm /> },
-          { path: 'configuracion/usuarios/:id/editar', element: <UsuarioForm /> },
-          { path: 'configuracion/backup',              element: <Backup /> }
+          { path: 'configuracion/usuarios',              element: <Usuarios /> },
+          { path: 'configuracion/usuarios/nuevo',       element: <UsuarioForm /> },
+          { path: 'configuracion/usuarios/:id/editar',  element: <UsuarioForm /> },
+          { path: 'configuracion/roles',                element: <Roles /> },
+          { path: 'configuracion/roles/nuevo',          element: <RolForm /> },
+          { path: 'configuracion/roles/:id/editar',     element: <RolForm /> },
+          { path: 'configuracion/backup',               element: <Backup /> }
         ]
       }
     ]

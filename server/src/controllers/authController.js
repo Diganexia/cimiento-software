@@ -2,8 +2,29 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
+const WORKER_URL = 'https://cimiento-licencias.cliford00001.workers.dev/';
+
+async function _workerSession(action, sessionId) {
+  const key = process.env.CIMIENTO_LICENSE_KEY;
+  if (!key || !sessionId) return { ok: true };
+  try {
+    const ctrl = new AbortController();
+    const tid = setTimeout(() => ctrl.abort(), 6000);
+    const res = await fetch(`${WORKER_URL}?key=${encodeURIComponent(key)}&action=${action}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ session_id: sessionId }),
+      signal: ctrl.signal,
+    });
+    clearTimeout(tid);
+    return await res.json();
+  } catch {
+    return { ok: true };
+  }
+}
+
 const login = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, session_id } = req.body;
   if (!username || !password) {
     return res.status(400).json({ error: 'Usuario y contraseña requeridos' });
   }
@@ -29,6 +50,15 @@ const login = async (req, res) => {
     const valid = await bcrypt.compare(password, usuario.password_hash);
     if (!valid) return res.status(401).json({ error: 'Credenciales inválidas' });
 
+    if (session_id) {
+      const r = await _workerSession('register', session_id);
+      if (!r.ok && r.error === 'limite_usuarios') {
+        return res.status(403).json({
+          error: `Límite de usuarios simultáneos alcanzado (${r.activos}/${r.max}). Cerrá sesión en otro equipo e intentá de nuevo.`
+        });
+      }
+    }
+
     const permisos =
       typeof usuario.permisos === 'string'
         ? JSON.parse(usuario.permisos)
@@ -51,12 +81,20 @@ const login = async (req, res) => {
   }
 };
 
-const logout = (_req, res) => {
+const logout = async (req, res) => {
+  const session_id = req.body?.session_id;
+  if (session_id) await _workerSession('unregister', session_id);
   res.json({ message: 'Sesión cerrada' });
+};
+
+const heartbeat = async (req, res) => {
+  const { session_id } = req.body || {};
+  if (session_id) await _workerSession('register', session_id);
+  res.json({ ok: true });
 };
 
 const me = (req, res) => {
   res.json(req.user);
 };
 
-module.exports = { login, logout, me };
+module.exports = { login, logout, me, heartbeat };

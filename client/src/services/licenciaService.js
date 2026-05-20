@@ -22,38 +22,6 @@ export function getSessionId() {
   return id;
 }
 
-export async function registerSession(key) {
-  const sessionId = getSessionId();
-  try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(`${WORKER_URL}?key=${encodeURIComponent(key)}&action=register`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: sessionId }),
-      signal: controller.signal,
-    });
-    clearTimeout(tid);
-    return await res.json();
-  } catch {
-    return { ok: true }; // sin conexión → offline grace lo maneja
-  }
-}
-
-export async function unregisterSession(key) {
-  const sessionId = getSessionId();
-  try {
-    const controller = new AbortController();
-    const tid = setTimeout(() => controller.abort(), 5000);
-    await fetch(`${WORKER_URL}?key=${encodeURIComponent(key)}&action=unregister`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ session_id: sessionId }),
-      signal: controller.signal,
-    });
-    clearTimeout(tid);
-  } catch {}
-}
 
 export async function checkLicencia(key) {
   try {

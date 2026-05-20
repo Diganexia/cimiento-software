@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-20 — v1.2.12.
+> Documento vivo. Última actualización: 2026-05-20 — v1.2.14.
 
 ---
 
@@ -572,8 +572,15 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 
 ### v1.2.12 (2026-05-20)
 - **Sistema de licencias**: Cloudflare Workers + KV. Pantalla de activación en primer arranque. Badge en Dashboard. Gracia offline 7 días. Anti-manipulación de reloj.
+- **Bloqueo de acceso**: overlay pantalla completa cuando licencia `vencida`/`suspendida`/`offline_expirado`/`invalida`. Botón "Reintentar" para reverificar.
 - **PDF de compras**: botón en `CompraDetalle` que genera y descarga `Compra_{Proveedor}_{fecha}.pdf` vía `generarCompraPDF()` en `pdfService.js`. Guarda en `Documents/Cimiento/Compras/`.
 - **Fix cursor en edición de productos**: `ProductoForm` ahora espera a que los datos del producto carguen antes de renderizar los inputs (estado `ready`), evitando re-render que causaba pérdida de foco.
+
+### v1.2.13 (2026-05-20)
+- **Límite de usuarios simultáneos**: campo `max_usuarios` en KV. Al loguear en modo servidor, se registra sesión en Worker (TTL 15 min, heartbeat cada 9 min). Si ya hay `max_usuarios` sesiones activas, el login falla con mensaje claro. Al cerrar sesión se libera el slot. Editar `max_usuarios` en KV para cambiar el límite sin tocar código.
+
+### v1.2.14 (2026-05-20)
+- **Fix modo cliente**: las máquinas en modo cliente ya no pasan por activación de licencia ni verifican con Cloudflare. Solo el servidor lo hace. Los clientes confían en que el servidor está licenciado.
 
 ### v1.2.6 (2026-05-19)
 - Nuevo ícono de aplicación: logo Cimiento (casa + ladrillos + perfiles) con fondo transparente, formato ICO con 6 tamaños embebidos (16, 32, 48, 64, 128, 256px). Se aplica en barra de tareas, instalador NSIS y accesos directos.
@@ -591,20 +598,41 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 
 El sistema de licencias corre fuera del servidor Express, en un **Cloudflare Worker**.
 
-| Método | URL | Descripción |
-|--------|-----|-------------|
-| `GET` | `https://cimiento-licencias.cliford00001.workers.dev/?key=KEY` | Valida la licencia. Retorna `{valida, estado, vence, razon_social, mensaje, serverTime}` |
+| Método | URL / Acción | Descripción |
+|--------|-------------|-------------|
+| `GET` | `?key=KEY` | Valida la licencia. Retorna `{valida, estado, vence, razon_social, max_usuarios, mensaje, serverTime}` |
+| `POST` | `?key=KEY&action=register` body `{session_id}` | Registra sesión activa (TTL 15 min). Rechaza con `limite_usuarios` si se superó `max_usuarios`. |
+| `POST` | `?key=KEY&action=unregister` body `{session_id}` | Libera la sesión al cerrar sesión. |
+
+**Worker URL:** `https://cimiento-licencias.cliford00001.workers.dev/`
 
 **Estados posibles:** `activa`, `vencida`, `suspendida`, `invalida`
 
-**Gestión:** Ingresar al KV namespace `cimiento-licencias` en el dashboard de Cloudflare (cuenta Diganexia). Agregar/modificar entradas con key = código de licencia, value = JSON con los campos arriba.
+**Formato de entrada KV:**
+```json
+{
+  "estado": "activa",
+  "vence": "YYYY-MM-DD",
+  "razon_social": "Nombre del cliente",
+  "mensaje": "",
+  "max_usuarios": 3
+}
+```
+`max_usuarios` es opcional; si no está presente, no hay límite. Para cambiarlo: editar la entrada en el dashboard Cloudflare → KV → `cimiento-licencias`.
 
-**Flujo en el cliente:**
-1. Primera vez → pantalla `/activacion` para ingresar la clave (requiere internet)
+**Gestión de sesiones:** cada instalación servidor tiene un `session_id` único persistido en `localStorage` (`cimiento_session_id`). Al loguear se registra con TTL 15 min; el heartbeat lo renueva cada 9 min. Al cerrar sesión se desregistra. En KV las sesiones activas se almacenan como `sess:{KEY}:{session_id}`.
+
+**Flujo en modo servidor:**
+1. Primera vez → pantalla `/activacion` (requiere internet)
 2. Clave válida → se guarda en `app-config.json` (`licenseKey`)
-3. Cada vez que el Dashboard carga → check asíncrono en background
-4. Gracia offline: 7 días desde el último check exitoso (caché en `localStorage`)
-5. Badge en Dashboard si la licencia está por vencer, vencida o suspendida
+3. Al loguear → `POST action=register`; si supera `max_usuarios` → error en login
+4. Heartbeat cada 9 min → renueva TTL de la sesión
+5. Al cerrar sesión → `POST action=unregister`
+6. `ProtectedRoute` verifica licencia en background; `Layout` muestra overlay bloqueante si `vencida`/`suspendida`/`offline_expirado`/`invalida`
+7. Gracia offline: 7 días desde el último check exitoso (caché en `localStorage`)
+8. Badge en Dashboard si la licencia está por vencer (<30d), vencida, suspendida u offline
+
+**Modo cliente:** las máquinas cliente (modo `client`) **no verifican la licencia ni registran sesión**. Solo el servidor lo hace. Los clientes confían en que el servidor está licenciado.
 
 ---
 
