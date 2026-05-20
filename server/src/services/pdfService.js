@@ -551,4 +551,98 @@ function generarReciboPDF({ cobro, cliente, medioPago, retenciones = [] }, res) 
   doc.end();
 }
 
-module.exports = { generarVentaPDF, generarEstadoCuentaPDF, generarArqueoPDF, generarReporteTablaPDF, generarReciboPDF };
+function generarCompraPDF(compra, items, res) {
+  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const emp = empresa();
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="compra-${compra.id}.pdf"`);
+  doc.pipe(res);
+
+  // Header empresa
+  doc.fontSize(19).font('Helvetica-Bold').text(emp.nombre, 50, 50, { width: 270 });
+  doc.fontSize(12).font('Helvetica').fillColor('#555');
+  if (emp.cuit) doc.text(`CUIT: ${emp.cuit}`);
+  if (emp.direccion) doc.text(emp.direccion);
+  if (emp.telefono) doc.text(`Tel: ${emp.telefono}`);
+
+  // Título + número
+  doc.fontSize(22).font('Helvetica-Bold').fillColor('#000')
+    .text('COMPROBANTE DE COMPRA', 350, 50, { align: 'right', width: 200 });
+  const numY = doc.y;
+  doc.fontSize(13).font('Helvetica')
+    .text(`N° ${String(compra.id).padStart(8, '0')}`, 350, numY, { align: 'right', width: 200 });
+  const fecha = compra.created_at
+    ? new Date(compra.created_at).toLocaleDateString('es-AR')
+    : new Date().toLocaleDateString('es-AR');
+  doc.text(`Fecha: ${fecha}`, 350, numY + 18, { align: 'right', width: 200 });
+
+  doc.moveTo(50, 143).lineTo(545, 143).strokeColor('#ccc').stroke();
+
+  // Proveedor
+  let y = 158;
+  doc.fontSize(12).font('Helvetica-Bold').fillColor('#000').text('PROVEEDOR', 50, y);
+  doc.font('Helvetica').fillColor('#333');
+  doc.text(compra.proveedor || '', 50, y + 15);
+  if (compra.proveedor_cuit) doc.text(`CUIT: ${compra.proveedor_cuit}`, 50, y + 30);
+
+  // Info derecha
+  doc.fontSize(12).font('Helvetica').fillColor('#333');
+  doc.text(`Depósito destino: ${compra.deposito || ''}`, 350, y + 15, { width: 200, align: 'right' });
+  if (compra.numero_remito) doc.text(`Remito: ${compra.numero_remito}`, 350, y + 30, { width: 200, align: 'right' });
+  if (compra.fecha_comprobante) {
+    const fechaComp = new Date(compra.fecha_comprobante).toLocaleDateString('es-AR');
+    doc.text(`Fecha comprobante: ${fechaComp}`, 350, y + 45, { width: 200, align: 'right' });
+  }
+  doc.text(`Registrado por: ${compra.usuario || ''}`, 350, y + 60, { width: 200, align: 'right' });
+
+  // Línea
+  const lineY = compra.numero_remito ? 235 : 218;
+  doc.moveTo(50, lineY).lineTo(545, lineY).strokeColor('#ccc').stroke();
+
+  // Tabla items
+  y = lineY + 9;
+  doc.fontSize(11).font('Helvetica-Bold').fillColor('#555');
+  doc.text('Producto',    50,  y, { width: 195 });
+  doc.text('Código',     248,  y, { width: 70 });
+  doc.text('Cantidad',   320,  y, { width: 60, align: 'right' });
+  doc.text('Precio unit.', 383, y, { width: 80, align: 'right' });
+  doc.text('Subtotal',   468,  y, { width: 77, align: 'right' });
+  y += 15;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 8;
+
+  doc.font('Helvetica').fillColor('#000');
+  for (const item of items) {
+    if (y > 700) { doc.addPage(); y = 50; }
+    doc.fontSize(11);
+    doc.text(item.producto || '', 50, y, { width: 195 });
+    doc.text(item.codigo || '', 248, y, { width: 70 });
+    doc.text(`${fmt(item.cantidad)} ${item.unidad || ''}`.trim(), 320, y, { width: 60, align: 'right' });
+    doc.text(`$${fmt(item.precio_unitario)}`, 383, y, { width: 80, align: 'right' });
+    doc.text(`$${fmt(item.subtotal)}`, 468, y, { width: 77, align: 'right' });
+    y += 17;
+  }
+
+  y += 8;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 13;
+
+  doc.font('Helvetica-Bold').fontSize(14).fillColor('#000');
+  doc.text('TOTAL:', 383, y, { width: 80 });
+  doc.text(`$${fmt(compra.total)}`, 468, y, { width: 77, align: 'right' });
+
+  if (compra.observaciones) {
+    y += 36;
+    doc.font('Helvetica').fontSize(11).fillColor('#555').text('Observaciones:', 50, y);
+    doc.fillColor('#333').text(compra.observaciones, 50, y + 15, { width: 495 });
+  }
+
+  const footerY = doc.page.height - doc.page.margins.bottom - 14;
+  doc.fontSize(10).fillColor('#999')
+    .text('Documento interno — no válido como comprobante fiscal', 50, footerY, { align: 'center', width: 495 });
+
+  doc.end();
+}
+
+module.exports = { generarVentaPDF, generarEstadoCuentaPDF, generarArqueoPDF, generarReporteTablaPDF, generarReciboPDF, generarCompraPDF };

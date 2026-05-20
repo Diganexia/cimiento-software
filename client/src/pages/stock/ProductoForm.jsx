@@ -30,6 +30,7 @@ export default function ProductoForm() {
   const [proveedores, setProveedores] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [ready, setReady] = useState(!isEdit);
 
   useEffect(() => {
     const flattenRubros = (tree, nivel = 0) => {
@@ -62,6 +63,7 @@ export default function ProductoForm() {
           stock_minimo: data.stock_minimo != null ? parseFloat(data.stock_minimo) : '',
           activo: data.activo !== false ? 'true' : 'false'
         });
+        setReady(true);
       });
     }
   }, [id, isEdit]);
@@ -94,6 +96,8 @@ export default function ProductoForm() {
       setLoading(false);
     }
   };
+
+  if (!ready) return <div className="p-6 text-gray-400 dark:text-gray-500">Cargando...</div>;
 
   return (
     <div className="p-6 max-w-2xl">

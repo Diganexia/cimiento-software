@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { upsertStock, registrarMovimiento } = require('../helpers/stockHelper');
+const { generarCompraPDF } = require('../services/pdfService');
 
 async function getSaldoProveedor(proveedor_id, trx = db) {
   const last = await trx('cuenta_corriente_proveedores')
@@ -243,4 +244,30 @@ const confirmarCompra = async (req, res) => {
   }
 };
 
-module.exports = { listar, detalle, crear, editar, confirmarCompra };
+const pdfCompra = async (req, res) => {
+  try {
+    const compra = await db('compras as c')
+      .join('proveedores as p', 'c.proveedor_id', 'p.id')
+      .join('depositos as d', 'c.deposito_destino_id', 'd.id')
+      .join('usuarios as u', 'c.usuario_id', 'u.id')
+      .select('c.*', 'p.nombre as proveedor', 'p.cuit as proveedor_cuit', 'd.nombre as deposito', 'u.nombre as usuario')
+      .where('c.id', req.params.id)
+      .first();
+
+    if (!compra) return res.status(404).json({ error: 'Compra no encontrada' });
+
+    const items = await db('compras_items as ci')
+      .join('productos as pr', 'ci.producto_id', 'pr.id')
+      .leftJoin('unidades_medida as um', 'pr.unidad_medida_id', 'um.id')
+      .select('ci.*', 'pr.nombre as producto', 'pr.codigo', 'um.abreviatura as unidad')
+      .where('ci.compra_id', compra.id)
+      .orderBy('pr.nombre');
+
+    generarCompraPDF(compra, items, res);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al generar PDF' });
+  }
+};
+
+module.exports = { listar, detalle, crear, editar, confirmarCompra, pdfCompra };

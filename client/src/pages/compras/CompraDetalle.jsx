@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { getCompra, confirmarCompra } from '../../services/comprasService';
+import { getCompra, confirmarCompra, downloadCompraPDF } from '../../services/comprasService';
 import { usePermission } from '../../hooks/usePermission';
 
 const ESTADO_META = {
@@ -13,12 +13,22 @@ export default function CompraDetalle() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [compra, setCompra] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   const canConfirm = usePermission('compras', 'confirmar');
   const canEdit    = usePermission('compras', 'crear');
 
   useEffect(() => {
     getCompra(id).then(({ data }) => setCompra(data)).catch(() => navigate('/compras'));
   }, [id, navigate]);
+
+  const handlePDF = async () => {
+    setPdfLoading(true);
+    try {
+      await downloadCompraPDF(id, compra.proveedor, compra.numero_remito);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const handleConfirmar = async () => {
     if (!confirm('¿Confirmar compra? Se ingresará el stock automáticamente.')) return;
@@ -46,6 +56,13 @@ export default function CompraDetalle() {
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{new Date(compra.created_at).toLocaleString('es-AR')}</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={handlePDF} disabled={pdfLoading}
+            className="border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 flex items-center gap-1.5">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            {pdfLoading ? 'Generando...' : 'PDF'}
+          </button>
           {compra.estado === 'borrador' && canEdit && (
             <button onClick={() => navigate(`/compras/${id}/editar`)}
               className="border border-gray-300 dark:border-gray-600 px-3 py-1.5 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
