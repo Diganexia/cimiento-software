@@ -150,7 +150,7 @@ export default function Productos() {
                             </span>
                           ) : (
                             <button onClick={() => setConfirmId(p.id)} className="text-xs text-red-500 hover:underline">
-                              Baja
+                              Eliminar
                             </button>
                           )
                         )}

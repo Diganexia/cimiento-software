@@ -16,21 +16,22 @@ export default function Clientes() {
   const [page, setPage] = useState(1);
   const [q, setQ] = useState('');
   const [search, setSearch] = useState('');
+  const [activo, setActivo] = useState('true');
   const limit = 50;
 
-  const load = async (pg = page, qv = search) => {
-    const params = { page: pg, limit, q: qv || undefined };
+  const load = async (pg = page, qv = search, av = activo) => {
+    const params = { page: pg, limit, q: qv || undefined, activo: av };
     const { data: res } = await getClientes(params);
     setData(res.data);
     setTotal(res.total);
   };
 
-  useEffect(() => { load(1, search); setPage(1); }, [search]);
+  useEffect(() => { load(1, search, activo); setPage(1); }, [search, activo]);
 
   const handleBuscar = (e) => { e.preventDefault(); setSearch(q); };
 
   const handleEliminar = async (id) => {
-    if (!confirm('¿Dar de baja este cliente?')) return;
+    if (!confirm('¿Dar de baja este cliente? Quedará inactivo pero sus datos y deudas se conservan.')) return;
     await deleteCliente(id);
     load();
   };
@@ -45,13 +46,19 @@ export default function Clientes() {
         </Link>
       </div>
 
-      <form onSubmit={handleBuscar} className="flex gap-2 mb-4">
+      <form onSubmit={handleBuscar} className="flex gap-2 mb-4 flex-wrap">
         <input
           value={q} onChange={(e) => setQ(e.target.value)} placeholder="Buscar por nombre, CUIT o DNI..."
           className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm w-80 focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button type="submit" className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded px-4 py-2 text-sm hover:bg-gray-200">Buscar</button>
         {search && <button type="button" onClick={() => { setQ(''); setSearch(''); }} className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700">Limpiar</button>}
+        <select value={activo} onChange={(e) => setActivo(e.target.value)}
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="true">Activos</option>
+          <option value="false">Dados de baja</option>
+          <option value="all">Todos</option>
+        </select>
       </form>
 
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
@@ -68,8 +75,11 @@ export default function Clientes() {
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
             {data.map((c) => (
-              <tr key={c.id} className="hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">{c.nombre}</td>
+              <tr key={c.id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${!c.activo ? 'opacity-60' : ''}`}>
+                <td className="px-4 py-3 font-medium text-gray-800 dark:text-gray-100">
+                  {c.nombre}
+                  {!c.activo && <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">Dado de baja</span>}
+                </td>
                 <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                   {c.cuit ? `CUIT: ${c.cuit}` : c.dni ? `DNI: ${c.dni}` : c.pasaporte ? `PAS: ${c.pasaporte}` : '—'}
                 </td>
@@ -83,7 +93,7 @@ export default function Clientes() {
                 <td className="px-4 py-3 text-right space-x-3">
                   <Link to={`/clientes/${c.id}/ventas`} className="text-green-600 hover:text-green-800 text-xs">Ventas</Link>
                   <Link to={`/clientes/${c.id}/editar`} className="text-blue-600 hover:text-blue-800 text-xs">Editar</Link>
-                  <button onClick={() => handleEliminar(c.id)} className="text-red-500 hover:text-red-700 text-xs">Dar de baja</button>
+                  {c.activo && <button onClick={() => handleEliminar(c.id)} className="text-red-500 hover:text-red-700 text-xs">Dar de baja</button>}
                 </td>
               </tr>
             ))}

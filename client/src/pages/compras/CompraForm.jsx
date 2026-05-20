@@ -45,7 +45,7 @@ export default function CompraForm() {
           producto_id: i.producto_id,
           nombre: i.producto,
           unidad: i.unidad,
-          cantidad: i.cantidad,
+          cantidad: Math.round(parseFloat(i.cantidad)) || 1,
           precio_unitario: i.precio_unitario
         })));
       });
