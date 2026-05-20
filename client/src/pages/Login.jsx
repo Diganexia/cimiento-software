@@ -20,7 +20,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (window.electronAPI && !window.electronAPI.getLicenseKey?.()) {
+    if (window.electronAPI && mode !== 'client' && !window.electronAPI.getLicenseKey?.()) {
       navigate('/activacion', { replace: true });
       return;
     }
@@ -35,7 +35,7 @@ export default function Login() {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/login', { username, password });
-      if (window.electronAPI) {
+      if (window.electronAPI && mode !== 'client') {
         const key = getLicenseKey();
         if (key) {
           const r = await registerSession(key);

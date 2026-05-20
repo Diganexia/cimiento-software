@@ -18,7 +18,7 @@ export default function ProtectedRoute() {
     api.get('/auth/me')
       .then(async ({ data }) => {
         setAuth(token, data);
-        if (window.electronAPI) {
+        if (window.electronAPI && window.electronAPI.getMode?.() !== 'client') {
           const key = getLicenseKey();
           if (key) {
             const r = await registerSession(key);
@@ -33,6 +33,7 @@ export default function ProtectedRoute() {
 
   useEffect(() => {
     if (!window.electronAPI || licResultado) return;
+    if (window.electronAPI.getMode?.() === 'client') return;
     const key = getLicenseKey();
     if (!key) return;
     setLicChecking(true);

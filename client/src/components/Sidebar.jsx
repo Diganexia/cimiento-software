@@ -200,7 +200,7 @@ export default function Sidebar() {
 
   const handleLogout = async () => {
     await api.post('/auth/logout').catch(() => {});
-    if (window.electronAPI) {
+    if (window.electronAPI && window.electronAPI.getMode?.() !== 'client') {
       const key = getLicenseKey();
       if (key) await unregisterSession(key);
       stopHeartbeat();
