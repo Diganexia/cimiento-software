@@ -22,9 +22,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401 || error.response?.status === 403) {
+    if (error.response?.status === 401) {
       localStorage.removeItem('ferreteria_token');
-      // Use hash navigation so it works correctly under file:// protocol
       window.location.hash = '/login';
     }
     return Promise.reject(error);
