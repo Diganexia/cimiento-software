@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-20 — v1.2.14.
+> Documento vivo. Última actualización: 2026-05-20 — v1.2.17.
 
 ---
 
@@ -82,7 +82,7 @@ ferreteria-software/          ← monorepo raíz (npm workspaces)
 │       │   └── configuracion/
 │       │       ├── Usuarios.jsx
 │       │       ├── UsuarioForm.jsx
-│       │       ├── Configuracion.jsx  ← tabs: Empresa, AFIP, Catálogo, Depósitos, Cajas
+│       │       ├── Configuracion.jsx  ← tabs: Empresa, AFIP, Catálogo, Depósitos, Cajas, Apariencia
 │       │       └── Backup.jsx
 │       └── router/index.jsx
 └── server/                   ← Node.js + Express
@@ -183,9 +183,10 @@ Los permisos se almacenan como JSON en `roles.permisos`. El middleware `authoriz
 ### Auth — `/api/auth`
 | Método | Ruta | Auth | Descripción |
 |--------|------|------|-------------|
-| `POST` | `/login` | No | `{username, password}` → `{token, usuario}` |
-| `POST` | `/logout` | JWT | Invalida sesión cliente |
+| `POST` | `/login` | No | `{username, password}` → `{token, usuario, sesiones: {activos, max}}` |
+| `POST` | `/logout` | JWT | Invalida sesión + libera slot en Cloudflare KV |
 | `GET` | `/me` | JWT | Usuario autenticado |
+| `POST` | `/heartbeat` | JWT | Renueva TTL de sesión en KV → `{ok, sesiones: {activos, max}}` |
 
 ### Productos — `/api/productos`
 | Método | Ruta | Permiso | Descripción |
@@ -582,6 +583,25 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 ### v1.2.14 (2026-05-20)
 - **Fix modo cliente**: las máquinas en modo cliente ya no pasan por activación de licencia ni verifican con Cloudflare. Solo el servidor lo hace. Los clientes confían en que el servidor está licenciado.
 
+### v1.2.15 (2026-05-20)
+- **ABM Roles**: nueva pantalla en Configuración para crear/editar/eliminar roles y sus permisos JSON.
+- **Fix usuarios iterable**: controlador usuarios: INSERT y UPDATE ahora usan `.returning('*')` para devolver array iterable.
+- **Sesiones via server**: `login` y `logout` llaman al Worker de Cloudflare para registrar/liberar sesión; `heartbeat` renueva TTL y devuelve `sesiones: {activos, max}`.
+
+### v1.2.16 (2026-05-20)
+- **Worker Cloudflare — validación mejorada**: verifica `estado === 'activa'` Y `vence >= hoy` (comparación de strings ISO YYYY-MM-DD). Antes solo validaba `estado`.
+- **Fix Activacion.jsx**: usa `resultado.valida` como única fuente de verdad para bloquear acceso (incluye estados `vencida`, `suspendida`, `invalida`).
+- **Badge usuarios en Dashboard**: visible solo en modo servidor; muestra `X/Y usuarios activos` leyendo `sesiones` de `licenciaStore`. Se actualiza en login y cada 9 min por heartbeat.
+- **Sidebar — filtrado por permisos**: cada ítem de navegación tiene un campo `perm: 'modulo.accion'`. Si el usuario no tiene el permiso, el ítem no se renderiza. Las secciones sin ítems visibles tampoco se muestran. Administrador (`{ all: true }`) ve todo.
+- **Fix 403 no cierra sesión**: `api.js` interceptor redirige a `/login` solo en 401 (token inválido). 403 (sin permiso) rechaza el error sin desloguear.
+- **Ventas — columna Tipo de pago**: nueva columna "Pago" en la tabla de ventas con labels `Contado` / `Cta. Cte.`.
+- **Configuración — tab Apariencia**: nueva pestaña con toggle dark/light mode y selector de modo ventana (Ventana / Maximizada / Pantalla completa). IPC handlers `get-window-mode` / `set-window-mode` en `main.js`. El modo se persiste en `app-config.json` y se aplica al iniciar.
+
+### v1.2.17 (2026-05-20)
+- **Clientes — soft delete visible**: "Dar de baja" hace baja lógica (`activo = false`). La lista ahora incluye filtro Activos / Dados de baja / Todos. Clientes dados de baja muestran badge en su fila y ocultan el botón de baja.
+- **Compras — cantidad entera al cargar borrador**: al editar un borrador, las cantidades se parsean con `Math.round()` para mostrar enteros (la BD almacena decimal).
+- **Productos — botón "Eliminar"**: renombrado de "Baja" a "Eliminar" para mayor claridad.
+
 ### v1.2.6 (2026-05-19)
 - Nuevo ícono de aplicación: logo Cimiento (casa + ladrillos + perfiles) con fondo transparente, formato ICO con 6 tamaños embebidos (16, 32, 48, 64, 128, 256px). Se aplica en barra de tareas, instalador NSIS y accesos directos.
 
@@ -600,7 +620,7 @@ El sistema de licencias corre fuera del servidor Express, en un **Cloudflare Wor
 
 | Método | URL / Acción | Descripción |
 |--------|-------------|-------------|
-| `GET` | `?key=KEY` | Valida la licencia. Retorna `{valida, estado, vence, razon_social, max_usuarios, mensaje, serverTime}` |
+| `GET` | `?key=KEY` | Valida la licencia. Verifica `estado === 'activa'` Y `vence >= hoy` (ISO YYYY-MM-DD). Retorna `{valida, estado, vence, razon_social, max_usuarios, mensaje, serverTime}` |
 | `POST` | `?key=KEY&action=register` body `{session_id}` | Registra sesión activa (TTL 15 min). Rechaza con `limite_usuarios` si se superó `max_usuarios`. |
 | `POST` | `?key=KEY&action=unregister` body `{session_id}` | Libera la sesión al cerrar sesión. |
 
@@ -625,8 +645,8 @@ El sistema de licencias corre fuera del servidor Express, en un **Cloudflare Wor
 **Flujo en modo servidor:**
 1. Primera vez → pantalla `/activacion` (requiere internet)
 2. Clave válida → se guarda en `app-config.json` (`licenseKey`)
-3. Al loguear → `POST action=register`; si supera `max_usuarios` → error en login
-4. Heartbeat cada 9 min → renueva TTL de la sesión
+3. Al loguear → `POST action=register`; si supera `max_usuarios` → error en login. Respuesta incluye `sesiones: {activos, max}` → se guarda en `licenciaStore` y muestra badge en Dashboard
+4. Heartbeat cada 9 min → renueva TTL de la sesión; respuesta también actualiza `sesiones`
 5. Al cerrar sesión → `POST action=unregister`
 6. `ProtectedRoute` verifica licencia en background; `Layout` muestra overlay bloqueante si `vencida`/`suspendida`/`offline_expirado`/`invalida`
 7. Gracia offline: 7 días desde el último check exitoso (caché en `localStorage`)
