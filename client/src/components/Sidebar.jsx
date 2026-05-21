@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import useAuthStore from '../store/authStore';
 import useLicenciaStore from '../store/licenciaStore';
@@ -235,8 +236,10 @@ export default function Sidebar() {
   const clearAuth = useAuthStore((s) => s.clearAuth);
   const stopHeartbeat = useLicenciaStore((s) => s.stopHeartbeat);
   const navigate = useNavigate();
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     const session_id = window.electronAPI ? getSessionId() : undefined;
     await api.post('/auth/logout', { session_id }).catch(() => {});
     stopHeartbeat();
@@ -288,8 +291,18 @@ export default function Sidebar() {
       <div className="border-t border-gray-700 px-4 py-3">
         <p className="text-xs font-medium text-gray-300 truncate">{usuario?.nombre}</p>
         <p className="text-xs text-gray-500 mb-1">{usuario?.rol}</p>
-        <button onClick={handleLogout} className="text-xs text-red-400 hover:text-red-300 transition-colors">
-          Cerrar sesión
+        <button
+          onClick={handleLogout}
+          disabled={loggingOut}
+          className="text-xs text-red-400 hover:text-red-300 transition-colors disabled:opacity-60 flex items-center gap-1"
+        >
+          {loggingOut && (
+            <svg className="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+            </svg>
+          )}
+          {loggingOut ? 'Cerrando sesión...' : 'Cerrar sesión'}
         </button>
       </div>
     </aside>
