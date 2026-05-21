@@ -102,4 +102,15 @@ const eliminar = async (req, res) => {
   }
 };
 
-module.exports = { listar, detalle, crear, editar, eliminar };
+const activar = async (req, res) => {
+  try {
+    const n = await db('clientes').where('id', req.params.id).update({ activo: true, updated_at: db.fn.now() });
+    if (!n) return res.status(404).json({ error: 'Cliente no encontrado' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al activar cliente' });
+  }
+};
+
+module.exports = { listar, detalle, crear, editar, eliminar, activar };

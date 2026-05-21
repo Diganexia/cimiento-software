@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-20 — v1.2.17.
+> Documento vivo. Última actualización: 2026-05-21 — v1.2.19.
 
 ---
 
@@ -596,6 +596,13 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - **Fix 403 no cierra sesión**: `api.js` interceptor redirige a `/login` solo en 401 (token inválido). 403 (sin permiso) rechaza el error sin desloguear.
 - **Ventas — columna Tipo de pago**: nueva columna "Pago" en la tabla de ventas con labels `Contado` / `Cta. Cte.`.
 - **Configuración — tab Apariencia**: nueva pestaña con toggle dark/light mode y selector de modo ventana (Ventana / Maximizada / Pantalla completa). IPC handlers `get-window-mode` / `set-window-mode` en `main.js`. El modo se persiste en `app-config.json` y se aplica al iniciar.
+
+### v1.2.19 (2026-05-21)
+- **Clientes — Dar de alta**: nueva acción para reactivar clientes dados de baja. Endpoint `PATCH /clientes/:id/activar` (pone `activo = true`). En la lista, el botón cambia según estado: "Dar de baja" (rojo) si activo, "Dar de alta" (verde) si inactivo. Visible tanto en la vista "Dados de baja" como en "Todos".
+
+### v1.2.18 (2026-05-20)
+- **Logout — spinner de carga**: botón "Cerrar sesión" en Sidebar muestra spinner + texto "Cerrando sesión..." mientras se procesa la llamada a Cloudflare. Evita doble click y da feedback visual.
+- **Login — estado de carga**: inputs deshabilitados y botón con spinner mientras se autentica.
 
 ### v1.2.17 (2026-05-20)
 - **Clientes — soft delete visible**: "Dar de baja" hace baja lógica (`activo = false`). La lista ahora incluye filtro Activos / Dados de baja / Todos. Clientes dados de baja muestran badge en su fila y ocultan el botón de baja.

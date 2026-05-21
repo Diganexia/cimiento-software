@@ -1,6 +1,6 @@
 ﻿import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { getClientes, deleteCliente } from '../../services/clientesService';
+import { getClientes, deleteCliente, activarCliente } from '../../services/clientesService';
 import Pagination from '../../components/Pagination';
 
 const TIPO_IVA_LABEL = {
@@ -33,6 +33,12 @@ export default function Clientes() {
   const handleEliminar = async (id) => {
     if (!confirm('¿Dar de baja este cliente? Quedará inactivo pero sus datos y deudas se conservan.')) return;
     await deleteCliente(id);
+    load();
+  };
+
+  const handleActivar = async (id) => {
+    if (!confirm('¿Dar de alta este cliente? Volverá a estar activo.')) return;
+    await activarCliente(id);
     load();
   };
 
@@ -93,7 +99,10 @@ export default function Clientes() {
                 <td className="px-4 py-3 text-right space-x-3">
                   <Link to={`/clientes/${c.id}/ventas`} className="text-green-600 hover:text-green-800 text-xs">Ventas</Link>
                   <Link to={`/clientes/${c.id}/editar`} className="text-blue-600 hover:text-blue-800 text-xs">Editar</Link>
-                  {c.activo && <button onClick={() => handleEliminar(c.id)} className="text-red-500 hover:text-red-700 text-xs">Dar de baja</button>}
+                  {c.activo
+                    ? <button onClick={() => handleEliminar(c.id)} className="text-red-500 hover:text-red-700 text-xs">Dar de baja</button>
+                    : <button onClick={() => handleActivar(c.id)} className="text-green-600 hover:text-green-800 text-xs">Dar de alta</button>
+                  }
                 </td>
               </tr>
             ))}
