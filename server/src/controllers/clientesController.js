@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { whereIlike, orWhereIlike } = require('../lib/dbCompat');
 
 const listar = async (req, res) => {
   try {
@@ -9,7 +10,7 @@ const listar = async (req, res) => {
     const applyFilters = (b) => {
       if (activo !== 'all') b.where('activo', activo === 'true');
       if (tipo_iva) b.where('tipo_iva', tipo_iva);
-      if (q) b.where((w) => w.whereIlike('nombre', `%${q}%`).orWhereIlike('cuit', `%${q}%`).orWhereIlike('dni', `%${q}%`));
+      if (q) b.where((w) => { whereIlike(w, 'nombre', `%${q}%`); orWhereIlike(w, 'cuit', `%${q}%`); orWhereIlike(w, 'dni', `%${q}%`); });
     };
 
     const [{ total }] = await db('clientes').modify(applyFilters).count('id as total');

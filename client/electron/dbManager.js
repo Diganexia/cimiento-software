@@ -1,8 +1,3 @@
-/**
- * Gestiona PostgreSQL embebido (embedded-postgres).
- * Solo se usa en el build de servidor.
- */
-
 const path = require('path');
 const fs = require('fs');
 const crypto = require('crypto');
@@ -13,6 +8,19 @@ let pgBinDir = null;
 const DB_USER = 'corralon';
 const DB_NAME = 'corralon';
 const DB_PORT = 5433;
+
+// ── SQLite ────────────────────────────────────────────────────────────────────
+
+async function startSQLite(dataDir, onStatus) {
+  onStatus('Iniciando base de datos...');
+  if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+  const dbPath = path.join(dataDir, 'cimiento.db');
+  const isFirstRun = !fs.existsSync(dbPath);
+  process.env.DB_PATH = dbPath;
+  return { isFirstRun, dbPassword: null };
+}
+
+// ── PostgreSQL embebido ───────────────────────────────────────────────────────
 
 function getOrCreateDbPassword(configPath) {
   try {
@@ -34,7 +42,6 @@ function getOrCreateDbPassword(configPath) {
 function _discoverPgBinDir(pg) {
   const pgExe = process.platform === 'win32' ? 'pg_dump.exe' : 'pg_dump';
 
-  // 1. Propiedades internas del objeto EmbeddedPostgres (distintas versiones exponen distintas keys)
   const instanceHints = [
     pg.pg_ctl, pg.pg_ctl_path, pg.pgCtlPath, pg.pgBinDir, pg._pg_ctl_path,
     pg._server_module?.pg_ctl_path, pg._server_module?.pgCtlPath,
@@ -48,12 +55,10 @@ function _discoverPgBinDir(pg) {
     } catch {}
   }
 
-  // 2. Buscar en todas las ubicaciones conocidas de node_modules
   const nmRoots = [
     path.resolve(__dirname, '../node_modules'),
     path.resolve(__dirname, '../../node_modules'),
   ];
-  // En producción (Electron empaquetado)
   try {
     const { app } = require('electron');
     const rp = process.resourcesPath;
@@ -65,21 +70,18 @@ function _discoverPgBinDir(pg) {
 
   const platform = process.platform === 'win32' ? 'windows' : process.platform === 'darwin' ? 'darwin' : 'linux';
   const win32   = process.platform === 'win32' ? 'win32' : null;
-  const arch    = process.arch; // 'x64', 'arm64', etc.
+  const arch    = process.arch;
 
   for (const nmRoot of nmRoots) {
     if (!fs.existsSync(nmRoot)) continue;
 
     const candidates = [
-      // embedded-postgres: ubicaciones típicas del paquete principal
       path.join(nmRoot, 'embedded-postgres', 'pg', 'bin'),
       path.join(nmRoot, 'embedded-postgres', 'bin'),
       path.join(nmRoot, 'embedded-postgres', 'dist', 'bin'),
-      // Subpaquetes @embedded-postgres/{platform}-{arch}  (v18.x usa "native/bin")
       path.join(nmRoot, '@embedded-postgres', `${platform}-${arch}`, 'native', 'bin'),
       path.join(nmRoot, '@embedded-postgres', `${platform}-${arch}`, 'pg', 'bin'),
       path.join(nmRoot, '@embedded-postgres', `${platform}-${arch}`, 'bin'),
-      // Alias win32 (algunos usan "windows", otros "win32")
       win32 && path.join(nmRoot, '@embedded-postgres', `win32-${arch}`, 'native', 'bin'),
       win32 && path.join(nmRoot, '@embedded-postgres', `win32-${arch}`, 'pg', 'bin'),
       win32 && path.join(nmRoot, '@embedded-postgres', `win32-${arch}`, 'bin'),
@@ -89,7 +91,6 @@ function _discoverPgBinDir(pg) {
       if (fs.existsSync(path.join(dir, pgExe))) return dir;
     }
 
-    // 3. Búsqueda recursiva de 2 niveles dentro del paquete embedded-postgres
     const epPkg = path.join(nmRoot, 'embedded-postgres');
     if (fs.existsSync(epPkg)) {
       try {
@@ -107,7 +108,6 @@ function _discoverPgBinDir(pg) {
       } catch {}
     }
 
-    // 4. Buscar en @embedded-postgres/* dentro de nmRoot
     const epScope = path.join(nmRoot, '@embedded-postgres');
     if (fs.existsSync(epScope)) {
       try {
@@ -125,8 +125,7 @@ function _discoverPgBinDir(pg) {
   return null;
 }
 
-async function startDatabase(dataDir, configPath, onStatus) {
-  // embedded-postgres es ESM-only, usar import() dinámico
+async function startPostgres(dataDir, configPath, onStatus) {
   const { default: EmbeddedPostgres } = await import('embedded-postgres');
 
   const dbPassword = getOrCreateDbPassword(configPath);
@@ -151,10 +150,8 @@ async function startDatabase(dataDir, configPath, onStatus) {
     await pg.start();
   }
 
-  // Discover pg_dump binary path
   pgBinDir = _discoverPgBinDir(pg);
 
-  // Exponer conexión vía process.env para el servidor Express
   process.env.DB_HOST = '127.0.0.1';
   process.env.DB_PORT = String(DB_PORT);
   process.env.DB_NAME = DB_NAME;
@@ -165,6 +162,15 @@ async function startDatabase(dataDir, configPath, onStatus) {
   return { isFirstRun, dbPassword };
 }
 
+// ── API pública ───────────────────────────────────────────────────────────────
+
+async function startDatabase(dataDir, configPath, onStatus) {
+  if (process.env.CIMIENTO_DB === 'sqlite') {
+    return startSQLite(dataDir, onStatus);
+  }
+  return startPostgres(dataDir, configPath, onStatus);
+}
+
 async function runMigrations(serverDir, onStatus) {
   onStatus('Ejecutando migraciones de base de datos...');
 
@@ -173,11 +179,8 @@ async function runMigrations(serverDir, onStatus) {
   const db = knex(knexfile.production);
 
   try {
-    // Always run migrate.latest() — it's idempotent and safe to call every boot.
-    // This handles the case where a previous boot failed mid-migration.
     await db.migrate.latest();
 
-    // Only seed if the roles table is empty (avoids duplicate data on re-runs)
     const rolesCount = await db('roles').count('id as n').first();
     if (!rolesCount || Number(rolesCount.n) === 0) {
       onStatus('Cargando datos iniciales...');
@@ -189,6 +192,7 @@ async function runMigrations(serverDir, onStatus) {
 }
 
 async function stopDatabase() {
+  if (process.env.CIMIENTO_DB === 'sqlite') return;
   if (pg) {
     try { await pg.stop(); } catch { /* ignore */ }
     pg = null;

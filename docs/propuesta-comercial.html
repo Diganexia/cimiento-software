@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cimiento — Propuesta Comercial</title>
+  <!--[if gte mso 9]>
+  <xml>
+    <w:WordDocument>
+      <w:View>Print</w:View>
+      <w:Zoom>100</w:Zoom>
+    </w:WordDocument>
+  </xml>
+  <![endif]-->
+  <style>
+    body {
+      font-family: Calibri, Arial, sans-serif;
+      font-size: 11pt;
+      color: #1a1a1a;
+      margin: 0;
+      padding: 0;
+      background: #ffffff;
+    }
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 60px 80px 60px;
+    }
+
+    /* HEADER */
+    .header {
+      border-bottom: 3px solid #1d4ed8;
+      padding-bottom: 24px;
+      margin-bottom: 36px;
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+    .brand-name {
+      font-size: 32pt;
+      font-weight: 700;
+      color: #1d4ed8;
+      letter-spacing: -1px;
+      margin: 0;
+    }
+    .brand-tagline {
+      font-size: 10pt;
+      color: #6b7280;
+      margin: 4px 0 0 0;
+    }
+    .header-meta {
+      text-align: right;
+      font-size: 9pt;
+      color: #9ca3af;
+      line-height: 1.6;
+    }
+    .doc-title {
+      font-size: 13pt;
+      font-weight: 600;
+      color: #374151;
+      margin: 20px 0 0 0;
+    }
+
+    /* SECCIONES */
+    .section {
+      margin-bottom: 36px;
+    }
+    .section-title {
+      font-size: 13pt;
+      font-weight: 700;
+      color: #1d4ed8;
+      border-left: 4px solid #1d4ed8;
+      padding-left: 10px;
+      margin: 0 0 14px 0;
+    }
+    .section p {
+      font-size: 11pt;
+      line-height: 1.7;
+      color: #374151;
+      margin: 0 0 10px 0;
+    }
+
+    /* GRILLA DE FEATURES */
+    .features-grid {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .features-grid td {
+      vertical-align: top;
+      padding: 10px 14px 10px 0;
+      width: 50%;
+    }
+    .feature-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .feature-icon {
+      font-size: 16pt;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .feature-name {
+      font-size: 10.5pt;
+      font-weight: 600;
+      color: #111827;
+      margin: 0 0 2px 0;
+    }
+    .feature-desc {
+      font-size: 9.5pt;
+      color: #6b7280;
+      margin: 0;
+      line-height: 1.4;
+    }
+
+    /* TABLA DE PRECIOS */
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    .pricing-table th {
+      background-color: #1d4ed8;
+      color: #ffffff;
+      font-size: 10pt;
+      font-weight: 600;
+      padding: 10px 16px;
+      text-align: left;
+    }
+    .pricing-table td {
+      padding: 12px 16px;
+      font-size: 10.5pt;
+      color: #1f2937;
+      border-bottom: 1px solid #e5e7eb;
+      vertical-align: top;
+    }
+    .pricing-table tr:last-child td {
+      border-bottom: none;
+    }
+    .pricing-table tr:nth-child(even) td {
+      background-color: #f9fafb;
+    }
+    .price-cell {
+      font-weight: 700;
+      font-size: 12pt;
+      color: #1d4ed8;
+      white-space: nowrap;
+    }
+    .price-placeholder {
+      font-weight: 700;
+      font-size: 12pt;
+      color: #1d4ed8;
+    }
+    .sublabel {
+      font-size: 8.5pt;
+      color: #9ca3af;
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* INCLUYE */
+    .includes-list {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+    .includes-list li {
+      font-size: 10.5pt;
+      color: #374151;
+      padding: 5px 0;
+      border-bottom: 1px solid #f3f4f6;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .includes-list li:last-child {
+      border-bottom: none;
+    }
+    .check {
+      color: #16a34a;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* NOTA */
+    .nota {
+      background-color: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 6px;
+      padding: 14px 18px;
+      margin-top: 10px;
+    }
+    .nota p {
+      font-size: 10pt;
+      color: #1e40af;
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    /* FOOTER */
+    .footer {
+      border-top: 2px solid #e5e7eb;
+      padding-top: 24px;
+      margin-top: 48px;
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .footer-brand {
+      font-size: 11pt;
+      font-weight: 700;
+      color: #1d4ed8;
+    }
+    .footer-contact {
+      font-size: 9.5pt;
+      color: #6b7280;
+      text-align: right;
+      line-height: 1.7;
+    }
+    .footer-contact strong {
+      color: #374151;
+    }
+    .footer-legal {
+      font-size: 8.5pt;
+      color: #d1d5db;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    @media print {
+      .page { padding: 40px; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ENCABEZADO -->
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <p class="brand-name">Cimiento</p>
+        <p class="brand-tagline">Sistema de gestión para ferreterías y corralones</p>
+      </div>
+      <div class="header-meta">
+        Desarrollado por <strong>Diganexia</strong><br>
+        <!-- Fecha: completar antes de enviar -->
+        <!-- Cliente: completar antes de enviar -->
+      </div>
+    </div>
+    <p class="doc-title">Propuesta Comercial</p>
+  </div>
+
+  <!-- QUÉ ES -->
+  <div class="section">
+    <p class="section-title">¿Qué es Cimiento?</p>
+    <p>
+      Cimiento es un sistema de gestión diseñado especialmente para ferreterías y corralones.
+      Permite llevar el control completo del negocio desde una sola pantalla: ventas, stock,
+      clientes, proveedores, caja y más.
+    </p>
+    <p>
+      Funciona en la computadora del local, sin necesidad de internet para el uso diario.
+      Es simple, rápido y se adapta a la forma de trabajar de cada negocio.
+    </p>
+  </div>
+
+  <!-- QUÉ INCLUYE -->
+  <div class="section">
+    <p class="section-title">¿Qué puede hacer?</p>
+    <table class="features-grid">
+      <tr>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">🛒</span>
+            <div>
+              <p class="feature-name">Punto de venta</p>
+              <p class="feature-desc">Registrá ventas rápidamente, elegí forma de pago (contado o cuenta corriente) y emitir comprobante en PDF.</p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">📦</span>
+            <div>
+              <p class="feature-name">Control de stock</p>
+              <p class="feature-desc">Stock actualizado automáticamente con cada venta y compra. Alertas cuando un producto está por agotarse.</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">👥</span>
+            <div>
+              <p class="feature-name">Clientes y cuenta corriente</p>
+              <p class="feature-desc">Registrá clientes, llevá su deuda, cobrá cuotas y generá estados de cuenta en PDF.</p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">🏭</span>
+            <div>
+              <p class="feature-name">Compras y proveedores</p>
+              <p class="feature-desc">Registrá compras, ingresá mercadería al stock y llevá cuenta con cada proveedor.</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">💰</span>
+            <div>
+              <p class="feature-name">Caja diaria</p>
+              <p class="feature-desc">Apertura y cierre de caja, arqueo de dinero, registro de movimientos y reporte en PDF.</p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">🧾</span>
+            <div>
+              <p class="feature-name">Facturación electrónica</p>
+              <p class="feature-desc">Emisión de facturas A y B con CAE ante ARCA (ex-AFIP). Opcional según certificado fiscal.</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">📊</span>
+            <div>
+              <p class="feature-name">Reportes y estadísticas</p>
+              <p class="feature-desc">Dashboard con ventas del día, semana y mes. Reportes exportables en PDF y Excel.</p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">🔐</span>
+            <div>
+              <p class="feature-name">Usuarios y permisos</p>
+              <p class="feature-desc">Cada empleado tiene su usuario con acceso solo a las secciones que le corresponden.</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">🔄</span>
+            <div>
+              <p class="feature-name">Actualizaciones automáticas</p>
+              <p class="feature-desc">El sistema se actualiza solo con las mejoras y correcciones nuevas, sin intervención.</p>
+            </div>
+          </div>
+        </td>
+        <td>
+          <div class="feature-item">
+            <span class="feature-icon">💾</span>
+            <div>
+              <p class="feature-name">Respaldo automático</p>
+              <p class="feature-desc">Copia de seguridad de todos los datos todos los días de forma automática.</p>
+            </div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- INVERSIÓN -->
+  <div class="section">
+    <p class="section-title">Inversión</p>
+    <table class="pricing-table">
+      <tr>
+        <th style="width:55%">Concepto</th>
+        <th style="width:45%">Precio</th>
+      </tr>
+      <tr>
+        <td>
+          <strong>Instalación y configuración inicial</strong>
+          <span class="sublabel">Pago único · incluye puesta en marcha completa</span>
+        </td>
+        <td class="price-cell">
+          <span class="price-placeholder">$&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          <strong>Abono mensual</strong>
+          <span class="sublabel">Soporte, actualizaciones y respaldo incluidos</span>
+        </td>
+        <td class="price-cell">
+          <span class="price-placeholder">$&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span>
+          <span class="sublabel">por mes</span>
+        </td>
+      </tr>
+    </table>
+  </div>
+
+  <!-- QUÉ INCLUYE EL ABONO -->
+  <div class="section">
+    <p class="section-title">¿Qué incluye el abono mensual?</p>
+    <ul class="includes-list">
+      <li><span class="check">✓</span> Acceso a todas las actualizaciones y mejoras del sistema</li>
+      <li><span class="check">✓</span> Soporte técnico ante cualquier inconveniente</li>
+      <li><span class="check">✓</span> Nuevas funciones incorporadas sin costo adicional</li>
+      <li><span class="check">✓</span> Respaldo automático de datos garantizado</li>
+      <li><span class="check">✓</span> Licencia de uso activa del sistema</li>
+    </ul>
+
+    <div class="nota">
+      <p>
+        <strong>Nota:</strong> El sistema funciona sin internet en el uso diario.
+        La conexión solo se utiliza para verificar la licencia activa una vez al día
+        y para descargar actualizaciones cuando están disponibles.
+      </p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <div class="footer">
+    <div class="footer-inner">
+      <div>
+        <p class="footer-brand">Cimiento — Diganexia</p>
+      </div>
+      <div class="footer-contact">
+        <!-- Completar con datos de contacto -->
+        <strong>Contacto:</strong><br>
+        contacto@diganexia.com
+      </div>
+    </div>
+    <p class="footer-legal">Este documento es una propuesta comercial confidencial. Los precios pueden variar.</p>
+  </div>
+
+</div>
+</body>
+</html>

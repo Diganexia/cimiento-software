@@ -1,14 +1,11 @@
-/**
- * Backup y restauración usando el módulo pg directamente (sin pg_dump externo).
- * Guarda backups en userData/backups con retención de 30 días.
- */
-
 const path = require('path');
 const fs = require('fs');
 
 const RETENTION_DAYS = 30;
 
-function getClient() {
+// ── PostgreSQL backup ─────────────────────────────────────────────────────────
+
+function getPgClient() {
   const { DB_PORT, DB_NAME, DB_USER } = require('./dbManager');
   const { Client } = require('pg');
   return new Client({
@@ -20,10 +17,8 @@ function getClient() {
   });
 }
 
-async function doBackup(backupDir) {
-  if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
-
-  const client = getClient();
+async function doBackupPG(backupDir) {
+  const client = getPgClient();
   await client.connect();
 
   try {
@@ -54,30 +49,14 @@ async function doBackup(backupDir) {
       backup.sequences[sequence_name] = val.rows[0]?.last_value ?? null;
     }
 
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-    const filename = `backup-${timestamp}.json`;
-    const filepath = path.join(backupDir, filename);
-    fs.writeFileSync(filepath, JSON.stringify(backup));
-
-    pruneBackups(backupDir);
-    return filename;
+    return backup;
   } finally {
     await client.end().catch(() => {});
   }
 }
 
-async function doRestore(backupDir, filename) {
-  const filepath = path.join(backupDir, filename);
-  if (!fs.existsSync(filepath)) throw new Error('Archivo de backup no encontrado');
-
-  if (filename.endsWith('.dump')) {
-    throw new Error('El formato .dump (versión anterior) ya no es compatible. Solo se pueden restaurar backups .json.');
-  }
-
-  const backup = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
-  if (!backup.tables) throw new Error('Formato de backup inválido');
-
-  const client = getClient();
+async function doRestorePG(backup) {
+  const client = getPgClient();
   await client.connect();
 
   try {
@@ -109,6 +88,105 @@ async function doRestore(backupDir, filename) {
   } finally {
     await client.query("SET session_replication_role = 'origin'").catch(() => {});
     await client.end().catch(() => {});
+  }
+}
+
+// ── SQLite backup ─────────────────────────────────────────────────────────────
+
+async function doBackupSQLite(backupDir) {
+  const Database = require('better-sqlite3');
+  const db = new Database(process.env.DB_PATH, { readonly: true });
+
+  try {
+    const backup = {
+      version: '2.0',
+      timestamp: new Date().toISOString(),
+      tables: {},
+      sequences: {}
+    };
+
+    const tables = db.prepare(`
+      SELECT name FROM sqlite_master
+      WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE 'knex_%'
+      ORDER BY name
+    `).all();
+
+    for (const { name } of tables) {
+      backup.tables[name] = db.prepare(`SELECT * FROM "${name}"`).all();
+    }
+
+    return backup;
+  } finally {
+    db.close();
+  }
+}
+
+async function doRestoreSQLite(backup) {
+  const Database = require('better-sqlite3');
+  const db = new Database(process.env.DB_PATH);
+
+  try {
+    db.pragma('foreign_keys = OFF');
+
+    const restore = db.transaction(() => {
+      const tableNames = Object.keys(backup.tables).reverse();
+      for (const table of tableNames) {
+        db.prepare(`DELETE FROM "${table}"`).run();
+      }
+      // Reiniciar contadores autoincrement
+      try { db.prepare(`DELETE FROM sqlite_sequence`).run(); } catch { /* tabla puede no existir */ }
+
+      for (const [table, rows] of Object.entries(backup.tables)) {
+        if (!rows.length) continue;
+        const columns = Object.keys(rows[0]);
+        const colList = columns.map((c) => `"${c}"`).join(', ');
+        const placeholders = columns.map(() => '?').join(', ');
+        const stmt = db.prepare(`INSERT INTO "${table}" (${colList}) VALUES (${placeholders})`);
+        for (const row of rows) {
+          stmt.run(columns.map((c) => row[c]));
+        }
+      }
+    });
+
+    restore();
+  } finally {
+    db.pragma('foreign_keys = ON');
+    db.close();
+  }
+}
+
+// ── API pública ───────────────────────────────────────────────────────────────
+
+async function doBackup(backupDir) {
+  if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+
+  const IS_SQLITE = process.env.CIMIENTO_DB === 'sqlite';
+  const backup = IS_SQLITE ? await doBackupSQLite(backupDir) : await doBackupPG(backupDir);
+
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+  const filename = `backup-${timestamp}.json`;
+  fs.writeFileSync(path.join(backupDir, filename), JSON.stringify(backup));
+
+  pruneBackups(backupDir);
+  return filename;
+}
+
+async function doRestore(backupDir, filename) {
+  const filepath = path.join(backupDir, filename);
+  if (!fs.existsSync(filepath)) throw new Error('Archivo de backup no encontrado');
+
+  if (filename.endsWith('.dump')) {
+    throw new Error('El formato .dump (versión anterior) ya no es compatible. Solo se pueden restaurar backups .json.');
+  }
+
+  const backup = JSON.parse(fs.readFileSync(filepath, 'utf-8'));
+  if (!backup.tables) throw new Error('Formato de backup inválido');
+
+  const IS_SQLITE = process.env.CIMIENTO_DB === 'sqlite';
+  if (IS_SQLITE) {
+    await doRestoreSQLite(backup);
+  } else {
+    await doRestorePG(backup);
   }
 }
 

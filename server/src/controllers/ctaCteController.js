@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { whereIlike, orWhereIlike } = require('../lib/dbCompat');
 
 async function getSaldoCliente(cliente_id, trx = db) {
   const last = await trx('cuenta_corriente_clientes')
@@ -22,7 +23,7 @@ const resumenClientes = async (req, res) => {
 
     const applyFilters = (b) => {
       b.where('c.tiene_cuenta_corriente', true).where('c.activo', true);
-      if (q) b.where((w) => w.whereIlike('c.nombre', `%${q}%`).orWhereIlike('c.cuit', `%${q}%`));
+      if (q) b.where((w) => { whereIlike(w, 'c.nombre', `%${q}%`); orWhereIlike(w, 'c.cuit', `%${q}%`); });
     };
 
     const [{ total }] = await db('clientes as c').modify(applyFilters).count('c.id as total');
@@ -235,7 +236,7 @@ const resumenProveedores = async (req, res) => {
 
     const applyFilters = (b) => {
       b.where('p.activo', true);
-      if (q) b.whereIlike('p.nombre', `%${q}%`);
+      if (q) whereIlike(b, 'p.nombre', `%${q}%`);
     };
 
     const [{ total }] = await db('proveedores as p').modify(applyFilters).count('p.id as total');

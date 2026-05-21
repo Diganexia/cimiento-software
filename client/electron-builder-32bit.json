@@ -4,12 +4,14 @@
   "electronVersion": "29.4.6",
   "copyright": "Ferretería Software",
   "directories": {
-    "output": "dist-electron/unified"
+    "output": "dist-electron/32bit"
   },
   "files": [
     "dist/**/*",
     "electron/**/*",
-    "package.json"
+    "package.json",
+    "!node_modules/embedded-postgres/**/*",
+    "!node_modules/@embedded-postgres/**/*"
   ],
   "extraResources": [
     {
@@ -18,9 +20,9 @@
       "filter": ["**/*", "!**/.env", "!**/.env.*", "!**/nodemon.json"]
     }
   ],
-  "artifactName": "Cimiento-Setup-${version}-64bit.${ext}",
+  "artifactName": "Cimiento-Setup-${version}-32bit.${ext}",
   "win": {
-    "target": [{ "target": "nsis", "arch": ["x64"] }],
+    "target": [{ "target": "nsis", "arch": ["ia32"] }],
     "icon": "assets/icon.ico"
   },
   "nsis": {
@@ -33,20 +35,19 @@
     "shortcutName": "Cimiento"
   },
   "asarUnpack": [
-    "node_modules/embedded-postgres/**/*",
-    "node_modules/@embedded-postgres/**/*"
+    "node_modules/better-sqlite3/**/*"
   ],
   "toolsets": {
     "winCodeSign": "1.1.0"
   },
   "extraMetadata": {
     "main": "electron/main.js",
-    "dbEngine": "postgres"
+    "dbEngine": "sqlite"
   },
   "publish": {
     "provider": "github",
     "owner": "Diganexia",
     "repo": "cimiento-software",
-    "channel": "latest"
+    "channel": "latest-32bit"
   }
 }

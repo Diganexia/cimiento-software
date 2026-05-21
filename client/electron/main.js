@@ -383,11 +383,17 @@ async function bootServerMode() {
 
   try {
     log('Boot: iniciando en modo servidor');
+    const pkg = require('./package.json');
+    process.env.CIMIENTO_DB = pkg.dbEngine || 'postgres';
+    log('Boot: motor de BD:', process.env.CIMIENTO_DB);
+
     const { startDatabase, runMigrations } = require('./dbManager');
 
-    const { isFirstRun } = await startDatabase(
-      path.join(userData, 'pgdata'), configPath, sendStatus
-    );
+    const dataDir = process.env.CIMIENTO_DB === 'sqlite'
+      ? path.join(userData, 'sqlitedata')
+      : path.join(userData, 'pgdata');
+
+    const { isFirstRun } = await startDatabase(dataDir, configPath, sendStatus);
     log('Boot: base de datos lista, firstRun=', isFirstRun);
 
     const serverDir = getServerDir();

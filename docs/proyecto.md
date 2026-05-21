@@ -683,3 +683,52 @@ El sistema de licencias corre fuera del servidor Express, en un **Cloudflare Wor
 | 014 | Ventas: agrega redondeo_monto |
 | 015 | Ventas: UNIQUE constraint en ventas.numero |
 | 016 | movimientos_stock: agrega valor TRANSFERENCIA al enum tipo |
+
+---
+
+## Cómo ver la base de datos (herramientas GUI)
+
+### Versión 64-bit — PostgreSQL embebido
+
+PostgreSQL corre en el puerto **5433** (no el 5432 estándar) con usuario `corralon`, base `corralon`. La contraseña está en `%APPDATA%\ferreteria-client\app-config.json` → campo `dbPassword`.
+
+**Herramientas recomendadas:**
+
+| Herramienta | Gratuita | Descarga |
+|---|---|---|
+| **pgAdmin 4** | ✓ | https://www.pgadmin.org |
+| **DBeaver Community** | ✓ | https://dbeaver.io |
+| **TablePlus** | Parcial (plan free limitado) | https://tableplus.com |
+
+**Conexión en pgAdmin / DBeaver:**
+```
+Host:     127.0.0.1
+Port:     5433
+Database: corralon
+Username: corralon
+Password: (ver app-config.json → dbPassword)
+```
+
+> La contraseña cambia por instalación (se genera aleatoriamente en el primer inicio). Siempre leerla desde `app-config.json`.
+
+---
+
+### Versión 32-bit — SQLite
+
+La base de datos es un archivo único en `%APPDATA%\ferreteria-client\sqlitedata\cimiento.db`.
+
+**Herramientas recomendadas:**
+
+| Herramienta | Gratuita | Descarga |
+|---|---|---|
+| **DB Browser for SQLite** | ✓ | https://sqlitebrowser.org |
+| **DBeaver Community** | ✓ | https://dbeaver.io |
+| **SQLiteStudio** | ✓ | https://sqlitestudio.pl |
+
+**Pasos en DB Browser for SQLite:**
+1. Abrir DB Browser for SQLite
+2. Archivo → Abrir base de datos
+3. Navegar a `%APPDATA%\ferreteria-client\sqlitedata\cimiento.db`
+4. Ir a pestaña "Explorar datos" para ver las tablas
+
+> SQLite no requiere usuario ni contraseña. El archivo se puede abrir directamente, pero conviene cerrar Cimiento primero para evitar conflictos de escritura.

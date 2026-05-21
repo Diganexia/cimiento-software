@@ -1,5 +1,6 @@
 ﻿const db = require('../config/db');
 const { generarReporteTablaPDF } = require('../services/pdfService');
+const { IS_SQLITE, sqlHastaFinDia, rawRows } = require('../lib/dbCompat');
 
 // â”€â”€ Helpers CSV â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
@@ -82,21 +83,40 @@ async function ventasPorPeriodo(req, res) {
   const trunc = truncMap[periodo] || 'day';
 
   try {
-    const result = await db.raw(`
-      SELECT
-        DATE_TRUNC('${trunc}', created_at) as fecha,
-        COUNT(*) as cantidad,
-        COALESCE(SUM(total), 0) as total,
-        COALESCE(SUM(descuento_monto), 0) as descuentos
-      FROM ventas
-      WHERE estado = 'confirmada'
-        AND created_at >= ?
-        AND created_at < (?::date + INTERVAL '1 day')
-      GROUP BY DATE_TRUNC('${trunc}', created_at)
-      ORDER BY fecha
-    `, [desde, hasta]);
+    let rawResult;
+    if (IS_SQLITE) {
+      const fmtMap = { dia: '%Y-%m-%d', semana: '%Y-%W', mes: '%Y-%m' };
+      const fmt = fmtMap[periodo] || '%Y-%m-%d';
+      rawResult = await rawRows(db, `
+        SELECT
+          strftime('${fmt}', created_at) as fecha,
+          COUNT(*) as cantidad,
+          COALESCE(SUM(total), 0) as total,
+          COALESCE(SUM(descuento_monto), 0) as descuentos
+        FROM ventas
+        WHERE estado = 'confirmada'
+          AND created_at >= ?
+          AND created_at < date(?, '+1 day')
+        GROUP BY strftime('${fmt}', created_at)
+        ORDER BY fecha
+      `, [desde, hasta]);
+    } else {
+      rawResult = await rawRows(db, `
+        SELECT
+          DATE_TRUNC('${trunc}', created_at) as fecha,
+          COUNT(*) as cantidad,
+          COALESCE(SUM(total), 0) as total,
+          COALESCE(SUM(descuento_monto), 0) as descuentos
+        FROM ventas
+        WHERE estado = 'confirmada'
+          AND created_at >= ?
+          AND created_at < (?::date + INTERVAL '1 day')
+        GROUP BY DATE_TRUNC('${trunc}', created_at)
+        ORDER BY fecha
+      `, [desde, hasta]);
+    }
 
-    const rows = result.rows.map((r) => ({
+    const rows = rawResult.map((r) => ({
       fecha: new Date(r.fecha).toLocaleDateString('es-AR'),
       fecha_raw: r.fecha,
       cantidad: parseInt(r.cantidad),
@@ -145,23 +165,25 @@ async function rankingProductos(req, res) {
   if (!desde || !hasta) return res.status(400).json({ error: 'desde y hasta requeridos' });
 
   try {
-    const result = await db.raw(`
+    const castFloat = IS_SQLITE ? 'CAST(SUM(vi.cantidad) AS REAL)' : 'SUM(vi.cantidad)::float';
+    const dateEnd = IS_SQLITE ? 'date(?, \'+1 day\')' : '(?::date + INTERVAL \'1 day\')';
+    const rawResult = await rawRows(db, `
       SELECT
         p.id, p.codigo, p.nombre,
-        SUM(vi.cantidad)::float as total_vendido,
+        ${castFloat} as total_vendido,
         COALESCE(SUM(vi.subtotal), 0) as total_monto
       FROM ventas_items vi
       JOIN ventas v ON vi.venta_id = v.id
       JOIN productos p ON vi.producto_id = p.id
       WHERE v.estado = 'confirmada'
         AND v.created_at >= ?
-        AND v.created_at < (?::date + INTERVAL '1 day')
+        AND v.created_at < ${dateEnd}
       GROUP BY p.id, p.codigo, p.nombre
       ORDER BY total_vendido DESC
       LIMIT ?
     `, [desde, hasta, parseInt(limit)]);
 
-    const rows = result.rows.map((r, i) => ({
+    const rows = rawResult.map((r, i) => ({
       posicion: i + 1,
       codigo: r.codigo || '',
       nombre: r.nombre,
@@ -366,7 +388,7 @@ async function kardex(req, res) {
       });
     }
     if (desde) query = query.whereRaw('ms.created_at >= ?', [desde]);
-    if (hasta) query = query.whereRaw("ms.created_at < (?::date + INTERVAL '1 day')", [hasta]);
+    if (hasta) query = query.whereRaw(sqlHastaFinDia('ms.created_at'), [hasta]);
 
     const rows = (await query).map((r) => ({
       fecha: new Date(r.created_at).toLocaleString('es-AR'),
@@ -475,7 +497,7 @@ async function comprobantesAfip(req, res) {
       .join('ventas as v', 'ca.venta_id', 'v.id')
       .leftJoin('clientes as c', 'v.cliente_id', 'c.id')
       .whereRaw('ca.created_at >= ?', [desde])
-      .whereRaw("ca.created_at < (?::date + INTERVAL '1 day')", [hasta])
+      .whereRaw(sqlHastaFinDia('ca.created_at'), [hasta])
       .select(
         'ca.tipo_comprobante', 'ca.numero', 'ca.cae', 'ca.cae_vencimiento',
         'ca.estado', 'ca.created_at',
