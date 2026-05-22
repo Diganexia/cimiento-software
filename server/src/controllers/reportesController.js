@@ -27,46 +27,48 @@ const fmtNum = (n) => parseFloat(n || 0).toLocaleString('es-AR', { minimumFracti
 
 async function kpis(req, res) {
   try {
-    const ventasRes = await db.raw(`
+    const [ventasRow] = await rawRows(db, `
       SELECT COUNT(*) as cantidad, COALESCE(SUM(total), 0) as total
       FROM ventas WHERE estado = 'confirmada' AND DATE(created_at) = CURRENT_DATE
     `);
 
-    const stockBajoRes = await db.raw(`
-      SELECT COUNT(*) as cantidad FROM productos p WHERE p.activo = true
-      AND COALESCE((SELECT SUM(cantidad) FROM stock_por_deposito WHERE producto_id = p.id), 0) <= p.stock_minimo
-    `);
+    const stockBajoRow = await db('productos as p')
+      .where('p.activo', true)
+      .whereRaw('COALESCE((SELECT SUM(cantidad) FROM stock_por_deposito WHERE producto_id = p.id), 0) <= p.stock_minimo')
+      .count('p.id as cnt')
+      .first();
 
     const arqueo = await db('arqueos').where('estado', 'abierto').orderBy('id', 'desc').first();
     let cajaActual = null;
     if (arqueo) {
-      const cajaRes = await db.raw(`
+      const [cajaRow] = await rawRows(db, `
         SELECT
           COALESCE(SUM(CASE WHEN tipo='ingreso' THEN monto ELSE 0 END), 0) as ingresos,
           COALESCE(SUM(CASE WHEN tipo='egreso'  THEN monto ELSE 0 END), 0) as egresos
         FROM movimientos_caja WHERE arqueo_id = ?
       `, [arqueo.id]);
-      const r = cajaRes.rows[0];
       cajaActual = {
-        saldo: parseFloat(arqueo.saldo_inicial) + parseFloat(r.ingresos) - parseFloat(r.egresos)
+        saldo: parseFloat(arqueo.saldo_inicial) + parseFloat(cajaRow.ingresos) - parseFloat(cajaRow.egresos)
       };
     }
 
-    const deudoresRes = await db.raw(`
-      SELECT COUNT(*) as cantidad, COALESCE(SUM(saldo_posterior), 0) as total
-      FROM (
-        SELECT DISTINCT ON (cliente_id) saldo_posterior
-        FROM cuenta_corriente_clientes ORDER BY cliente_id, id DESC
-      ) t WHERE saldo_posterior > 0
-    `);
+    const deudoresSQL = IS_SQLITE
+      ? `SELECT COUNT(*) as cantidad, COALESCE(SUM(saldo_posterior), 0) as total
+         FROM (SELECT saldo_posterior FROM cuenta_corriente_clientes
+               WHERE id IN (SELECT MAX(id) FROM cuenta_corriente_clientes GROUP BY cliente_id)) t
+         WHERE saldo_posterior > 0`
+      : `SELECT COUNT(*) as cantidad, COALESCE(SUM(saldo_posterior), 0) as total
+         FROM (SELECT DISTINCT ON (cliente_id) saldo_posterior
+               FROM cuenta_corriente_clientes ORDER BY cliente_id, id DESC) t
+         WHERE saldo_posterior > 0`;
 
-    const v = ventasRes.rows[0];
-    const d = deudoresRes.rows[0];
+    const [deudoresRow] = await rawRows(db, deudoresSQL);
+
     res.json({
-      ventasHoy: { cantidad: parseInt(v.cantidad), total: parseFloat(v.total) },
-      stockBajo: parseInt(stockBajoRes.rows[0].cantidad),
+      ventasHoy: { cantidad: parseInt(ventasRow.cantidad), total: parseFloat(ventasRow.total) },
+      stockBajo: parseInt(stockBajoRow.cnt),
       cajaActual,
-      deudores: { cantidad: parseInt(d.cantidad), total: parseFloat(d.total) }
+      deudores: { cantidad: parseInt(deudoresRow.cantidad), total: parseFloat(deudoresRow.total) }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -305,21 +307,38 @@ async function rotacionStock(req, res) {
   const { dias = 30, format } = req.query;
 
   try {
-    const result = await db.raw(`
-      SELECT
-        p.id, p.codigo, p.nombre,
-        MAX(ms.created_at) as ultimo_movimiento,
-        EXTRACT(DAY FROM NOW() - MAX(ms.created_at))::integer as dias_sin_movimiento,
-        COALESCE((SELECT SUM(cantidad) FROM stock_por_deposito WHERE producto_id = p.id), 0) as stock_actual
-      FROM productos p
-      LEFT JOIN movimientos_stock ms ON ms.producto_id = p.id AND ms.tipo = 'SALIDA_VENTA'
-      WHERE p.activo = true
-      GROUP BY p.id, p.codigo, p.nombre
-      HAVING MAX(ms.created_at) IS NULL OR EXTRACT(DAY FROM NOW() - MAX(ms.created_at)) >= ?
-      ORDER BY dias_sin_movimiento DESC NULLS FIRST
-    `, [parseInt(dias)]);
+    let rawResult;
+    if (IS_SQLITE) {
+      rawResult = await rawRows(db, `
+        SELECT
+          p.id, p.codigo, p.nombre,
+          MAX(ms.created_at) as ultimo_movimiento,
+          CAST(julianday('now') - julianday(MAX(ms.created_at)) AS INTEGER) as dias_sin_movimiento,
+          COALESCE((SELECT SUM(cantidad) FROM stock_por_deposito WHERE producto_id = p.id), 0) as stock_actual
+        FROM productos p
+        LEFT JOIN movimientos_stock ms ON ms.producto_id = p.id AND ms.tipo = 'SALIDA_VENTA'
+        WHERE p.activo = 1
+        GROUP BY p.id, p.codigo, p.nombre
+        HAVING MAX(ms.created_at) IS NULL OR CAST(julianday('now') - julianday(MAX(ms.created_at)) AS INTEGER) >= ?
+        ORDER BY CASE WHEN MAX(ms.created_at) IS NULL THEN 0 ELSE 1 END, dias_sin_movimiento DESC
+      `, [parseInt(dias)]);
+    } else {
+      rawResult = await rawRows(db, `
+        SELECT
+          p.id, p.codigo, p.nombre,
+          MAX(ms.created_at) as ultimo_movimiento,
+          EXTRACT(DAY FROM NOW() - MAX(ms.created_at))::integer as dias_sin_movimiento,
+          COALESCE((SELECT SUM(cantidad) FROM stock_por_deposito WHERE producto_id = p.id), 0) as stock_actual
+        FROM productos p
+        LEFT JOIN movimientos_stock ms ON ms.producto_id = p.id AND ms.tipo = 'SALIDA_VENTA'
+        WHERE p.activo = true
+        GROUP BY p.id, p.codigo, p.nombre
+        HAVING MAX(ms.created_at) IS NULL OR EXTRACT(DAY FROM NOW() - MAX(ms.created_at)) >= ?
+        ORDER BY dias_sin_movimiento DESC NULLS FIRST
+      `, [parseInt(dias)]);
+    }
 
-    const rows = result.rows.map((r) => ({
+    const rows = rawResult.map((r) => ({
       codigo: r.codigo || '',
       nombre: r.nombre,
       ultimo_movimiento: r.ultimo_movimiento

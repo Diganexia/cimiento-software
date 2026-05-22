@@ -299,8 +299,16 @@ function registerUniversalAsyncIPC() {
     }
   });
 
-  ipcMain.handle('install-update', () => {
+  ipcMain.handle('install-update', async () => {
     if (isDev) return;
+    const cfg = loadConfig();
+    if (cfg.mode === 'server') {
+      try {
+        const { doBackup } = require('./backupManager');
+        await doBackup(backupDir);
+        log('Pre-update backup completado');
+      } catch (e) { logError('Pre-update backup fallido:', e.message); }
+    }
     require('electron-updater').autoUpdater.quitAndInstall();
   });
 
@@ -581,6 +589,13 @@ if (!isDev) {
   autoUpdater.on('update-not-available', () => sendUpdateStatus('not-available'));
   autoUpdater.on('download-progress', (p) => sendUpdateStatus('downloading', { percent: Math.round(p.percent) }));
   autoUpdater.on('update-downloaded', (info) => {
+    const cfg = loadConfig();
+    if (cfg.mode === 'server') {
+      const { doBackup } = require('./backupManager');
+      doBackup(backupDir)
+        .then(() => log('Backup pre-actualización completado'))
+        .catch((e) => logError('Backup pre-actualización fallido:', e.message));
+    }
     sendUpdateStatus('downloaded', { version: info.version });
     dialog.showMessageBox({
       type: 'info',

@@ -98,6 +98,11 @@ const cobrar = async (req, res) => {
   const { cliente_id, monto, descripcion, medio_pago_id, cheque, retenciones = [] } = req.body;
   if (!cliente_id || !monto) return res.status(400).json({ error: 'cliente_id y monto son requeridos' });
 
+  if (medio_pago_id) {
+    const arqueo = await db('arqueos').where('estado', 'abierto').first();
+    if (!arqueo) return res.status(400).json({ error: 'No hay caja abierta. Abrí la caja antes de registrar un cobro.' });
+  }
+
   const trx = await db.transaction();
   try {
     const saldoAnterior = await getSaldoCliente(cliente_id, trx);
