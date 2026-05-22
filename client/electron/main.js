@@ -376,6 +376,17 @@ function bootSetup() {
 async function bootServerMode() {
   createSplashWindow('/splash');
 
+  // Esperar que el renderer del splash esté listo antes de enviar IPC.
+  // SQLite bootea en ~1s; sin esta espera boot-error/boot-complete se pierden
+  // porque Chromium aún no terminó de cargar el HTML y registrar los listeners.
+  await new Promise((resolve) => {
+    if (splashWindow.webContents.isLoading()) {
+      splashWindow.webContents.once('did-finish-load', resolve);
+    } else {
+      resolve();
+    }
+  });
+
   const sendStatus = (msg) => {
     if (splashWindow && !splashWindow.isDestroyed())
       splashWindow.webContents.send('boot-status', msg);

@@ -17,6 +17,17 @@ async function startSQLite(dataDir, onStatus) {
   const dbPath = path.join(dataDir, 'cimiento.db');
   const isFirstRun = !fs.existsSync(dbPath);
   process.env.DB_PATH = dbPath;
+
+  // Verificar que el módulo nativo carga correctamente antes de continuar.
+  // Si el binario ia32/x64 no coincide, falla aquí con mensaje claro.
+  try {
+    require('better-sqlite3');
+  } catch (err) {
+    throw new Error(
+      `No se pudo cargar better-sqlite3 (${process.arch}): ${err.message}`
+    );
+  }
+
   return { isFirstRun, dbPassword: null };
 }
 
