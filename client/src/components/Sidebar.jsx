@@ -4,6 +4,7 @@ import useAuthStore from '../store/authStore';
 import useLicenciaStore from '../store/licenciaStore';
 import api from '../lib/api';
 import { getSessionId } from '../services/licenciaService';
+import logoCimiento from '../assets/logo-cimiento.png';
 
 function canSee(permisos, perm) {
   if (!perm) return true;
@@ -249,9 +250,10 @@ export default function Sidebar() {
 
   return (
     <aside className="w-56 bg-gray-900 text-white flex flex-col h-full shrink-0">
-      <div className="px-4 py-4 border-b border-gray-700">
-        <h1 className="text-base font-bold leading-tight">Cimiento</h1>
-        <p className="text-xs text-gray-400">Sistema de gestión</p>
+      <div className="border-b border-gray-700">
+        <button onClick={() => navigate('/dashboard')} className="w-full focus:outline-none">
+          <img src={logoCimiento} alt="Cimiento" className="w-full object-contain" />
+        </button>
       </div>
 
       <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
