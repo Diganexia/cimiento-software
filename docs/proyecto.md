@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-21 — v1.2.19.
+> Documento vivo. Última actualización: 2026-05-22 — v1.2.24.
 
 ---
 
@@ -18,8 +18,9 @@
 | Gráficos | Recharts | 2 |
 | Backend | Node.js + Express | 4.18 |
 | Query builder | Knex.js | 3 |
-| Base de datos | PostgreSQL | 15+ (embedded) |
+| Base de datos | PostgreSQL 15+ (64-bit) / SQLite (32-bit) | embedded |
 | PostgreSQL embebido | embedded-postgres | — |
+| SQLite (32-bit) | better-sqlite3 | 9.6 |
 | Autenticación | JWT (jsonwebtoken) | 9 |
 | Hash de contraseñas | bcryptjs | 2.4 |
 | PDF | pdfkit | 0.15 |
@@ -33,7 +34,7 @@
 ```
 Red LAN
 ┌─────────────────────────────────┐    HTTP/REST    ┌───────────────────────┐
-│  Corralon Servidor (1 PC)       │ ◄────────────► │  Corralon Cliente     │
+│  Cimiento Servidor (1 PC)       │ ◄────────────► │  Cimiento Cliente     │
 │  Electron + React               │    :3001        │  Electron + React     │
 │  Express (in-process)           │                 │  (N equipos)          │
 │  PostgreSQL embebido (:5433)    │                 └───────────────────────┘
@@ -42,7 +43,20 @@ Red LAN
 
 - El servidor corre en **una sola PC** de la red. Incluye PostgreSQL portable sin instalación.
 - Los clientes son apps Electron que se conectan por IP de LAN. No requieren internet.
-- Dos instaladores: `Corralon Servidor Setup.exe` y `Corralon Cliente Setup.exe`.
+- Un solo instalador unificado: `Cimiento-Setup-X.Y.Z-64bit.exe` o `Cimiento-Setup-X.Y.Z-32bit.exe`. El primer arranque pregunta si es Servidor o Cliente.
+
+### Soporte 32-bit (Windows 7/8/10 32-bit)
+
+Para PCs antiguas con Windows 32-bit se publica un instalador separado que usa **SQLite** en lugar de PostgreSQL.
+
+| | 64-bit | 32-bit |
+|--|--------|--------|
+| Motor BD | PostgreSQL (embedded-postgres) | SQLite (better-sqlite3) |
+| Instalador | `Cimiento-Setup-X.Y.Z-64bit.exe` | `Cimiento-Setup-X.Y.Z-32bit.exe` |
+| Canal auto-update | `latest.yml` | `latest-32bit.yml` |
+| Datos | `%APPDATA%\ferreteria-client\sqlitedata\pgdata\` | `%APPDATA%\ferreteria-client\sqlitedata\cimiento.db` |
+
+El motor se detecta en runtime con `process.env.CIMIENTO_DB` (`'postgres'` o `'sqlite'`), inyectado desde `package.json.dbEngine` al iniciar Electron. El código del servidor usa `server/src/lib/dbCompat.js` para abstraer diferencias (ILIKE vs LIKE, DATE_TRUNC vs strftime, etc.).
 
 ---
 
@@ -57,11 +71,11 @@ ferreteria-software/          ← monorepo raíz (npm workspaces)
 │   ├── electron/
 │   │   ├── main.js           ← proceso principal (detecta modo servidor/cliente)
 │   │   ├── preload.js        ← IPC bridge contextIsolation
-│   │   ├── dbManager.js      ← gestión embedded-postgres
-│   │   ├── backupManager.js  ← pg_dump, backup automático diario
-│   │   └── server-mode.flag  ← presente solo en build servidor
-│   ├── electron-builder-server.json
-│   ├── electron-builder-client.json
+│   │   ├── dbManager.js      ← gestión embedded-postgres / SQLite
+│   │   ├── backupManager.js  ← backup automático diario (pg.Client / better-sqlite3)
+│   │   └── ipcHandlers.js
+│   ├── electron-builder-unified.json   ← build 64-bit
+│   ├── electron-builder-32bit.json     ← build 32-bit
 │   └── src/
 │       ├── lib/api.js        ← axios con URL dinámica vía IPC
 │       ├── store/authStore.js
@@ -97,9 +111,11 @@ ferreteria-software/          ← monorepo raíz (npm workspaces)
     │   │   └── pdfService.js ← venta, compra, estado de cuenta, arqueo, reporte tabla, recibo
     │   ├── helpers/stockHelper.js
     │   └── index.js
+    ├── src/lib/dbCompat.js   ← helpers PG/SQLite (whereIlike, sqlHastaFinDia, rawRows, IS_SQLITE)
     ├── database/
     │   ├── knexfile.js
-    │   ├── migrations/       ← 001 a 009
+    │   ├── migrations/            ← 001 a 016 (PostgreSQL)
+    │   ├── migrations-sqlite/     ← 001 a 016 (SQLite, adaptadas)
     │   └── seeds/
     └── src/config/empresa.json   ← generado al guardar datos de empresa en UI
 ```
@@ -317,15 +333,11 @@ En desarrollo: `server/.env`. En producción (app servidor): `userData/app-confi
 ## Scripts
 
 ```bash
-# Raíz del monorepo
-npm run dev                       # server + client en paralelo (desarrollo)
-
 # client/
-$env:CSC_IDENTITY_AUTO_DISCOVERY="false"
-npm run electron:build:server     # genera Corralon Servidor Setup X.Y.Z.exe
-npm run electron:build:client     # genera Corralon Cliente Setup X.Y.Z.exe
 npm run electron:dev              # Electron + Vite en desarrollo
 npm run electron:dev:server       # idem con SERVER_MODE=true
+npm run electron:build:64         # genera Cimiento-Setup-X.Y.Z-64bit.exe (PostgreSQL)
+npm run electron:build:32         # genera Cimiento-Setup-X.Y.Z-32bit.exe (SQLite, ia32)
 
 # server/
 npm run dev                       # nodemon src/index.js
@@ -344,10 +356,12 @@ node generate-pdf.js              # genera documentacion-tecnica.pdf
 
 | Archivo | Para quién |
 |---------|-----------|
-| `Corralon Servidor Setup X.Y.Z.exe` | PC principal — actúa de servidor + cliente. Incluye PostgreSQL portable. |
-| `Corralon Cliente Setup X.Y.Z.exe` | Resto de PCs de la red — solo interfaz, se conecta al servidor por IP. |
+| `Cimiento-Setup-X.Y.Z-64bit.exe` | PCs con Windows 64-bit. Motor PostgreSQL embebido. |
+| `Cimiento-Setup-X.Y.Z-32bit.exe` | PCs con Windows 32-bit. Motor SQLite. |
 
-Los instaladores se publican en **GitHub Releases**: `https://github.com/Diganexia/ferreteria-software/releases`
+El primer arranque pregunta si la PC es **Servidor** o **Cliente** y guarda la elección en `app-config.json`. No hay instaladores separados para cada rol.
+
+Los instaladores se publican en **GitHub Releases**: `https://github.com/Diganexia/cimiento-software/releases`
 
 ### Requisitos de red
 
@@ -359,22 +373,25 @@ Los instaladores se publican en **GitHub Releases**: `https://github.com/Diganex
 
 Las apps se actualizan solas al publicar una nueva release en GitHub.
 
-- App Servidor → detecta cambios en `server.yml` de la release
-- App Cliente → detecta cambios en `client.yml` de la release
-- El usuario ve un diálogo "¿Instalar ahora?" cuando hay una actualización lista
+- 64-bit → lee `latest.yml`
+- 32-bit → lee `latest-32bit.yml`
+- El canal se fuerza por código en `main.js` según `package.json.dbEngine` (evita que 32-bit descargue el instalador 64-bit).
+- Antes de instalar una actualización se genera un backup automático.
+- El usuario ve un diálogo "¿Instalar ahora?" cuando hay una actualización lista.
 
 ### Publicar una nueva versión
 
-1. Incrementar `version` en `client/package.json` (ej. `1.0.1`)
-2. Construir los instaladores:
+1. Incrementar `version` en `client/package.json`
+2. Construir ambos instaladores:
    ```powershell
-   $env:CSC_IDENTITY_AUTO_DISCOVERY="false"
-   npm run electron:build:server
-   npm run electron:build:client
+   npm run electron:build:64   # desde client/
+   npm run electron:build:32   # desde client/
    ```
-3. Crear release en GitHub con tag `vX.Y.Z` y subir:
-   - `dist-electron/server/Corralon Servidor Setup X.Y.Z.exe` + `.blockmap` + `server.yml`
-   - `dist-electron/client/Corralon Cliente Setup X.Y.Z.exe` + `.blockmap` + `client.yml`
+3. Crear release en GitHub con tag `vX.Y.Z` y subir **6 archivos**:
+   - `dist-electron/unified/Cimiento-Setup-X.Y.Z-64bit.exe` + `.blockmap` + `latest.yml`
+   - `dist-electron/32bit/Cimiento-Setup-X.Y.Z-32bit.exe` + `.blockmap` + `latest-32bit.yml`
+
+> Sin `latest.yml` o `latest-32bit.yml` el auto-updater no detecta nuevas versiones.
 
 ### Clean install — borrar la base de datos
 
@@ -397,11 +414,13 @@ Para reinstalar el software desde cero (sin datos previos), hay que eliminar la 
 
 ```
 C:\Users\<usuario>\AppData\Roaming\ferreteria-client\
-├── pgdata\          ← base de datos PostgreSQL
-├── backups\         ← backups automáticos diarios
+├── sqlitedata\
+│   ├── pgdata\      ← base de datos PostgreSQL (64-bit)
+│   └── cimiento.db  ← base de datos SQLite (32-bit)
+├── backups\         ← backups automáticos diarios (formato .json)
 ├── logs\
 ├── Cache\
-└── app-config.json  ← contraseña de la BD
+└── app-config.json  ← modo (server/client), contraseña BD, licenseKey, etc.
 ```
 
 > Para los clientes (no el servidor), la carpeta equivalente es `%APPDATA%\ferreteria-client` en cada PC cliente (no contiene BD, solo configuración de conexión).
@@ -599,6 +618,27 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 
 ### v1.2.19 (2026-05-21)
 - **Clientes — Dar de alta**: nueva acción para reactivar clientes dados de baja. Endpoint `PATCH /clientes/:id/activar` (pone `activo = true`). En la lista, el botón cambia según estado: "Dar de baja" (rojo) si activo, "Dar de alta" (verde) si inactivo. Visible tanto en la vista "Dados de baja" como en "Todos".
+- **Soporte Windows 32-bit (SQLite)**: build dual PG/SQLite en el mismo repo. Motor detectado por `process.env.CIMIENTO_DB`. Migraciones SQLite en `migrations-sqlite/`. `dbCompat.js` abstrae diferencias de sintaxis. Fix race condition splash en 32-bit.
+
+### v1.2.20 (2026-05-22)
+- **Importar backup desde archivo externo**: botón en Configuración > Backup para restaurar un `.json` desde cualquier ubicación del disco (migración 32↔64 bit).
+- **Fix restore PG→SQLite**: `toSQLiteValue()` convierte booleans (`true/false` → `1/0`) y objetos/JSON antes de insertar en SQLite.
+- **Fix `require` package.json**: ruta corregida a absoluta en `main.js` (evitaba error al resolver `pkg.dbEngine`).
+
+### v1.2.21 (2026-05-22)
+- **Fix auto-updater canal**: canal forzado por código en `main.js` (`pkg.dbEngine === 'sqlite' ? 'latest-32bit' : 'latest'`). Evita que la versión 32-bit descargue el instalador 64-bit. No depender solo de `app-update.yml`.
+
+### v1.2.22 (2026-05-22)
+- **Indicador 32-bit/64-bit**: se muestra junto a la versión en todas las pantallas (Dashboard, Login, Splash, Setup, Activación). Expuesto via `window.electronAPI.dbEngine` en `preload.js`.
+
+### v1.2.23 (2026-05-22)
+- **Fix caja obligatoria en cobros**: `ctaCteController.cobrar()` ahora bloquea el registro si no hay arqueo abierto cuando se selecciona medio de pago (igual que ventas).
+- **Fix KPIs Dashboard en SQLite**: `reportesController.kpis()` usaba `DISTINCT ON` (PG-only) y `.rows[0]` (PG-only). Reescrito con subquery compatible + `rawRows()`. Esto causaba que deudores y stock bajo mostraran 0 en la versión 32-bit.
+- **Fix Rotación de stock en SQLite**: query reescrita con `julianday()` y sin `NULLS FIRST` (ambos PG-only).
+- **Backup automático pre-actualización**: se genera un backup antes de instalar cualquier actualización, tanto desde el diálogo automático como desde el botón de Configuración.
+
+### v1.2.24 (2026-05-22)
+- **Fix crítico auto-updater**: un segundo bloque `if (!isDev)` en `main.js` pisaba el canal `latest-32bit` con `'latest'` (ambos bloques actúan sobre la misma instancia cacheada de `autoUpdater`). Eliminada la línea redundante `autoUpdater.channel = 'latest'` del segundo bloque.
 
 ### v1.2.18 (2026-05-20)
 - **Logout — spinner de carga**: botón "Cerrar sesión" en Sidebar muestra spinner + texto "Cerrando sesión..." mientras se procesa la llamada a Cloudflare. Evita doble click y da feedback visual.

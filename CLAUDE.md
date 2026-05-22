@@ -41,15 +41,19 @@ Después de `npm install` en `client/`, reaplicar el patch en `node_modules/app-
 
 ### Build y release
 El usuario dice "buildea y subilo" como comando único. Ejecutar:
-1. `npm run electron:build` desde `client/`
-2. ```
+1. `npm run electron:build:64` desde `client/`
+2. `npm run electron:build:32` desde `client/`
+3. ```
    gh release create vX.Y.Z \
-     "client/dist-electron/unified/Cimiento-Setup-X.Y.Z.exe" \
-     "client/dist-electron/unified/Cimiento-Setup-X.Y.Z.exe.blockmap" \
-     "client/dist-electron/unified/latest.yml"
+     "client/dist-electron/unified/Cimiento-Setup-X.Y.Z-64bit.exe" \
+     "client/dist-electron/unified/Cimiento-Setup-X.Y.Z-64bit.exe.blockmap" \
+     "client/dist-electron/unified/latest.yml" \
+     "client/dist-electron/32bit/Cimiento-Setup-X.Y.Z-32bit.exe" \
+     "client/dist-electron/32bit/Cimiento-Setup-X.Y.Z-32bit.exe.blockmap" \
+     "client/dist-electron/32bit/latest-32bit.yml"
    ```
 
-**CRÍTICO:** Subir siempre los 3 archivos: `.exe`, `.exe.blockmap` y `latest.yml`. Sin `latest.yml`, el auto-updater no puede detectar nuevas versiones.
+**CRÍTICO:** Subir siempre los 6 archivos. Sin `latest.yml` / `latest-32bit.yml` el auto-updater no detecta nuevas versiones.
 
 No pedir confirmación intermedia.
 
@@ -57,6 +61,14 @@ No pedir confirmación intermedia.
 Pushear directo a `main`. No abrir PRs.
 
 ## Decisiones de arquitectura (no obvias)
+
+### Motor dual PostgreSQL/SQLite (32-bit)
+`package.json.dbEngine` se inyecta en build time (`'postgres'` o `'sqlite'`). En runtime: `process.env.CIMIENTO_DB`. Lógica de detección en `client/electron/main.js`. **Reglas para queries en el servidor:**
+- Usar `rawRows(db, sql, params)` de `dbCompat.js` en vez de `db.raw().rows` — PG devuelve `{rows:[]}`, SQLite devuelve array directo.
+- Usar `.where('col', true)` de Knex para booleanos (genera `= 1` en SQLite automáticamente). Nunca `p.activo = true` en raw SQL compartido.
+- No usar `DISTINCT ON`, `EXTRACT()`, `NULLS FIRST`, `::cast` en queries que corran en ambos motores.
+- Para queries diferentes por motor: `if (IS_SQLITE) { ... } else { ... }`.
+- `dbCompat.js` exporta: `IS_SQLITE`, `whereIlike()`, `orWhereIlike()`, `sqlHastaFinDia()`, `rawRows()`.
 
 ### Backup sin pg_dump
 `embedded-postgres` v18 solo instala pg_ctl/postgres/initdb, no pg_dump. `backupManager.js` usa `pg.Client` directamente. Formato `.json`. No tocar esta decisión buscando pg_dump.
@@ -70,8 +82,8 @@ Detectado en runtime leyendo `app-config.json` en userData (`%APPDATA%\ferreteri
 - `node-afip` v1.0.4 solo tiene consultas de Padrón (no WSFE). Para emitir facturas se necesita certificado en `server/certs/cert.crt` y `private.key`
 - Si falla ARCA, la venta se confirma igual (no bloqueante). Error queda en `comprobantes.estado='error'` y se muestra en frontend como banner amarillo
 
-### Caja obligatoria en ventas
-`_confirmar` en `ventasController.js` valida al inicio que haya arqueo `estado='abierto'`. Sin caja abierta, ninguna venta puede confirmarse.
+### Caja obligatoria en ventas y cobros
+`_confirmar` en `ventasController.js` valida al inicio que haya arqueo `estado='abierto'`. Sin caja abierta, ninguna venta puede confirmarse. Lo mismo aplica a `cobrar()` en `ctaCteController.js` cuando se especifica `medio_pago_id`.
 
 ### Restauración de sesión al reiniciar
 `authStore.usuario` no persiste en localStorage (solo el token). `ProtectedRoute.jsx` llama `GET /auth/me` al montar si tiene token pero `usuario===null`. Muestra `null` mientras carga. Si el token expiró, `clearAuth()` y redirige a login.
