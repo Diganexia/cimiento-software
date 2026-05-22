@@ -574,7 +574,7 @@ app.on('activate', () => {
 // ── Auto-updater ──────────────────────────────────────────────────────────────
 if (!isDev) {
   const { autoUpdater } = require('electron-updater');
-  autoUpdater.channel = 'latest';
+  // canal ya seteado en el bloque anterior según dbEngine (latest-32bit o latest)
   autoUpdater.autoDownload = true;
   autoUpdater.autoInstallOnAppQuit = true;
 
