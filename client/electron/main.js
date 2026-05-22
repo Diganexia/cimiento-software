@@ -394,7 +394,7 @@ async function bootServerMode() {
 
   try {
     log('Boot: iniciando en modo servidor');
-    const pkg = require('./package.json');
+    const pkg = require(path.join(__dirname, '..', 'package.json'));
     process.env.CIMIENTO_DB = pkg.dbEngine || 'postgres';
     log('Boot: motor de BD:', process.env.CIMIENTO_DB);
 
