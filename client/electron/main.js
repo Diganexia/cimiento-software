@@ -510,6 +510,20 @@ async function bootClientMode() {
   }
 }
 
+// ── Auto-updater: forzar canal correcto según motor de BD ─────────────────────
+// No depender de app-update.yml solamente — setearlo en código evita que
+// la versión 32-bit (SQLite) descargue el instalador 64-bit por error.
+if (!isDev) {
+  try {
+    const { autoUpdater } = require('electron-updater');
+    const pkg = require(path.join(__dirname, '..', 'package.json'));
+    autoUpdater.channel = pkg.dbEngine === 'sqlite' ? 'latest-32bit' : 'latest';
+    log('Auto-updater: canal forzado a', autoUpdater.channel);
+  } catch (e) {
+    logError('Auto-updater: no se pudo setear canal:', e.message);
+  }
+}
+
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
   registerSyncIPC();
