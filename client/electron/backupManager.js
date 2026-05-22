@@ -121,6 +121,14 @@ async function doBackupSQLite(backupDir) {
   }
 }
 
+// Convierte valores de PG (booleans, objetos JSON) a tipos que acepta better-sqlite3
+function toSQLiteValue(v) {
+  if (v === null || v === undefined) return null;
+  if (typeof v === 'boolean') return v ? 1 : 0;
+  if (typeof v === 'object') return JSON.stringify(v);
+  return v;
+}
+
 async function doRestoreSQLite(backup) {
   const Database = require('better-sqlite3');
   const db = new Database(process.env.DB_PATH);
@@ -143,7 +151,7 @@ async function doRestoreSQLite(backup) {
         const placeholders = columns.map(() => '?').join(', ');
         const stmt = db.prepare(`INSERT INTO "${table}" (${colList}) VALUES (${placeholders})`);
         for (const row of rows) {
-          stmt.run(columns.map((c) => row[c]));
+          stmt.run(columns.map((c) => toSQLiteValue(row[c])));
         }
       }
     });
@@ -190,6 +198,15 @@ async function doRestore(backupDir, filename) {
   }
 }
 
+async function doRestoreFromPath(absolutePath) {
+  if (!fs.existsSync(absolutePath)) throw new Error('Archivo no encontrado');
+  const backup = JSON.parse(fs.readFileSync(absolutePath, 'utf-8'));
+  if (!backup.tables) throw new Error('Formato de backup inválido');
+  const IS_SQLITE = process.env.CIMIENTO_DB === 'sqlite';
+  if (IS_SQLITE) await doRestoreSQLite(backup);
+  else await doRestorePG(backup);
+}
+
 function listBackups(backupDir) {
   if (!fs.existsSync(backupDir)) return [];
   return fs.readdirSync(backupDir)
@@ -223,4 +240,4 @@ function scheduleAutoBackup(backupDir) {
   }, msUntilNext);
 }
 
-module.exports = { doBackup, doRestore, listBackups, scheduleAutoBackup };
+module.exports = { doBackup, doRestore, doRestoreFromPath, listBackups, scheduleAutoBackup };

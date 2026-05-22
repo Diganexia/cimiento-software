@@ -10,6 +10,7 @@ export default function Backup() {
   const [backups, setBackups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [doing, setDoing] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [restoring, setRestoring] = useState(null);
   const [msg, setMsg] = useState('');
   const [err, setErr] = useState('');
@@ -57,6 +58,20 @@ export default function Backup() {
     }
   };
 
+  const handleImport = async () => {
+    if (!window.confirm('¿Importar un backup desde archivo?\n\nEsto sobreescribirá todos los datos actuales con los del archivo seleccionado. Esta acción no se puede deshacer.')) return;
+    setImporting(true); setMsg(''); setErr('');
+    try {
+      const result = await window.electronAPI.importBackupFile();
+      if (result.canceled) return;
+      setMsg('Backup importado correctamente. Reiniciá la aplicación para verificar los datos.');
+    } catch (e) {
+      setErr(e.message || 'Error al importar');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   const handleDelete = async (filename) => {
     if (!window.confirm(`¿Eliminar backup "${filename}"?`)) return;
     try {
@@ -82,13 +97,22 @@ export default function Backup() {
           <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">Backup y restauración</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Backups automáticos diarios a las 02:00 hs. Retención: 30 días.</p>
         </div>
-        <button
-          onClick={handleBackup}
-          disabled={doing}
-          className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
-        >
-          {doing ? 'Creando backup...' : 'Crear backup ahora'}
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={handleImport}
+            disabled={importing || doing}
+            className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50 transition-colors"
+          >
+            {importing ? 'Importando...' : 'Importar desde archivo'}
+          </button>
+          <button
+            onClick={handleBackup}
+            disabled={doing}
+            className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 disabled:opacity-50 transition-colors"
+          >
+            {doing ? 'Creando backup...' : 'Crear backup ahora'}
+          </button>
+        </div>
       </div>
 
       {msg && (

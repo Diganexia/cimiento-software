@@ -332,7 +332,7 @@ function registerUniversalAsyncIPC() {
 }
 
 function registerServerAsyncIPC() {
-  const { doBackup, doRestore, listBackups } = require('./backupManager');
+  const { doBackup, doRestore, doRestoreFromPath, listBackups } = require('./backupManager');
 
   ipcMain.handle('backup-do', async () => {
     const filename = await doBackup(backupDir);
@@ -346,6 +346,17 @@ function registerServerAsyncIPC() {
   ipcMain.handle('backup-delete', async (_e, filename) => {
     const filepath = path.join(backupDir, filename);
     if (fs.existsSync(filepath)) fs.unlinkSync(filepath);
+    return { ok: true };
+  });
+  ipcMain.handle('backup-import-file', async () => {
+    const win = BrowserWindow.getFocusedWindow() || mainWindow;
+    const { canceled, filePaths } = await dialog.showOpenDialog(win, {
+      title: 'Importar backup',
+      filters: [{ name: 'Backup JSON', extensions: ['json'] }],
+      properties: ['openFile']
+    });
+    if (canceled || !filePaths.length) return { ok: false, canceled: true };
+    await doRestoreFromPath(filePaths[0]);
     return { ok: true };
   });
 }
