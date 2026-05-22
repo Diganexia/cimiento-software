@@ -251,7 +251,7 @@ export default function Sidebar() {
   return (
     <aside className="w-56 bg-gray-900 text-white flex flex-col h-full shrink-0">
       <div className="border-b border-gray-700">
-        <button onClick={() => navigate('/dashboard')} className="w-full focus:outline-none">
+        <button onClick={() => navigate('/')} className="w-full focus:outline-none">
           <img src={logoCimiento} alt="Cimiento" className="w-full object-contain" />
         </button>
       </div>
