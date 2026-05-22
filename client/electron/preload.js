@@ -2,6 +2,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('electronAPI', {
   platform: process.platform,
+  dbEngine: process.env.CIMIENTO_DB || 'postgres',
 
   // ── Mode & config ──────────────────────────────────────────────────────────
   getMode: () => ipcRenderer.sendSync('get-mode'),

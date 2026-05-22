@@ -68,7 +68,7 @@ export default function Setup() {
         <p className="text-red-400 text-xs mt-4">{error}</p>
       )}
 
-      <p className="text-gray-700 text-xs absolute bottom-6">v{version}</p>
+      <p className="text-gray-700 text-xs absolute bottom-6">v{version} · {window.electronAPI?.dbEngine === 'sqlite' ? '32-bit' : '64-bit'}</p>
     </div>
   );
 }

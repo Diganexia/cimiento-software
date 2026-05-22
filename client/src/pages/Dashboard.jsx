@@ -159,7 +159,9 @@ export default function Dashboard() {
             </span>
           )}
           <LicenciaBadge resultado={resultado} checking={checking} />
-          <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">v{version}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded font-mono">
+            v{version} · {window.electronAPI?.dbEngine === 'sqlite' ? '32-bit' : '64-bit'}
+          </span>
         </div>
       </div>
 

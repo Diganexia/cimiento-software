@@ -42,7 +42,7 @@ export default function Activacion() {
         <div className="text-center mb-7">
           <h1 className="text-2xl font-bold text-white">Cimiento</h1>
           <p className="text-gray-400 text-sm mt-1">Activación de licencia</p>
-          <p className="text-gray-600 text-xs mt-0.5">v{version}</p>
+          <p className="text-gray-600 text-xs mt-0.5">v{version} · {window.electronAPI?.dbEngine === 'sqlite' ? '32-bit' : '64-bit'}</p>
         </div>
         <form onSubmit={handleActivar} className="space-y-4">
           <div>
