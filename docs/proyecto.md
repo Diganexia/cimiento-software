@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-22 — v1.2.24.
+> Documento vivo. Última actualización: 2026-05-27 — v1.2.29.
 
 ---
 
@@ -636,6 +636,20 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - **Fix KPIs Dashboard en SQLite**: `reportesController.kpis()` usaba `DISTINCT ON` (PG-only) y `.rows[0]` (PG-only). Reescrito con subquery compatible + `rawRows()`. Esto causaba que deudores y stock bajo mostraran 0 en la versión 32-bit.
 - **Fix Rotación de stock en SQLite**: query reescrita con `julianday()` y sin `NULLS FIRST` (ambos PG-only).
 - **Backup automático pre-actualización**: se genera un backup antes de instalar cualquier actualización, tanto desde el diálogo automático como desde el botón de Configuración.
+
+### v1.2.29 (2026-05-27)
+- **Fix inventario físico dark mode**: en el paso "Revisar diferencias", las filas con diferencia usaban `bg-yellow-50` sin variante dark. En modo noche, el fondo claro quedaba con texto blanco (`dark:text-gray-100`) resultando invisible. Corregido con `dark:bg-yellow-900/20`.
+
+### v1.2.28 (2026-05-27)
+- **Proveedores — Estado y Eliminar**: en el formulario de edición se añadió el selector Activo/Inactivo (con normalización para SQLite 0/1). Nuevo botón "Eliminar" que bloquea si el proveedor tiene compras registradas y sugiere desactivarlo en ese caso. Backend: endpoint `DELETE /api/proveedores/:id` con validación.
+- **POS — redondeo siempre visible**: la condición para mostrar la opción de redondeo pasó de `total - totalBase > 0.01` (solo cuando el total no era múltiplo exacto) a `total > 0.01` (siempre que haya un total positivo).
+
+### v1.2.27 (2026-05-27)
+- **Fix depósitos No→Sí**: `InlineForm` en `Configuracion.jsx` normalizaba booleanos SQLite (0/1) como `String(0) = "0"` en lugar de `"false"`, por lo que el select de Estado no hacía match con la opción correcta. Corregido con conversión explícita `0/false → "false"`, `1/true → "true"`.
+- **Fix Ajuste de stock 32-bit "Buscando..." infinito**: tres causas combinadas: (1) `productosController.js`, `stockController.js` y `proveedoresController.js` usaban `ILIKE` (PostgreSQL-only) en queries raw → error silencioso en SQLite. Reemplazado con `whereIlike`/`orWhereIlike` de `dbCompat.js`. (2) `Ajuste.jsx` no tenía try/catch en el useEffect de búsqueda — si la API lanzaba error, `setBuscando(false)` nunca se ejecutaba. Corregido con try/catch/finally.
+
+### v1.2.25 – v1.2.26 (2026-05-27)
+- Logo Cimiento como imagen en Sidebar con link al dashboard (`navigate('/')`).
 
 ### v1.2.24 (2026-05-22)
 - **Fix crítico auto-updater**: un segundo bloque `if (!isDev)` en `main.js` pisaba el canal `latest-32bit` con `'latest'` (ambos bloques actúan sobre la misma instancia cacheada de `autoUpdater`). Eliminada la línea redundante `autoUpdater.channel = 'latest'` del segundo bloque.
