@@ -73,4 +73,17 @@ const editar = async (req, res) => {
   }
 };
 
-module.exports = { listar, detalle, crear, editar };
+const eliminar = async (req, res) => {
+  try {
+    const compra = await db('compras').where('proveedor_id', req.params.id).first();
+    if (compra) return res.status(409).json({ error: 'Tiene compras registradas — desactivelo en lugar de eliminarlo' });
+    const deleted = await db('proveedores').where('id', req.params.id).delete();
+    if (!deleted) return res.status(404).json({ error: 'Proveedor no encontrado' });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Error al eliminar proveedor' });
+  }
+};
+
+module.exports = { listar, detalle, crear, editar, eliminar };

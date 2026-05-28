@@ -162,7 +162,7 @@ export default function PuntoVenta() {
   const descM = subtotal * (parseFloat(descuentoGlobal) || 0) / 100;
   const total = subtotal - descM;
   const totalBase = Math.floor(total / 100) * 100;
-  const hayDecimales = total - totalBase > 0.01;
+  const hayDecimales = total > 0.01;
   const totalEfectivo = redondeo ? totalBase + redondeoStep * 50 : total;
   const montoRedondeo = total - totalEfectivo;
 

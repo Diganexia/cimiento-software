@@ -1,8 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getProveedor, createProveedor, updateProveedor } from '../../services/proveedoresService';
+import { getProveedor, createProveedor, updateProveedor, deleteProveedor } from '../../services/proveedoresService';
 
-const EMPTY = { nombre: '', razon_social: '', cuit: '', telefono: '', email: '', direccion: '' };
+const EMPTY = { nombre: '', razon_social: '', cuit: '', telefono: '', email: '', direccion: '', activo: true };
 
 const inputCls = 'w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500';
 const Label = ({ children, required }) => (
@@ -27,7 +27,8 @@ export default function ProveedorForm() {
         cuit: data.cuit || '',
         telefono: data.telefono || '',
         email: data.email || '',
-        direccion: data.direccion || ''
+        direccion: data.direccion || '',
+        activo: data.activo !== false && data.activo !== 0
       }));
     }
   }, [id, isEdit]);
@@ -48,6 +49,19 @@ export default function ProveedorForm() {
     } catch (err) {
       setError(err.response?.data?.error || 'Error al guardar');
     } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEliminar = async () => {
+    if (!window.confirm('¿Eliminar este proveedor? Solo es posible si no tiene compras registradas.')) return;
+    setError('');
+    setLoading(true);
+    try {
+      await deleteProveedor(id);
+      navigate('/proveedores');
+    } catch (err) {
+      setError(err.response?.data?.error || 'Error al eliminar');
       setLoading(false);
     }
   };
@@ -89,6 +103,19 @@ export default function ProveedorForm() {
             <Label>Dirección</Label>
             <input value={form.direccion} onChange={set('direccion')} className={inputCls} />
           </div>
+          {isEdit && (
+            <div>
+              <Label>Estado</Label>
+              <select
+                value={form.activo ? 'true' : 'false'}
+                onChange={(e) => setForm((p) => ({ ...p, activo: e.target.value === 'true' }))}
+                className={inputCls}
+              >
+                <option value="true">Activo</option>
+                <option value="false">Inactivo</option>
+              </select>
+            </div>
+          )}
         </div>
 
         {error && <p className="text-red-600 dark:text-red-400 text-sm bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded px-3 py-2">{error}</p>}
@@ -102,6 +129,12 @@ export default function ProveedorForm() {
             className="px-5 py-2 rounded text-sm border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
             Cancelar
           </button>
+          {isEdit && (
+            <button type="button" onClick={handleEliminar} disabled={loading}
+              className="ml-auto px-5 py-2 rounded text-sm border border-red-300 dark:border-red-700 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 transition-colors">
+              Eliminar
+            </button>
+          )}
         </div>
       </form>
     </div>
