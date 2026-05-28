@@ -35,9 +35,14 @@ export default function Ajuste() {
     if (!busqueda.trim()) { setProductos([]); return; }
     const t = setTimeout(async () => {
       setBuscando(true);
-      const { data } = await api.get('/productos', { params: { q: busqueda, activo: 'true', limit: 10 } });
-      setProductos(data.data || []);
-      setBuscando(false);
+      try {
+        const { data } = await api.get('/productos', { params: { q: busqueda, activo: 'true', limit: 10 } });
+        setProductos(data.data || []);
+      } catch {
+        setProductos([]);
+      } finally {
+        setBuscando(false);
+      }
     }, 300);
     return () => clearTimeout(t);
   }, [busqueda]);

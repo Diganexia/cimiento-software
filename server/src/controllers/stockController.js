@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { upsertStock, registrarMovimiento, getStockDeposito } = require('../helpers/stockHelper');
+const { whereIlike } = require('../lib/dbCompat');
 
 const listar = async (req, res) => {
   try {
@@ -22,7 +23,7 @@ const listar = async (req, res) => {
 
     if (deposito_id) query = query.where('spd.deposito_id', deposito_id);
     if (proveedor_id) query = query.where('p.proveedor_habitual_id', proveedor_id);
-    if (q) query = query.whereRaw('p.nombre ILIKE ?', [`%${q}%`]);
+    if (q) whereIlike(query, 'p.nombre', `%${q}%`);
 
     const data = await query.orderBy('p.nombre');
     res.json(data);

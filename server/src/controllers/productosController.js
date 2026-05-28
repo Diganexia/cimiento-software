@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { whereIlike, orWhereIlike } = require('../lib/dbCompat');
 
 const applyFilters = (builder, { activo, rubro_id, busqueda, proveedor_habitual_id }) => {
   if (activo !== 'all') builder.where('p.activo', activo !== 'false');
@@ -6,9 +7,9 @@ const applyFilters = (builder, { activo, rubro_id, busqueda, proveedor_habitual_
   if (proveedor_habitual_id) builder.where('p.proveedor_habitual_id', proveedor_habitual_id);
   if (busqueda) {
     builder.where((b) => {
-      b.whereRaw('p.nombre ILIKE ?', [`%${busqueda}%`])
-        .orWhereRaw('p.codigo ILIKE ?', [`%${busqueda}%`])
-        .orWhereRaw('COALESCE(p.codigo_barra,\'\') ILIKE ?', [`%${busqueda}%`]);
+      whereIlike(b, 'p.nombre', `%${busqueda}%`);
+      orWhereIlike(b, 'p.codigo', `%${busqueda}%`);
+      orWhereIlike(b, 'p.codigo_barra', `%${busqueda}%`);
     });
   }
 };

@@ -38,7 +38,12 @@ function InlineForm({ fields, onSave, onCancel, initial = {} }) {
   const [vals, setVals] = useState(() => {
     const v = { ...initial };
     fields.forEach((f) => {
-      if (f.type === 'select' && v[f.key] != null) v[f.key] = String(v[f.key]);
+      if (f.type === 'select' && v[f.key] != null) {
+        const val = v[f.key];
+        if (val === true || val === 1) v[f.key] = 'true';
+        else if (val === false || val === 0) v[f.key] = 'false';
+        else v[f.key] = String(val);
+      }
     });
     return v;
   });

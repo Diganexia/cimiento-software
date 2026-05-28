@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { whereIlike } = require('../lib/dbCompat');
 
 const listar = async (req, res) => {
   try {
@@ -8,7 +9,7 @@ const listar = async (req, res) => {
 
     const applyFilters = (b) => {
       if (activo !== 'all') b.where('activo', activo !== 'false');
-      if (q) b.whereRaw('nombre ILIKE ?', [`%${q}%`]);
+      if (q) whereIlike(b, 'nombre', `%${q}%`);
     };
 
     const [{ total }] = await db('proveedores').modify(applyFilters).count('id as total');
