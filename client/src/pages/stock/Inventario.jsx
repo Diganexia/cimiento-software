@@ -251,7 +251,7 @@ export default function Inventario() {
                 {inventario.items.filter((i) => i.cantidad_contada !== null).map((item) => {
                   const dif = parseFloat(item.diferencia || 0);
                   return (
-                    <tr key={item.producto_id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${dif !== 0 ? 'bg-yellow-50' : ''}`}>
+                    <tr key={item.producto_id} className={`hover:bg-gray-50 dark:hover:bg-gray-700 ${dif !== 0 ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}>
                       <td className="px-4 py-2 font-medium text-gray-800 dark:text-gray-100">{item.producto}</td>
                       <td className="px-4 py-2 text-right text-gray-600 dark:text-gray-300">{parseFloat(item.cantidad_sistema)}</td>
                       <td className="px-4 py-2 text-right text-gray-800 dark:text-gray-100 font-medium">{parseFloat(item.cantidad_contada)}</td>
