@@ -30,7 +30,8 @@
     "installerHeaderIcon": "assets/icon.ico",
     "createDesktopShortcut": true,
     "createStartMenuShortcut": true,
-    "shortcutName": "Cimiento"
+    "shortcutName": "Cimiento",
+    "include": "build/installer-64bit.nsh"
   },
   "asarUnpack": [
     "node_modules/embedded-postgres/**/*",

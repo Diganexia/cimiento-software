@@ -534,6 +534,12 @@ if (!isDev) {
 
 // ── App lifecycle ─────────────────────────────────────────────────────────────
 app.whenReady().then(async () => {
+  try {
+    const pkg = require(path.join(__dirname, '..', 'package.json'));
+    const arch = pkg.dbEngine === 'sqlite' ? '32bit' : '64bit';
+    fs.writeFileSync(path.join(userData, 'arch.txt'), arch, 'utf8');
+  } catch { /* ignore */ }
+
   registerSyncIPC();
   registerUniversalAsyncIPC();
 
