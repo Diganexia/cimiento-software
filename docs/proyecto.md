@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-05-27 — v1.2.29.
+> Documento vivo. Última actualización: 2026-06-03 — v1.2.30.
 
 ---
 
@@ -636,6 +636,9 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - **Fix KPIs Dashboard en SQLite**: `reportesController.kpis()` usaba `DISTINCT ON` (PG-only) y `.rows[0]` (PG-only). Reescrito con subquery compatible + `rawRows()`. Esto causaba que deudores y stock bajo mostraran 0 en la versión 32-bit.
 - **Fix Rotación de stock en SQLite**: query reescrita con `julianday()` y sin `NULLS FIRST` (ambos PG-only).
 - **Backup automático pre-actualización**: se genera un backup antes de instalar cualquier actualización, tanto desde el diálogo automático como desde el botón de Configuración.
+
+### v1.2.30 (2026-06-03)
+- **Verificación de arquitectura en instalador NSIS**: al ejecutar el instalador 64-bit sobre una instalación 32-bit existente (o viceversa), se muestra un diálogo de advertencia con opción de cancelar. `main.js` escribe `arch.txt` (`"64bit"` / `"32bit"`) en `%APPDATA%\ferreteria-client\` al arrancar. Los scripts `client/build/installer-64bit.nsh` y `client/build/installer-32bit.nsh` lo leen en el hook `customInit` usando saltos relativos NSIS (sin labels, para evitar el warning "label in macro" que electron-builder trata como error). La detección solo funciona a partir de la primera ejecución de v1.2.30+.
 
 ### v1.2.29 (2026-05-27)
 - **Fix inventario físico dark mode**: en el paso "Revisar diferencias", las filas con diferencia usaban `bg-yellow-50` sin variante dark. En modo noche, el fondo claro quedaba con texto blanco (`dark:text-gray-100`) resultando invisible. Corregido con `dark:bg-yellow-900/20`.
