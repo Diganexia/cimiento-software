@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-06-03 — v1.2.30.
+> Documento vivo. Última actualización: 2026-06-05 — v1.2.31.
 
 ---
 
@@ -636,6 +636,11 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - **Fix KPIs Dashboard en SQLite**: `reportesController.kpis()` usaba `DISTINCT ON` (PG-only) y `.rows[0]` (PG-only). Reescrito con subquery compatible + `rawRows()`. Esto causaba que deudores y stock bajo mostraran 0 en la versión 32-bit.
 - **Fix Rotación de stock en SQLite**: query reescrita con `julianday()` y sin `NULLS FIRST` (ambos PG-only).
 - **Backup automático pre-actualización**: se genera un backup antes de instalar cualquier actualización, tanto desde el diálogo automático como desde el botón de Configuración.
+
+### v1.2.31 (2026-06-05)
+- **Módulo Facturación**: nueva sección en Sidebar con emisión de Facturas A/B, Notas de Débito A/B y Notas de Crédito A/B directamente desde ARCA, independiente del POS. Crear factura desde notas de venta existentes (remito/comp.interno) y/o ítems manuales con descripción libre. El sistema impide doble facturación vía tabla `factura_ventas` con UNIQUE en `venta_id`. Migración 017 agrega tablas `facturas`, `factura_items`, `factura_ventas` (idéntica PG y SQLite). PDF generado con `generarFacturaPDF`. Permisos: `facturacion.ver`, `facturacion.crear`, `facturacion.emitir`.
+- **POS — mejoras de defaults y UX**: comprobante default cambiado a "Comp. Interno" (antes "Remito"); forma de pago default busca "Efectivo" por nombre; monto se auto-llena al cambiar el total en modo contado con 1 sola forma de pago; depósito seleccionado persiste en `localStorage` entre ventas; si hay un único depósito, el selector se oculta automáticamente.
+- **Stock General — ordenar por cantidad**: nuevo selector en la barra de filtros con opciones "Mayor a menor" / "Menor a mayor" (backend: parámetro `sort_stock` en `/api/stock`).
 
 ### v1.2.30 (2026-06-03)
 - **Verificación de arquitectura en instalador NSIS**: al ejecutar el instalador 64-bit sobre una instalación 32-bit existente (o viceversa), se muestra un diálogo de advertencia con opción de cancelar. `main.js` escribe `arch.txt` (`"64bit"` / `"32bit"`) en `%APPDATA%\ferreteria-client\` al arrancar. Los scripts `client/build/installer-64bit.nsh` y `client/build/installer-32bit.nsh` lo leen en el hook `customInit` usando saltos relativos NSIS (sin labels, para evitar el warning "label in macro" que electron-builder trata como error). La detección solo funciona a partir de la primera ejecución de v1.2.30+.
