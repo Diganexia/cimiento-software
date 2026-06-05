@@ -36,7 +36,7 @@ export default function PuntoVenta() {
 
   const [depositoId, setDepositoId] = useState('');
   const [clienteId, setClienteId] = useState('');
-  const [tipoComprobante, setTipoComprobante] = useState('remito');
+  const [tipoComprobante, setTipoComprobante] = useState('factura_interna');
   const [tipoPago, setTipoPago] = useState('contado');
   const [descuentoGlobal, setDescuentoGlobal] = useState(0);
   const [observaciones, setObservaciones] = useState('');
@@ -62,8 +62,14 @@ export default function PuntoVenta() {
       setClientes(cli.data.data || cli.data);
       setMediosPago(med.data);
       setPuntosVenta(pv.data);
-      if (dep.data[0]) setDepositoId(String(dep.data[0].id));
-      if (med.data[0]) setPagos([{ medio_pago_id: String(med.data[0].id), monto: '' }]);
+
+      const savedDeposito = localStorage.getItem('cimiento_pos_deposito_id');
+      const depositoInicial = dep.data.find((d) => String(d.id) === savedDeposito) || dep.data[0];
+      if (depositoInicial) setDepositoId(String(depositoInicial.id));
+
+      const efectivo = med.data.find((m) => m.nombre.toLowerCase().includes('efectivo')) || med.data[0];
+      if (efectivo) setPagos([{ medio_pago_id: String(efectivo.id), monto: '' }]);
+
       setCajaAbierta(!!(arqueo?.arqueo));
     });
   }, []);
@@ -173,6 +179,14 @@ export default function PuntoVenta() {
   useEffect(() => {
     if (!clienteId && tipoPago === 'cuenta_corriente') setTipoPago('contado');
   }, [clienteId]);
+
+  // Auto-fill monto en contado con 1 sola forma de pago
+  useEffect(() => {
+    if (tipoPago === 'contado' && pagos.length === 1 && totalEfectivo > 0) {
+      setPagos((prev) => [{ ...prev[0], monto: String(totalEfectivo) }]);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalEfectivo, tipoPago]);
 
   const handleRedondeo = (checked) => {
     setRedondeo(checked);
@@ -287,7 +301,7 @@ export default function PuntoVenta() {
               className="bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded text-sm hover:bg-gray-200 transition-colors">
               Descargar PDF
             </button>
-            <button onClick={() => { setConfirmada(null); setCart([]); setClienteId(''); setObservaciones(''); setDescuentoGlobal(0); setRedondeo(false); setRedondeoStep(0); }}
+            <button onClick={() => { setConfirmada(null); setCart([]); setClienteId(''); setTipoComprobante('factura_interna'); setTipoPago('contado'); setObservaciones(''); setDescuentoGlobal(0); setRedondeo(false); setRedondeoStep(0); setPagos([{ medio_pago_id: pagos[0]?.medio_pago_id || '', monto: '' }]); }}
               className="bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700 transition-colors">
               Nueva venta
             </button>
@@ -407,14 +421,16 @@ export default function PuntoVenta() {
         {/* Right: sale config + totals */}
         <div className="w-72 flex flex-col gap-3">
           <div className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Depósito *</label>
-              <select value={depositoId} onChange={(e) => setDepositoId(e.target.value)}
-                className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <option value="">Seleccionar...</option>
-                {depositos.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
-              </select>
-            </div>
+            {depositos.length > 1 && (
+              <div>
+                <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Depósito *</label>
+                <select value={depositoId} onChange={(e) => { setDepositoId(e.target.value); localStorage.setItem('cimiento_pos_deposito_id', e.target.value); }}
+                  className="w-full border border-gray-300 dark:border-gray-600 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                  <option value="">Seleccionar...</option>
+                  {depositos.map((d) => <option key={d.id} value={d.id}>{d.nombre}</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">Cliente</label>
               <select value={clienteId} onChange={(e) => setClienteId(e.target.value)}

@@ -4,7 +4,7 @@ const { whereIlike } = require('../lib/dbCompat');
 
 const listar = async (req, res) => {
   try {
-    const { deposito_id, q, proveedor_id } = req.query;
+    const { deposito_id, q, proveedor_id, sort_stock } = req.query;
     let query = db('stock_por_deposito as spd')
       .join('productos as p', 'spd.producto_id', 'p.id')
       .join('depositos as d', 'spd.deposito_id', 'd.id')
@@ -25,7 +25,11 @@ const listar = async (req, res) => {
     if (proveedor_id) query = query.where('p.proveedor_habitual_id', proveedor_id);
     if (q) whereIlike(query, 'p.nombre', `%${q}%`);
 
-    const data = await query.orderBy('p.nombre');
+    if (sort_stock === 'asc') query = query.orderBy('spd.cantidad', 'asc');
+    else if (sort_stock === 'desc') query = query.orderBy('spd.cantidad', 'desc');
+    else query = query.orderBy('p.nombre');
+
+    const data = await query;
     res.json(data);
   } catch (err) {
     console.error(err);

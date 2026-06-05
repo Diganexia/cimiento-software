@@ -13,6 +13,7 @@ export default function StockView() {
   const [depositoId, setDepositoId] = useState('');
   const [proveedorId, setProveedorId] = useState('');
   const [busqueda, setBusqueda] = useState('');
+  const [sortStock, setSortStock] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -25,11 +26,11 @@ export default function StockView() {
 
   useEffect(() => {
     setLoading(true);
-    getStock({ deposito_id: depositoId, proveedor_id: proveedorId, q: busqueda })
+    getStock({ deposito_id: depositoId, proveedor_id: proveedorId, q: busqueda, sort_stock: sortStock })
       .then((r) => setStock(r.data))
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [depositoId, proveedorId, busqueda]);
+  }, [depositoId, proveedorId, busqueda, sortStock]);
 
   return (
     <div className="p-6">
@@ -74,6 +75,15 @@ export default function StockView() {
         >
           <option value="">Todos los distribuidores</option>
           {proveedores.map((p) => <option key={p.id} value={p.id}>{p.nombre}</option>)}
+        </select>
+        <select
+          value={sortStock}
+          onChange={(e) => setSortStock(e.target.value)}
+          className="border border-gray-300 dark:border-gray-600 rounded px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="">Ordenar por nombre</option>
+          <option value="desc">Stock: mayor a menor</option>
+          <option value="asc">Stock: menor a mayor</option>
         </select>
       </div>
 

@@ -645,4 +645,104 @@ function generarCompraPDF(compra, items, res) {
   doc.end();
 }
 
-module.exports = { generarVentaPDF, generarEstadoCuentaPDF, generarArqueoPDF, generarReporteTablaPDF, generarReciboPDF, generarCompraPDF };
+function generarFacturaPDF(factura, items, res) {
+  const doc = new PDFDocument({ margin: 50, size: 'A4' });
+  const emp = empresa();
+  const label = TIPO_LABEL[factura.tipo] || 'FACTURA';
+
+  res.setHeader('Content-Type', 'application/pdf');
+  res.setHeader('Content-Disposition', `inline; filename="factura-${factura.numero}.pdf"`);
+  doc.pipe(res);
+
+  // Header empresa
+  doc.fontSize(19).font('Helvetica-Bold').text(emp.nombre, 50, 50, { width: 270 });
+  doc.fontSize(12).font('Helvetica').fillColor('#555');
+  if (emp.cuit) doc.text(`CUIT: ${emp.cuit}`);
+  if (emp.direccion) doc.text(emp.direccion);
+  if (emp.telefono) doc.text(`Tel: ${emp.telefono}`);
+
+  // Tipo + número
+  doc.fontSize(22).font('Helvetica-Bold').fillColor('#000')
+    .text(label, 350, 50, { align: 'right', width: 200 });
+  const numY = doc.y;
+  doc.fontSize(14).font('Helvetica')
+    .text(`N° ${String(factura.numero).padStart(8, '0')}`, 350, numY, { align: 'right', width: 200 });
+  const fecha = factura.fecha
+    ? new Date(factura.fecha + 'T00:00:00').toLocaleDateString('es-AR')
+    : new Date().toLocaleDateString('es-AR');
+  doc.text(`Fecha: ${fecha}`, 350, numY + 18, { align: 'right', width: 200 });
+
+  doc.moveTo(50, 143).lineTo(545, 143).strokeColor('#ccc').stroke();
+
+  // Cliente
+  let y = 158;
+  doc.fontSize(12).font('Helvetica-Bold').fillColor('#000').text('CLIENTE', 50, y);
+  doc.font('Helvetica').fillColor('#333');
+  if (factura.cliente_nombre) {
+    doc.text(factura.cliente_nombre, 50, y + 15);
+    if (factura.cliente_cuit) doc.text(`CUIT: ${factura.cliente_cuit}`, 50, y + 30);
+    else if (factura.cliente_dni) doc.text(`DNI: ${factura.cliente_dni}`, 50, y + 30);
+    if (factura.cliente_direccion) doc.text(factura.cliente_direccion, 50, y + 45);
+  } else {
+    doc.text('Consumidor Final', 50, y + 15);
+  }
+
+  doc.fontSize(12).font('Helvetica').fillColor('#333');
+  doc.text(`Condición IVA: ${factura.tipo === 'factura_a' ? 'Responsable Inscripto' : 'Consumidor Final'}`, 350, y + 15, { width: 200, align: 'right' });
+
+  // Items table
+  y = 230;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 9;
+  doc.fontSize(11).font('Helvetica-Bold').fillColor('#555');
+  doc.text('Descripción', 50, y, { width: 265 });
+  doc.text('N° Venta', 318, y, { width: 70 });
+  doc.text('Cant', 390, y, { width: 40, align: 'right' });
+  doc.text('P.Unit.', 433, y, { width: 55, align: 'right' });
+  doc.text('Subtotal', 460, y, { width: 85, align: 'right' });
+  y += 15;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 8;
+
+  doc.font('Helvetica').fillColor('#000');
+  for (const item of items) {
+    if (y > 700) { doc.addPage(); y = 50; }
+    doc.fontSize(11);
+    doc.text(item.descripcion || '', 50, y, { width: 265 });
+    doc.text(item.venta_numero ? `#${String(item.venta_numero).padStart(8, '0')}` : 'Manual', 318, y, { width: 70 });
+    doc.text(fmt(item.cantidad), 390, y, { width: 40, align: 'right' });
+    doc.text(`$${fmt(item.precio_unitario)}`, 433, y, { width: 55, align: 'right' });
+    doc.text(`$${fmt(item.subtotal)}`, 460, y, { width: 85, align: 'right' });
+    y += 17;
+  }
+
+  y += 8;
+  doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+  y += 13;
+
+  const colLabel = 330, colR = 460, colW = 85;
+  doc.font('Helvetica-Bold').fontSize(14).fillColor('#000');
+  doc.text('TOTAL:', colLabel, y, { width: colR - colLabel });
+  doc.text(`$${fmt(factura.total)}`, colR, y, { width: colW, align: 'right' });
+
+  // CAE block
+  if (factura.cae) {
+    y += 48;
+    doc.moveTo(50, y).lineTo(545, y).strokeColor('#ccc').stroke();
+    y += 13;
+    doc.font('Helvetica-Bold').fontSize(12).fillColor('#000').text('COMPROBANTE ELECTRÓNICO (ARCA)', 50, y);
+    y += 15;
+    doc.font('Helvetica').fontSize(11).fillColor('#333');
+    doc.text(`CAE: ${factura.cae}`, 50, y);
+    doc.text(`Vencimiento CAE: ${factura.cae_vencimiento}`, 230, y);
+  }
+
+  const footerY = doc.page.height - doc.page.margins.bottom - 14;
+  const esFactura = factura.tipo === 'factura_a' || factura.tipo === 'factura_b';
+  doc.fontSize(10).fillColor('#999')
+    .text(esFactura ? 'Comprobante fiscal válido' : 'Comprobante electrónico', 50, footerY, { align: 'center', width: 495 });
+
+  doc.end();
+}
+
+module.exports = { generarVentaPDF, generarEstadoCuentaPDF, generarArqueoPDF, generarReporteTablaPDF, generarReciboPDF, generarCompraPDF, generarFacturaPDF };

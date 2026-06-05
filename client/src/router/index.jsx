@@ -40,6 +40,9 @@ import ServerConfig from '../pages/ServerConfig';
 import Setup from '../pages/Setup';
 import Backup from '../pages/configuracion/Backup';
 import Activacion from '../pages/Activacion';
+import Facturas from '../pages/facturacion/Facturas';
+import FacturaForm from '../pages/facturacion/FacturaForm';
+import FacturaDetalle from '../pages/facturacion/FacturaDetalle';
 
 const router = createHashRouter([
   { path: '/setup', element: <Setup /> },
@@ -85,6 +88,9 @@ const router = createHashRouter([
           { path: 'cta-cte/proveedores',            element: <CtaCteProveedores /> },
           { path: 'cta-cte/proveedores/:proveedorId', element: <CtaCteProveedor /> },
           { path: 'cta-cte/cuotas',                 element: <Cuotas /> },
+          { path: 'facturacion',                   element: <Facturas /> },
+          { path: 'facturacion/nueva',             element: <FacturaForm /> },
+          { path: 'facturacion/:id',               element: <FacturaDetalle /> },
           { path: 'reportes',                      element: <Reportes /> },
           { path: 'configuracion',                 element: <Configuracion /> },
           { path: 'configuracion/usuarios',              element: <Usuarios /> },

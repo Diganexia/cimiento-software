@@ -22,6 +22,7 @@ const afipRoutes        = require('./routes/afip');
 const usuariosRoutes    = require('./routes/usuarios');
 const configuracionRoutes = require('./routes/configuracion');
 const reportesRoutes      = require('./routes/reportes');
+const facturacionRoutes   = require('./routes/facturacion');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -53,6 +54,7 @@ app.use('/api/afip',           afipRoutes);
 app.use('/api/usuarios',       usuariosRoutes);
 app.use('/api/configuracion',  configuracionRoutes);
 app.use('/api/reportes',       reportesRoutes);
+app.use('/api/facturacion',    facturacionRoutes);
 
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));
 
