@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-06-05 — v1.2.31.
+> Documento vivo. Última actualización: 2026-06-17 — v1.3.0.
 
 ---
 
@@ -114,8 +114,8 @@ ferreteria-software/          ← monorepo raíz (npm workspaces)
     ├── src/lib/dbCompat.js   ← helpers PG/SQLite (whereIlike, sqlHastaFinDia, rawRows, IS_SQLITE)
     ├── database/
     │   ├── knexfile.js
-    │   ├── migrations/            ← 001 a 016 (PostgreSQL)
-    │   ├── migrations-sqlite/     ← 001 a 016 (SQLite, adaptadas)
+    │   ├── migrations/            ← 001 a 017 (PostgreSQL)
+    │   ├── migrations-sqlite/     ← 001 a 017 (SQLite, adaptadas)
     │   └── seeds/
     └── src/config/empresa.json   ← generado al guardar datos de empresa en UI
 ```
@@ -189,6 +189,7 @@ Los permisos se almacenan como JSON en `roles.permisos`. El middleware `authoriz
 | `usuarios` | `ver`, `crear`, `editar` |
 | `reportes` | `ver` |
 | `configuracion` | `ver`, `editar` |
+| `facturacion` | `ver`, `crear`, `emitir` |
 
 > `Administrador` tiene `{ all: true }` — bypasea todas las verificaciones.
 
@@ -637,6 +638,9 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - **Fix Rotación de stock en SQLite**: query reescrita con `julianday()` y sin `NULLS FIRST` (ambos PG-only).
 - **Backup automático pre-actualización**: se genera un backup antes de instalar cualquier actualización, tanto desde el diálogo automático como desde el botón de Configuración.
 
+### v1.3.0 (2026-06-17)
+- **Fix crítico instalador 64-bit en sistemas 32-bit**: el instalador 64-bit ahora detecta la arquitectura real del SO antes de arrancar (variables de entorno `PROCESSOR_ARCHITEW6432` / `PROCESSOR_ARCHITECTURE`). Si el equipo tiene Windows 32-bit, muestra un error bloqueante y aborta la instalación. Antes solo chequeaba si había una instalación previa (`arch.txt`), por lo que en instalación fresca sobre un equipo 32-bit no bloqueaba y el software fallaba al intentar correr.
+
 ### v1.2.31 (2026-06-05)
 - **Módulo Facturación**: nueva sección en Sidebar con emisión de Facturas A/B, Notas de Débito A/B y Notas de Crédito A/B directamente desde ARCA, independiente del POS. Crear factura desde notas de venta existentes (remito/comp.interno) y/o ítems manuales con descripción libre. El sistema impide doble facturación vía tabla `factura_ventas` con UNIQUE en `venta_id`. Migración 017 agrega tablas `facturas`, `factura_items`, `factura_ventas` (idéntica PG y SQLite). PDF generado con `generarFacturaPDF`. Permisos: `facturacion.ver`, `facturacion.crear`, `facturacion.emitir`.
 - **POS — mejoras de defaults y UX**: comprobante default cambiado a "Comp. Interno" (antes "Remito"); forma de pago default busca "Efectivo" por nombre; monto se auto-llena al cambiar el total en modo contado con 1 sola forma de pago; depósito seleccionado persiste en `localStorage` entre ventas; si hay un único depósito, el selector se oculta automáticamente.
@@ -745,6 +749,7 @@ El sistema de licencias corre fuera del servidor Express, en un **Cloudflare Wor
 | 014 | Ventas: agrega redondeo_monto |
 | 015 | Ventas: UNIQUE constraint en ventas.numero |
 | 016 | movimientos_stock: agrega valor TRANSFERENCIA al enum tipo |
+| 017 | Facturación: tablas facturas, factura_items, factura_ventas |
 
 ---
 
