@@ -3,7 +3,7 @@
   StrCmp $R9 "AMD64" +5 +1
   ReadEnvStr $R9 "PROCESSOR_ARCHITECTURE"
   StrCmp $R9 "AMD64" +3 +1
-  MessageBox MB_OK|MB_ICONSTOP "Este instalador es solo para Windows 64-bit (x64).$\n$\nSu equipo tiene Windows 32-bit.$\n$\nPor favor descargue el instalador de 32-bit."
+  MessageBox MB_OK|MB_ICONSTOP "Cimiento v${VERSION} (64-bit) solo funciona en Windows 64-bit.$\n$\nSu equipo tiene Windows 32-bit.$\n$\nDescargue el instalador 32-bit correcto."
   Quit
   StrCpy $R0 "$APPDATA\ferreteria-client\arch.txt"
   IfFileExists $R0 +1 +8
@@ -12,6 +12,6 @@
   FileClose $R1
   StrCpy $R2 $R2 5
   StrCmp $R2 "32bit" +1 +3
-  MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "ATENCION: Se detecto una instalacion de Cimiento 32-bit en este equipo.$\n$\nEste instalador es la version 64-bit.$\n$\nSi instalo la version 32-bit por compatibilidad del equipo, CANCELE y use el instalador 32-bit correcto.$\n$\n?Desea instalar la version 64-bit de todas formas?" IDOK +2
+  MessageBox MB_OKCANCEL|MB_DEFBUTTON2|MB_ICONEXCLAMATION "ATENCION: Se detecto una instalacion de Cimiento 32-bit en este equipo.$\n$\nEste instalador es Cimiento v${VERSION} (64-bit).$\n$\nSi instalo la version 32-bit por compatibilidad del equipo, presione CANCELAR y use el instalador 32-bit correcto.$\n$\n?Desea reemplazar con la version 64-bit de todas formas?" IDOK +2
   Quit
 !macroend
