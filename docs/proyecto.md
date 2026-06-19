@@ -1,6 +1,6 @@
 # Documentación Técnica — Ferretería / Corralón Software
 
-> Documento vivo. Última actualización: 2026-06-17 — v1.3.0.
+> Documento vivo. Última actualización: 2026-06-19 — v1.3.1.
 
 ---
 
@@ -637,6 +637,11 @@ Para un corralón mediano (50–200 ventas/día, 2.000–10.000 productos), la b
 - **Fix KPIs Dashboard en SQLite**: `reportesController.kpis()` usaba `DISTINCT ON` (PG-only) y `.rows[0]` (PG-only). Reescrito con subquery compatible + `rawRows()`. Esto causaba que deudores y stock bajo mostraran 0 en la versión 32-bit.
 - **Fix Rotación de stock en SQLite**: query reescrita con `julianday()` y sin `NULLS FIRST` (ambos PG-only).
 - **Backup automático pre-actualización**: se genera un backup antes de instalar cualquier actualización, tanto desde el diálogo automático como desde el botón de Configuración.
+
+### v1.3.1 (2026-06-19)
+- **Fix crítico arranque:** `server/src/routes/facturacion.js` tenía `require('../middleware/auth')` inexistente → corregido a `require('../middleware/authenticateToken')`. Causaba crash "Cannot find module" al iniciar el servidor.
+- **Instalador:** versión visible (`${VERSION}`) en todos los diálogos de advertencia de arquitectura.
+- **Instalador:** botón Cancelar es ahora el default (`MB_DEFBUTTON2`) al detectar mezcla de arquitecturas.
 
 ### v1.3.0 (2026-06-17)
 - **Fix crítico instalador 64-bit en sistemas 32-bit**: el instalador 64-bit ahora detecta la arquitectura real del SO antes de arrancar (variables de entorno `PROCESSOR_ARCHITEW6432` / `PROCESSOR_ARCHITECTURE`). Si el equipo tiene Windows 32-bit, muestra un error bloqueante y aborta la instalación. Antes solo chequeaba si había una instalación previa (`arch.txt`), por lo que en instalación fresca sobre un equipo 32-bit no bloqueaba y el software fallaba al intentar correr.
